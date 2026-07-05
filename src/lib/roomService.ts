@@ -15,6 +15,7 @@ import {
 import { db } from "./firebase";
 import {
   applyRoundLoss,
+  applyBlindRevival,
   buildTurnOrder,
   createDeck,
   dealCards,
@@ -341,7 +342,13 @@ export async function openChallenge(
   if (!room.currentBid) throw new Error("Açmak için önce bir iddia olmalı.");
 
   const players = await fetchPlayers(roomCode);
-  const revealResult = resolveChallenge(players, room.currentBid, playerId, playerName);
+  const revealResult = resolveChallenge(
+    players,
+    room.currentBid,
+    playerId,
+    playerName,
+    room.turnOrder
+  );
 
   await updateDoc(roomRef, {
     phase: "revealed",
@@ -365,9 +372,16 @@ export async function continueAfterReveal(roomCode: string, hostId: string): Pro
 
   const players = await fetchPlayers(roomCode);
   const updatedPlayers = players.map((player) => {
-    if (player.id === room.revealResult!.loserId) {
+    const result = room.revealResult!;
+
+    if (result.blindRevivalId && player.id === result.blindRevivalId) {
+      return applyBlindRevival(player);
+    }
+
+    if (player.id === result.loserId) {
       return applyRoundLoss(player);
     }
+
     return player;
   });
 

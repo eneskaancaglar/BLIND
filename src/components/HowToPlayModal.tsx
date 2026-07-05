@@ -12,6 +12,8 @@ const RULES = [
   "Sayım ≥ iddia → açan kaybeder. Sayım < iddia → son iddia eden kaybeder.",
   "Kaybeden sonraki elde +1 kart alır. 6 kartta tekrar kaybederse BLIND olur (kartlarını göremez).",
   "BLIND iken kaybederse elenir. Kartı kalan son oyuncu kazanır.",
+  "BLIND kuralı: BLIND oyuncu iddia eder. Hemen sonraki oyuncu iddiayı yükseltip devam ederse oyun normal sürer — ekstra bir şey olmaz.",
+  "Ama BLIND'den hemen sonraki oyuncu Aç derse ve iddia doğru çıkarsa: BLIND oyuncu 5 kartla oyuna geri döner (kartlarını tekrar görür), açan ise +1 kart cezası alır (5 kartı varsa BLIND olur).",
 ];
 
 export function HowToPlayModal({ open, onClose }: HowToPlayModalProps) {

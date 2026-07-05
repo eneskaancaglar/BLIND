@@ -59,18 +59,42 @@ export function resolveChallenge(
   players: Player[],
   currentBid: Bid,
   openerId: string,
-  openerName: string
+  openerName: string,
+  turnOrder: string[] = []
 ): RevealResult {
   const allCards = players.flatMap((player) => player.cards);
   const actualCount = countMatchingCards(allCards, currentBid.rank);
+  const lastBidder = players.find((player) => player.id === currentBid.playerId);
 
   const openerLoses = actualCount >= currentBid.count;
   const loserId = openerLoses ? openerId : currentBid.playerId;
   const loserName = openerLoses ? openerName : currentBid.playerName;
 
-  const reason = openerLoses
-    ? `Sayım (${actualCount}) ≥ iddia (${currentBid.count}). Aç diyen kaybetti.`
-    : `Sayım (${actualCount}) < iddia (${currentBid.count}). Son iddia eden kaybetti.`;
+  const openerIsNextAfterBlind =
+    turnOrder.length > 0 &&
+    (() => {
+      const blindIndex = turnOrder.indexOf(currentBid.playerId);
+      if (blindIndex === -1) return false;
+      const nextIndex = (blindIndex + 1) % turnOrder.length;
+      return turnOrder[nextIndex] === openerId;
+    })();
+
+  // BLIND iddia etti, hemen sonraki oyuncu Aç dedi ve iddia doğru çıktı
+  const blindRevival =
+    lastBidder?.isBlind &&
+    openerLoses &&
+    openerIsNextAfterBlind &&
+    !lastBidder.isEliminated
+      ? { id: lastBidder.id, name: lastBidder.name }
+      : null;
+
+  let reason = openerLoses
+    ? `Sayım (${actualCount}) ≥ iddia (${currentBid.count}). Aç diyen kaybetti (+1 kart).`
+    : `Sayım (${actualCount}) < iddia (${currentBid.count}). Son iddia eden kaybetti (+1 kart).`;
+
+  if (blindRevival) {
+    reason += ` BLIND iddiası doğruydu — ${blindRevival.name} 5 kartla oyuna döner, ${openerName} ceza kartı alır.`;
+  }
 
   return {
     actualCount,
@@ -81,6 +105,18 @@ export function resolveChallenge(
     loserId,
     loserName,
     reason,
+    blindRevivalId: blindRevival?.id ?? null,
+    blindRevivalName: blindRevival?.name ?? null,
+  };
+}
+
+export function applyBlindRevival(player: Player): Player {
+  return {
+    ...player,
+    cardCount: 5,
+    isBlind: false,
+    isEliminated: false,
+    cards: [],
   };
 }
 

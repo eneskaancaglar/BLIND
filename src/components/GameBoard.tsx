@@ -125,6 +125,13 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
             Sayım: {room.revealResult.actualCount}
           </p>
           <p className="mt-1 text-red-300">Kaybeden: {room.revealResult.loserName}</p>
+          {room.revealResult.blindRevivalName ? (
+            <p className="mt-3 rounded-xl bg-violet-500/20 px-3 py-2 text-violet-100">
+              {room.revealResult.blindRevivalName} 5 kartla oyuna dönüyor!
+              <br />
+              {room.revealResult.openerName} +1 kart cezası aldı.
+            </p>
+          ) : null}
           {isHost ? (
             <button
               type="button"

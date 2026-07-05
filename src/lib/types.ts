@@ -68,6 +68,8 @@ export type RevealResult = {
   loserId: string;
   loserName: string;
   reason: string;
+  blindRevivalId: string | null;
+  blindRevivalName: string | null;
 };
 
 export type PlayerView = Omit<Player, "cards"> & {
@@ -113,8 +115,8 @@ export const SUIT_SYMBOLS: Record<Suit, string> = {
 };
 
 export const SUIT_COLORS: Record<Suit, string> = {
-  H: "text-red-400",
-  D: "text-red-400",
-  C: "text-white",
-  S: "text-white",
+  H: "text-red-700",
+  D: "text-red-700",
+  C: "text-slate-900",
+  S: "text-slate-900",
 };

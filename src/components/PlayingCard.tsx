@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { Card, SUIT_COLORS, SUIT_SYMBOLS } from "@/lib/types";
+import { Card, SUIT_SYMBOLS } from "@/lib/types";
 
 export type CardSize = "xs" | "sm" | "md" | "lg" | "xl";
 
@@ -55,32 +55,32 @@ function CardBack({ size, blind }: { size: CardSize; blind?: boolean }) {
 }
 
 function CardFace({ card, size }: { card: Card; size: CardSize }) {
-  const colorClass = SUIT_COLORS[card.suit];
   const suit = SUIT_SYMBOLS[card.suit];
   const isRed = card.suit === "H" || card.suit === "D";
+  const inkClass = isRed ? "text-red-700" : "text-slate-900";
 
   return (
     <div className={`card-body card-body-face ${SIZE_CLASSES[size]}`}>
       <div className="card-face-shine pointer-events-none absolute inset-0 rounded-[0.65rem]" />
 
       <div
-        className={`absolute left-1.5 top-1.5 flex flex-col items-center leading-none ${colorClass}`}
+        className={`absolute left-1.5 top-1.5 flex flex-col items-center leading-none ${inkClass}`}
       >
         <span className="font-black drop-shadow-sm">{card.rank}</span>
-        <span className="text-[0.9em]">{suit}</span>
+        <span className="text-[0.9em] font-bold">{suit}</span>
       </div>
 
       <div
-        className={`absolute inset-0 flex items-center justify-center ${CENTER_SUIT[size]} ${colorClass}`}
+        className={`absolute inset-0 flex items-center justify-center ${CENTER_SUIT[size]} ${inkClass}`}
       >
         <span className="drop-shadow-sm">{suit}</span>
       </div>
 
       <div
-        className={`absolute bottom-1.5 right-1.5 flex rotate-180 flex-col items-center leading-none ${colorClass}`}
+        className={`absolute bottom-1.5 right-1.5 flex rotate-180 flex-col items-center leading-none ${inkClass}`}
       >
         <span className="font-black">{card.rank}</span>
-        <span className="text-[0.9em]">{suit}</span>
+        <span className="text-[0.9em] font-bold">{suit}</span>
       </div>
 
       {card.rank === "2" ? (
