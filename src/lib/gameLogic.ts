@@ -183,17 +183,17 @@ export function nextTurnIndex(turnOrder: string[], currentIndex: number): number
   return (currentIndex + 1) % turnOrder.length;
 }
 
-export function buildTurnOrder(players: Player[], startAfterId?: string | null): string[] {
+export function buildTurnOrder(players: Player[], startWithId?: string | null): string[] {
   const activeIds = getActivePlayers(players)
     .sort((a, b) => a.joinedAt - b.joinedAt)
     .map((player) => player.id);
 
-  if (!startAfterId || activeIds.length === 0) return activeIds;
+  if (!startWithId || activeIds.length === 0) return activeIds;
 
-  const startIndex = activeIds.indexOf(startAfterId);
+  const startIndex = activeIds.indexOf(startWithId);
   if (startIndex === -1) return activeIds;
 
-  return [...activeIds.slice(startIndex + 1), ...activeIds.slice(0, startIndex + 1)];
+  return [...activeIds.slice(startIndex), ...activeIds.slice(0, startIndex)];
 }
 
 export function cardToLabel(card: Card): string {
