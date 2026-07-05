@@ -1,13 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
+  --background: #0c0618;
   --foreground: #f5f5f5;
-  --card-bg: #1a1a1a;
-  --accent: #22c55e;
-  --accent-hover: #16a34a;
-  --danger: #ef4444;
-  --muted: #737373;
 }
 
 * {
@@ -25,7 +20,6 @@ body {
   background: var(--background);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 input,
@@ -38,19 +32,146 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* 3D Kartlar */
+.card-scene {
+  perspective: 900px;
+  flex-shrink: 0;
+}
+
+.card-tilt-hand {
+  transform: rotateX(12deg);
+  transform-style: preserve-3d;
+}
+
+.card-tilt-table {
+  transform: rotateX(38deg);
+  transform-style: preserve-3d;
+}
+
+.card-tilt-flat {
+  transform: rotateX(4deg);
+}
+
+.card-body {
+  position: relative;
+  border-radius: 0.65rem;
+  transform-style: preserve-3d;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2) inset,
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    0 8px 16px rgba(0, 0, 0, 0.35),
+    0 16px 32px rgba(0, 0, 0, 0.2);
+}
+
+.card-body-face {
+  background: linear-gradient(155deg, #ffffff 0%, #f8fafc 45%, #e2e8f0 100%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.card-face-shine {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    transparent 45%,
+    transparent 100%
+  );
+}
+
+.card-body-back {
+  background: linear-gradient(145deg, #2563eb 0%, #1d4ed8 40%, #1e3a8a 100%);
+  border: 2px solid #1e40af;
+}
+
+.card-back-pattern {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.07) 0px,
+      rgba(255, 255, 255, 0.07) 3px,
+      transparent 3px,
+      transparent 8px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.05) 0px,
+      rgba(255, 255, 255, 0.05) 3px,
+      transparent 3px,
+      transparent 8px
+    );
+}
+
+.card-back-diamond {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+}
+
+.count-badge {
+  display: inline-flex;
+  min-width: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #f472b6, #a855f7);
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: white;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.45);
+}
+
+.count-badge-lg {
+  min-width: 2rem;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.875rem;
+}
+
+/* Oyun masası */
+.game-shell {
+  background: linear-gradient(180deg, #1a0a2e 0%, #0f172a 50%, #0c4a4e 100%);
+}
+
 .table-felt {
   background:
-    radial-gradient(ellipse at 50% 30%, rgba(34, 120, 60, 0.35) 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 100%, rgba(0, 0, 0, 0.4) 0%, transparent 50%),
-    linear-gradient(160deg, #0f3d22 0%, #0a2818 40%, #061808 100%);
+    radial-gradient(ellipse at 50% 20%, rgba(52, 211, 153, 0.25) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(0, 0, 0, 0.45) 0%, transparent 50%),
+    linear-gradient(165deg, #14532d 0%, #166534 35%, #064e3b 100%);
+}
+
+.table-rim {
+  box-shadow:
+    inset 0 0 0 6px rgba(120, 53, 15, 0.35),
+    inset 0 0 60px rgba(0, 0, 0, 0.35);
 }
 
 .table-glow {
-  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.25);
+}
+
+.center-pot {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.25) 100%);
+  border: 2px solid rgba(251, 191, 36, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .player-hand {
-  background: linear-gradient(to top, #040a06 0%, #061208 100%);
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border-top: 1px solid rgba(34, 211, 238, 0.15);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.4);
 }
 
+/* Ana sayfa */
+.home-shell {
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(217, 70, 239, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(34, 211, 238, 0.15) 0%, transparent 50%),
+    linear-gradient(165deg, #1e1035 0%, #0f172a 45%, #134e4a 100%);
+}
+
+.home-card-deco {
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45));
+}
+
+.home-panel {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+}
