@@ -4,16 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import { BidControls } from "@/components/BidControls";
 import { PlayerCardsRow, PlayerList } from "@/components/PlayerList";
 import { isFirebaseConfigured } from "@/lib/firebase";
-import { getActivePlayers } from "@/lib/gameLogic";
-import { Player, Room } from "@/lib/types";
+import { getActivePlayers, nextTurnIndex } from "@/lib/gameLogic";
+import { Bid, Player, Room } from "@/lib/types";
 import {
+  attachRoomSync,
   continueAfterReveal,
   getPlayerId,
   maskPlayersForViewer,
   openChallenge,
   placeBid,
-  subscribeToPlayers,
-  subscribeToRoom,
 } from "@/lib/roomService";
 
 type GameBoardProps = {
@@ -35,13 +34,13 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   useEffect(() => {
     if (!roomCode || !isFirebaseConfigured()) return;
 
-    const unsubRoom = subscribeToRoom(roomCode, setRoom);
-    const unsubPlayers = subscribeToPlayers(roomCode, setPlayers);
+    const detach = attachRoomSync(roomCode, {
+      onRoom: setRoom,
+      onPlayers: setPlayers,
+      onError: (err) => setError(err.message),
+    });
 
-    return () => {
-      unsubRoom();
-      unsubPlayers();
-    };
+    return detach;
   }, [roomCode]);
 
   const me = players.find((player) => player.id === playerId);
@@ -57,8 +56,26 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const showAllCards = room?.phase === "revealed";
 
   async function handleBid(count: number, rank: Parameters<typeof placeBid>[4]) {
-    if (!me) return;
-    await placeBid(roomCode, playerId, me.name, count, rank);
+    if (!me || !room) return;
+
+    const bid: Bid = {
+      count,
+      rank,
+      playerId,
+      playerName: me.name,
+    };
+
+    setRoom({
+      ...room,
+      currentBid: bid,
+      currentTurnIndex: nextTurnIndex(room.turnOrder, room.currentTurnIndex),
+    });
+
+    try {
+      await placeBid(roomCode, playerId, me.name, count, rank);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "İddia verilemedi.");
+    }
   }
 
   async function handleOpen() {

@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, memoryLocalCache } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -18,7 +18,11 @@ function getFirebaseApp() {
 }
 
 export const app = getFirebaseApp();
-export const db = getFirestore(app);
+
+export const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true,
+  localCache: memoryLocalCache(),
+});
 
 export function isFirebaseConfigured(): boolean {
   return Boolean(

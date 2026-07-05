@@ -8,8 +8,7 @@ import {
   buildJoinLink,
   getPlayerId,
   startGame,
-  subscribeToPlayers,
-  subscribeToRoom,
+  attachRoomSync,
 } from "@/lib/roomService";
 
 type RoomLobbyProps = {
@@ -35,29 +34,25 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
   useEffect(() => {
     if (!roomCode || !isFirebaseConfigured()) return;
 
-    const unsubRoom = subscribeToRoom(
+    const detach = attachRoomSync(
       roomCode,
-      (nextRoom) => {
-        if (!nextRoom) {
-          setError("Oda bulunamadı.");
-          return;
-        }
-        setRoom(nextRoom);
-        if (nextRoom.status === "playing" || nextRoom.status === "finished") {
-          onGameStarted();
-        }
-      },
-      (err) => setError(err.message)
+      {
+        onRoom: (nextRoom) => {
+          if (!nextRoom) {
+            setError("Oda bulunamadı.");
+            return;
+          }
+          setRoom(nextRoom);
+          if (nextRoom.status === "playing" || nextRoom.status === "finished") {
+            onGameStarted();
+          }
+        },
+        onPlayers: setPlayers,
+        onError: (err) => setError(err.message),
+      }
     );
 
-    const unsubPlayers = subscribeToPlayers(roomCode, setPlayers, (err) =>
-      setError(err.message)
-    );
-
-    return () => {
-      unsubRoom();
-      unsubPlayers();
-    };
+    return detach;
   }, [roomCode, onGameStarted]);
 
   async function copyShareLink() {

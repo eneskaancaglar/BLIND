@@ -96,6 +96,57 @@ async function fetchPlayers(roomCode: string): Promise<Player[]> {
   return snapshot.docs.map((d) => d.data() as Player);
 }
 
+export async function fetchRoomSnapshot(roomCode: string): Promise<Room | null> {
+  const snapshot = await getDoc(doc(db, ROOMS, roomCode));
+  if (!snapshot.exists()) return null;
+  return snapshot.data() as Room;
+}
+
+export function attachRoomSync(
+  roomCode: string,
+  handlers: {
+    onRoom: (room: Room | null) => void;
+    onPlayers: (players: Player[]) => void;
+    onError?: (error: Error) => void;
+  }
+): () => void {
+  const unsubs = [
+    subscribeToRoom(roomCode, handlers.onRoom, handlers.onError),
+    subscribeToPlayers(roomCode, handlers.onPlayers, handlers.onError),
+  ];
+
+  const pullLatest = async () => {
+    try {
+      const [room, players] = await Promise.all([
+        fetchRoomSnapshot(roomCode),
+        fetchPlayers(roomCode),
+      ]);
+      handlers.onRoom(room);
+      handlers.onPlayers(players);
+    } catch (error) {
+      handlers.onError?.(new Error(toFriendlyError(error, "Senkron hatası")));
+    }
+  };
+
+  const interval = window.setInterval(() => {
+    void pullLatest();
+  }, 2000);
+
+  const onVisible = () => {
+    if (document.visibilityState === "visible") {
+      void pullLatest();
+    }
+  };
+
+  document.addEventListener("visibilitychange", onVisible);
+
+  return () => {
+    unsubs.forEach((unsub) => unsub());
+    window.clearInterval(interval);
+    document.removeEventListener("visibilitychange", onVisible);
+  };
+}
+
 export async function createRoom(playerName: string): Promise<string> {
   const playerId = playerIdKey();
   setStoredPlayerName(playerName);
