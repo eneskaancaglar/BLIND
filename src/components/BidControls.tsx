@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getMinimumBid, isValidBid } from "@/lib/gameLogic";
 import { Bid, RANKS, RANK_LABELS, Rank } from "@/lib/types";
 
@@ -26,6 +26,11 @@ export function BidControls({
   const [rank, setRank] = useState<Rank>(minimum.rank);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setCount(minimum.count);
+    setRank(minimum.rank);
+  }, [minimum.count, minimum.rank]);
 
   const valid = isValidBid({ count, rank }, currentBid, activePlayerCount);
 
@@ -54,69 +59,73 @@ export function BidControls({
   }
 
   return (
-    <div className="space-y-4 rounded-2xl border border-neutral-700 bg-neutral-900 p-4">
-      <div>
-        <h3 className="mb-1 text-lg font-semibold">İddia Ver</h3>
-        <p className="text-sm text-neutral-400">
-          Format: adet + rütbe. 2 iddia edilemez; açılınca joker sayılır.
-        </p>
+    <div className="rounded-2xl border border-emerald-800/50 bg-black/50 p-4 backdrop-blur-md">
+      <p className="mb-3 text-center text-sm font-semibold text-emerald-100">Hamlen</p>
+
+      {/* Adet seçici */}
+      <div className="mb-4 flex items-center justify-center gap-4">
+        <button
+          type="button"
+          disabled={disabled || loading || count <= 1}
+          onClick={() => setCount((c) => Math.max(1, c - 1))}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-800 text-2xl font-bold text-white"
+        >
+          −
+        </button>
+        <div className="text-center">
+          <p className="text-[10px] uppercase text-neutral-400">Adet</p>
+          <p className="text-4xl font-black text-white">{count}</p>
+        </div>
+        <button
+          type="button"
+          disabled={disabled || loading || count >= activePlayerCount * 4}
+          onClick={() => setCount((c) => c + 1)}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-800 text-2xl font-bold text-white"
+        >
+          +
+        </button>
       </div>
 
-      {currentBid ? (
-        <p className="rounded-xl bg-neutral-800 px-3 py-2 text-sm">
-          Son iddia:{" "}
-          <span className="font-semibold text-green-400">
-            {currentBid.count} tane {RANK_LABELS[currentBid.rank]} ({currentBid.rank})
-          </span>{" "}
-          — {currentBid.playerName}
-        </p>
-      ) : (
-        <p className="text-sm text-neutral-400">Henüz iddia yok. İlk iddiayı sen ver.</p>
-      )}
-
-      <div className="grid grid-cols-2 gap-3">
-        <label className="space-y-2">
-          <span className="text-sm text-neutral-400">Adet</span>
-          <input
-            type="number"
-            min={1}
-            max={activePlayerCount * 4}
-            value={count}
-            onChange={(e) => setCount(Number(e.target.value))}
-            className="w-full rounded-xl border border-neutral-600 bg-neutral-950 px-4 py-3 text-lg outline-none focus:border-green-500"
-          />
-        </label>
-
-        <label className="space-y-2">
-          <span className="text-sm text-neutral-400">Rütbe</span>
-          <select
-            value={rank}
-            onChange={(e) => setRank(e.target.value as Rank)}
-            className="w-full rounded-xl border border-neutral-600 bg-neutral-950 px-4 py-3 text-lg outline-none focus:border-green-500"
+      {/* Rütbe seçici — kart gibi */}
+      <p className="mb-2 text-center text-[10px] uppercase tracking-wider text-neutral-400">
+        Rütbe seç (2 yok)
+      </p>
+      <div className="mb-4 grid grid-cols-4 gap-1.5 sm:grid-cols-6">
+        {RANKS.map((r) => (
+          <button
+            key={r}
+            type="button"
+            disabled={disabled || loading}
+            onClick={() => setRank(r)}
+            className={`rounded-lg border py-2 text-sm font-bold transition ${
+              rank === r
+                ? "border-emerald-400 bg-emerald-600 text-white shadow-lg shadow-emerald-900/50"
+                : "border-neutral-600 bg-neutral-900/80 text-neutral-200 hover:border-neutral-400"
+            }`}
           >
-            {RANKS.map((r) => (
-              <option key={r} value={r}>
-                {RANK_LABELS[r]} ({r})
-              </option>
-            ))}
-          </select>
-        </label>
+            {r}
+          </button>
+        ))}
       </div>
+
+      <p className="mb-3 text-center text-xs text-emerald-200/60">
+        İddia: <span className="font-bold text-white">{count}× {RANK_LABELS[rank]}</span>
+      </p>
 
       {!valid ? (
-        <p className="text-sm text-amber-300">
-          Bu iddia geçersiz. Daha yüksek adet veya aynı adette daha yüksek rütbe seçin.
+        <p className="mb-2 text-center text-xs text-amber-300">
+          Daha yüksek iddia seç
         </p>
       ) : null}
 
-      {error ? <p className="text-sm text-red-400">{error}</p> : null}
+      {error ? <p className="mb-2 text-center text-xs text-red-400">{error}</p> : null}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
           disabled={disabled || loading || !valid}
           onClick={handleBid}
-          className="rounded-2xl bg-green-600 px-4 py-4 text-lg font-semibold text-white transition hover:bg-green-500 disabled:hover:bg-green-600"
+          className="rounded-xl bg-emerald-600 py-3.5 text-base font-bold text-white shadow-lg shadow-emerald-950/50"
         >
           İddia Ver
         </button>
@@ -124,9 +133,9 @@ export function BidControls({
           type="button"
           disabled={disabled || loading || !canOpen}
           onClick={handleOpen}
-          className="rounded-2xl bg-red-600 px-4 py-4 text-lg font-semibold text-white transition hover:bg-red-500 disabled:hover:bg-red-600"
+          className="rounded-xl bg-red-600 py-3.5 text-base font-bold text-white shadow-lg shadow-red-950/50"
         >
-          Aç
+          Aç!
         </button>
       </div>
     </div>

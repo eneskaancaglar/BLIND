@@ -37,3 +37,20 @@ button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.table-felt {
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(34, 120, 60, 0.35) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 100%, rgba(0, 0, 0, 0.4) 0%, transparent 50%),
+    linear-gradient(160deg, #0f3d22 0%, #0a2818 40%, #061808 100%);
+}
+
+.table-glow {
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.45);
+}
+
+.player-hand {
+  background: linear-gradient(to top, #040a06 0%, #061208 100%);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+}
+
