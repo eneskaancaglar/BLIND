@@ -19,21 +19,23 @@ export default function HomeClient() {
   const searchParams = useSearchParams();
   const inviteCode = searchParams.get("room")?.toUpperCase() ?? "";
 
+  const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [screen, setScreen] = useState<Screen>("home");
   const [activeRoomCode, setActiveRoomCode] = useState("");
+  const [firebaseReady, setFirebaseReady] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    setFirebaseReady(isFirebaseConfigured());
     setName(getStoredPlayerName());
     if (inviteCode) {
       setRoomCode(inviteCode);
     }
   }, [inviteCode]);
-
-  const firebaseReady = isFirebaseConfigured();
 
   const goHome = useCallback(() => {
     setScreen("home");
@@ -116,6 +118,14 @@ export default function HomeClient() {
 
   if (screen === "game" && activeRoomCode) {
     return <GameBoard roomCode={activeRoomCode} onLeave={goHome} />;
+  }
+
+  if (!mounted) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-md items-center justify-center px-4">
+        <p className="text-neutral-400">Yükleniyor...</p>
+      </main>
+    );
   }
 
   return (
