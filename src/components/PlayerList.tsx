@@ -90,25 +90,25 @@ export function PlayerCardsRow({ player, isMe, showAll }: PlayerCardsProps) {
       ) : showAll ? (
         <div className="flex flex-wrap gap-2">
           {player.cards.map((card, index) => (
-            <PlayingCard key={`${player.id}-${index}`} card={card} small />
+            <PlayingCard key={`${player.id}-${index}`} card={card} size="sm" />
           ))}
         </div>
       ) : isMe && !player.isBlind ? (
         <div className="flex flex-wrap gap-2">
           {player.cards.map((card, index) => (
-            <PlayingCard key={`${player.id}-${index}`} card={card} small />
+            <PlayingCard key={`${player.id}-${index}`} card={card} size="sm" />
           ))}
         </div>
       ) : isMe && player.isBlind ? (
         <div className="flex flex-wrap gap-2">
           {Array.from({ length: player.cardCount }).map((_, index) => (
-            <PlayingCard key={`${player.id}-blind-${index}`} blind small />
+            <PlayingCard key={`${player.id}-blind-${index}`} blind size="sm" />
           ))}
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
           {Array.from({ length: player.cardCount }).map((_, index) => (
-            <PlayingCard key={`${player.id}-hidden-${index}`} hidden small />
+            <PlayingCard key={`${player.id}-hidden-${index}`} hidden size="sm" />
           ))}
         </div>
       )}
