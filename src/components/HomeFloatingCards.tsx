@@ -48,7 +48,7 @@ export function HomeFloatingCards() {
       {floaters.map((item) => (
         <div
           key={item.id}
-          className="home-floater absolute opacity-[0.22]"
+          className="home-floater absolute opacity-[0.42]"
           style={{
             left: "50%",
             top: `${item.top}%`,

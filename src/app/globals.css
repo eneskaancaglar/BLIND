@@ -173,9 +173,15 @@ button:disabled {
 }
 
 .home-panel {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+}
+
+.home-panel-light {
+  background: rgba(15, 23, 42, 0.42);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(6px);
 }
 
 /* Tur sonu animasyonları */
