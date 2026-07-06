@@ -144,8 +144,10 @@ export default function HomeClient() {
   }, [inviteCode]);
 
   useEffect(() => {
-    if (!mounted || !firebaseReady || inviteCode) {
-      if (!inviteCode) setRestoring(false);
+    if (!mounted) return;
+
+    if (inviteCode || !firebaseReady) {
+      setRestoring(false);
       return;
     }
 
