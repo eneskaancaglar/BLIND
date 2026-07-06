@@ -9,8 +9,8 @@ import { WinnerOverlay } from "@/components/WinnerOverlay";
 import { useLanguage } from "@/context/LanguageContext";
 import { useSound } from "@/context/SoundContext";
 import { isFirebaseConfigured } from "@/lib/firebase";
-import { getActivePlayers, nextTurnIndex } from "@/lib/gameLogic";
-import { Bid, Player, Room } from "@/lib/types";
+import { getActivePlayers, getHandDisplayCount } from "@/lib/gameLogic";
+import { Player, Room } from "@/lib/types";
 import {
   attachRoomSync,
   continueAfterReveal,
@@ -73,6 +73,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
 
   const roomPhase = room?.phase;
   const roomRoundNumber = room?.roundNumber ?? 0;
+  const blindGetsCards = room?.blindGetsCards ?? false;
 
   useEffect(() => {
     setPlayerId(getPlayerId());
@@ -118,14 +119,17 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     if (!animateDeal || roomRoundNumber <= 0) return;
 
     const me = players.find((p) => p.id === playerId);
-    if (!me || me.isEliminated || me.cardCount === 0) return;
+    if (!me || me.isEliminated) return;
 
-    const key = `${roomRoundNumber}-${me.cardCount}`;
+    const handCount = getHandDisplayCount(me, blindGetsCards);
+    if (handCount === 0) return;
+
+    const key = `${roomRoundNumber}-${handCount}`;
     if (dealSoundRef.current === key) return;
     dealSoundRef.current = key;
 
     const timers: number[] = [];
-    for (let i = 0; i < me.cardCount; i += 1) {
+    for (let i = 0; i < handCount; i += 1) {
       timers.push(
         window.setTimeout(() => {
           play("card");
@@ -134,7 +138,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     }
 
     return () => timers.forEach((t) => window.clearTimeout(t));
-  }, [animateDeal, roomRoundNumber, players, playerId, play]);
+  }, [animateDeal, roomRoundNumber, players, playerId, play, blindGetsCards]);
 
   useEffect(() => {
     if (room?.phase === "revealed" && room.revealResult) {
@@ -165,11 +169,10 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   }, [room?.status, room?.winnerId, room?.winnerName, playerId, play]);
 
   const me = players.find((player) => player.id === playerId);
-  const blindGetsCards = room?.blindGetsCards ?? false;
   const visiblePlayers = useMemo(() => {
     if (!room) return players;
-    return maskPlayersForViewer(players, playerId, room.phase, room.status, blindGetsCards);
-  }, [players, playerId, room, blindGetsCards]);
+    return maskPlayersForViewer(players, playerId, room.phase, room.status);
+  }, [players, playerId, room]);
 
   const opponents = visiblePlayers.filter((p) => p.id !== playerId);
   const activePlayers = getActivePlayers(players);
@@ -193,18 +196,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   async function handleBid(count: number, rank: Parameters<typeof placeBid>[4]) {
     if (!me || !room) return;
 
-    const bid: Bid = {
-      count,
-      rank,
-      playerId,
-      playerName: me.name,
-    };
-
-    setRoom({
-      ...room,
-      currentBid: bid,
-      currentTurnIndex: nextTurnIndex(room.turnOrder, room.currentTurnIndex),
-    });
+    setError("");
 
     try {
       await placeBid(roomCode, playerId, me.name, count, rank);

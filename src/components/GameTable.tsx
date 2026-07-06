@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
+import { getHandDisplayCount } from "@/lib/gameLogic";
 import { getOpponentSeatPosition } from "@/lib/seatLayout";
 import { Player, Room } from "@/lib/types";
 import { CardFan } from "./CardFan";
@@ -34,7 +35,8 @@ export function GameTable({
 }: GameTableProps) {
   const { translate } = useLanguage();
   const blindGetsCards = room.blindGetsCards ?? false;
-  const seesOwnCards = Boolean(me && (showAllCards || !me.isBlind || blindGetsCards));
+  const handCount = me ? getHandDisplayCount(me, blindGetsCards) : 0;
+  const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
 
   const turnName =
     opponents.find((p) => p.id === turnPlayerId)?.name ??
@@ -84,6 +86,7 @@ export function GameTable({
                     player={player}
                     isTurn={player.id === turnPlayerId}
                     showCards={showAllCards}
+                    blindGetsCards={blindGetsCards}
                     animateDeal={animateDeal}
                     dealKey={dealKey}
                   />
@@ -141,8 +144,8 @@ export function GameTable({
               </span>
             ) : null}
           </div>
-          {me && !me.isEliminated ? (
-            <span className="count-badge count-badge-lg">{me.cardCount}</span>
+          {me && !me.isEliminated && handCount > 0 ? (
+            <span className="count-badge count-badge-lg">{handCount}</span>
           ) : null}
         </div>
 
@@ -150,7 +153,7 @@ export function GameTable({
           <p className="text-center text-sm text-white/50">{translate("playerNotFound")}</p>
         ) : me.isEliminated ? (
           <p className="text-center text-sm text-white/50">{translate("eliminated")}</p>
-        ) : seesOwnCards && me.cards.length > 0 ? (
+        ) : seesOwnCards || (showAllCards && !me.isBlind) ? (
           <CardFan
             cards={me.cards}
             size="xl"
@@ -159,10 +162,10 @@ export function GameTable({
             animateDeal={animateDeal}
             dealKey={dealKey}
           />
-        ) : me.isBlind && !blindGetsCards ? (
+        ) : me.isBlind && handCount > 0 ? (
           <>
             <CardFan
-              count={me.cardCount}
+              count={handCount}
               blind
               size="xl"
               spread="wide"
@@ -172,6 +175,8 @@ export function GameTable({
             />
             <p className="mt-2 text-center text-xs text-amber-200">{translate("cantSeeCards")}</p>
           </>
+        ) : me.isBlind ? (
+          <p className="text-center text-sm text-amber-200">{translate("blindNoCards")}</p>
         ) : (
           <CardFan
             cards={me.cards}

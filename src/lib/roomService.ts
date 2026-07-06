@@ -10,6 +10,7 @@ import {
   query,
   setDoc,
   updateDoc,
+  writeBatch,
   Unsubscribe,
 } from "firebase/firestore";
 import { db } from "./firebase";
@@ -30,6 +31,29 @@ import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "./i18n";
 
 const ROOMS = "rooms";
 const PLAYERS = "players";
+const SYNC_DEBOUNCE_MS = 40;
+const SYNC_POLL_MS = 1000;
+
+async function batchWritePlayersAndRoom(
+  roomCode: string,
+  roomRef: ReturnType<typeof doc>,
+  roomUpdate: Record<string, unknown>,
+  players: Player[]
+): Promise<void> {
+  const batch = writeBatch(db);
+
+  for (const player of players) {
+    batch.update(doc(db, ROOMS, roomCode, PLAYERS, player.id), {
+      cards: player.cards,
+      cardCount: player.cardCount,
+      isBlind: player.isBlind,
+      isEliminated: player.isEliminated,
+    });
+  }
+
+  batch.update(roomRef, roomUpdate);
+  await batch.commit();
+}
 
 function playerIdKey(): string {
   if (typeof window === "undefined") return "";
@@ -147,9 +171,46 @@ export function attachRoomSync(
     onError?: (error: Error) => void;
   }
 ): () => void {
+  let latestRoom: Room | null | undefined;
+  let latestPlayers: Player[] | undefined;
+  let flushTimer: number | null = null;
+
+  const flush = (immediate = false) => {
+    if (flushTimer !== null) {
+      window.clearTimeout(flushTimer);
+      flushTimer = null;
+    }
+
+    const run = () => {
+      if (latestRoom !== undefined) handlers.onRoom(latestRoom);
+      if (latestPlayers !== undefined) handlers.onPlayers(latestPlayers);
+    };
+
+    if (immediate) {
+      run();
+      return;
+    }
+
+    flushTimer = window.setTimeout(run, SYNC_DEBOUNCE_MS);
+  };
+
   const unsubs = [
-    subscribeToRoom(roomCode, handlers.onRoom, handlers.onError),
-    subscribeToPlayers(roomCode, handlers.onPlayers, handlers.onError),
+    subscribeToRoom(
+      roomCode,
+      (room) => {
+        latestRoom = room;
+        flush();
+      },
+      handlers.onError
+    ),
+    subscribeToPlayers(
+      roomCode,
+      (players) => {
+        latestPlayers = players;
+        flush();
+      },
+      handlers.onError
+    ),
   ];
 
   const pullLatest = async () => {
@@ -158,8 +219,9 @@ export function attachRoomSync(
         fetchRoomSnapshot(roomCode),
         fetchPlayers(roomCode),
       ]);
-      handlers.onRoom(room);
-      handlers.onPlayers(players);
+      latestRoom = room;
+      latestPlayers = players;
+      flush(true);
     } catch (error) {
       handlers.onError?.(new Error(toFriendlyError(error, "Senkron hatası")));
     }
@@ -167,7 +229,7 @@ export function attachRoomSync(
 
   const interval = window.setInterval(() => {
     void pullLatest();
-  }, 2000);
+  }, SYNC_POLL_MS);
 
   const onVisible = () => {
     if (document.visibilityState === "visible") {
@@ -175,12 +237,19 @@ export function attachRoomSync(
     }
   };
 
+  const onOnline = () => {
+    void pullLatest();
+  };
+
   document.addEventListener("visibilitychange", onVisible);
+  window.addEventListener("online", onOnline);
 
   return () => {
     unsubs.forEach((unsub) => unsub());
     window.clearInterval(interval);
+    if (flushTimer !== null) window.clearTimeout(flushTimer);
     document.removeEventListener("visibilitychange", onVisible);
+    window.removeEventListener("online", onOnline);
   };
 }
 
@@ -306,38 +375,35 @@ export async function startGame(roomCode: string, hostId: string): Promise<void>
   }
 
   let deck = createDeck(room.deckCount ?? 1);
+  const blindGetsCards = room.blindGetsCards ?? false;
   const preparedPlayers = players.map((player) => ({
     ...player,
     cardCount: player.isEliminated ? 0 : Math.max(player.cardCount, 1),
     cards: [] as Player["cards"],
   }));
 
-  const dealt = dealCards(deck, preparedPlayers);
+  const dealt = dealCards(deck, preparedPlayers, blindGetsCards);
   deck = dealt.deck;
   const turnOrder = buildTurnOrder(dealt.players);
 
-  await updateDoc(roomRef, {
-    status: "playing",
-    phase: "bidding",
-    roundNumber: 1,
-    deck,
-    currentBid: null,
-    currentTurnIndex: 0,
-    turnOrder,
-    revealResult: null,
-    lastLoserId: null,
-    lastLoserName: null,
-    winnerId: null,
-    winnerName: null,
-  });
-
-  await Promise.all(
-    dealt.players.map((player) =>
-      updateDoc(doc(db, ROOMS, roomCode, PLAYERS, player.id), {
-        cards: player.cards,
-        cardCount: player.cardCount,
-      })
-    )
+  await batchWritePlayersAndRoom(
+    roomCode,
+    roomRef,
+    {
+      status: "playing",
+      phase: "bidding",
+      roundNumber: 1,
+      deck,
+      currentBid: null,
+      currentTurnIndex: 0,
+      turnOrder,
+      revealResult: null,
+      lastLoserId: null,
+      lastLoserName: null,
+      winnerId: null,
+      winnerName: null,
+    },
+    dealt.players
   );
 }
 
@@ -420,6 +486,7 @@ export async function continueAfterReveal(roomCode: string, actorId: string): Pr
   }
 
   const blindThreshold = room.blindThreshold ?? 6;
+  const blindGetsCards = room.blindGetsCards ?? false;
   const updatedPlayers = players.map((player) => {
     const result = room.revealResult!;
 
@@ -428,7 +495,7 @@ export async function continueAfterReveal(roomCode: string, actorId: string): Pr
     }
 
     if (player.id === result.loserId) {
-      return applyRoundLoss(player, blindThreshold);
+      return applyRoundLoss(player, blindThreshold, blindGetsCards);
     }
 
     return player;
@@ -436,51 +503,39 @@ export async function continueAfterReveal(roomCode: string, actorId: string): Pr
 
   const winner = getWinner(updatedPlayers);
   if (winner) {
-    await updateDoc(roomRef, {
-      status: "finished",
-      phase: "round_end",
-      winnerId: winner.id,
-      winnerName: winner.name,
-    });
-
-    await Promise.all(
-      updatedPlayers.map((player) =>
-        updateDoc(doc(db, ROOMS, roomCode, PLAYERS, player.id), {
-          cards: player.cards,
-          cardCount: player.cardCount,
-          isBlind: player.isBlind,
-          isEliminated: player.isEliminated,
-        })
-      )
+    await batchWritePlayersAndRoom(
+      roomCode,
+      roomRef,
+      {
+        status: "finished",
+        phase: "round_end",
+        winnerId: winner.id,
+        winnerName: winner.name,
+      },
+      updatedPlayers
     );
     return;
   }
 
   let deck = room.deck.length > 0 ? [...room.deck] : createDeck(room.deckCount ?? 1);
-  const dealt = dealCards(deck, updatedPlayers);
+  const dealt = dealCards(deck, updatedPlayers, blindGetsCards);
   deck = dealt.deck;
   const turnOrder = buildTurnOrder(dealt.players, room.revealResult.loserId);
 
-  await updateDoc(roomRef, {
-    status: "playing",
-    phase: "bidding",
-    roundNumber: room.roundNumber + 1,
-    deck,
-    currentBid: null,
-    turnOrder,
-    currentTurnIndex: 0,
-    revealResult: null,
-  });
-
-  await Promise.all(
-    dealt.players.map((player) =>
-      updateDoc(doc(db, ROOMS, roomCode, PLAYERS, player.id), {
-        cards: player.cards,
-        cardCount: player.cardCount,
-        isBlind: player.isBlind,
-        isEliminated: player.isEliminated,
-      })
-    )
+  await batchWritePlayersAndRoom(
+    roomCode,
+    roomRef,
+    {
+      status: "playing",
+      phase: "bidding",
+      roundNumber: room.roundNumber + 1,
+      deck,
+      currentBid: null,
+      turnOrder,
+      currentTurnIndex: 0,
+      revealResult: null,
+    },
+    dealt.players
   );
 }
 
@@ -614,26 +669,27 @@ export function maskPlayersForViewer(
   players: Player[],
   viewerId: string,
   phase: Room["phase"],
-  status: Room["status"],
-  blindGetsCards = false
+  status: Room["status"]
 ): Player[] {
   const showAllCards = phase === "revealed" || (status === "finished" && phase === "round_end");
 
   return players.map((player) => {
-    if (showAllCards) return player;
-    if (player.id === viewerId) {
-      if (player.isBlind && !blindGetsCards) {
-        return {
-          ...player,
-          cards: [],
-        };
+    const hideOwnBlindHand = player.id === viewerId && player.isBlind;
+
+    if (showAllCards) {
+      if (hideOwnBlindHand) {
+        return { ...player, cards: [] };
       }
       return player;
     }
 
-    return {
-      ...player,
-      cards: [],
-    };
+    if (player.id === viewerId) {
+      if (player.isBlind) {
+        return { ...player, cards: [] };
+      }
+      return player;
+    }
+
+    return { ...player, cards: [] };
   });
 }

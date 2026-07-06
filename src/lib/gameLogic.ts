@@ -122,7 +122,11 @@ export function applyBlindRevival(player: Player): Player {
   };
 }
 
-export function applyRoundLoss(player: Player, blindThreshold: number): Player {
+export function applyRoundLoss(
+  player: Player,
+  blindThreshold: number,
+  blindGetsCards = false
+): Player {
   if (player.isBlind) {
     return {
       ...player,
@@ -135,7 +139,7 @@ export function applyRoundLoss(player: Player, blindThreshold: number): Player {
   if (player.cardCount >= blindThreshold) {
     return {
       ...player,
-      cardCount: blindThreshold,
+      cardCount: blindGetsCards ? blindThreshold : 0,
       isBlind: true,
       cards: [],
     };
@@ -150,11 +154,16 @@ export function applyRoundLoss(player: Player, blindThreshold: number): Player {
 
 export function dealCards(
   deck: Card[],
-  players: Player[]
+  players: Player[],
+  blindGetsCards = false
 ): { deck: Card[]; players: Player[] } {
   const remainingDeck = [...deck];
   const updatedPlayers = players.map((player) => {
     if (player.isEliminated) {
+      return { ...player, cards: [], cardCount: 0 };
+    }
+
+    if (player.isBlind && !blindGetsCards) {
       return { ...player, cards: [], cardCount: 0 };
     }
 
@@ -164,14 +173,28 @@ export function dealCards(
       if (card) cards.push(card);
     }
 
-    return { ...player, cards };
+    return { ...player, cards, cardCount: cards.length };
   });
 
   return { deck: remainingDeck, players: updatedPlayers };
 }
 
+export function getHandDisplayCount(player: Player, blindGetsCards = false): number {
+  if (player.isBlind) {
+    return blindGetsCards ? player.cardCount : 0;
+  }
+
+  if (player.cards.length > 0) {
+    return player.cards.length;
+  }
+
+  return player.cardCount;
+}
+
 export function getActivePlayers(players: Player[]): Player[] {
-  return players.filter((player) => !player.isEliminated && player.cardCount > 0);
+  return players.filter(
+    (player) => !player.isEliminated && (player.cardCount > 0 || player.isBlind)
+  );
 }
 
 export function getWinner(players: Player[]): Player | null {

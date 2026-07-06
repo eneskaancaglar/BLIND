@@ -62,9 +62,9 @@ const en = {
   deckDouble: "2 decks",
   blindThreshold: "BLIND at",
   blindThresholdCards: "{count} cards",
-  blindGetsCards: "BLIND sees cards",
-  blindNoCards: "BLIND hidden",
-  blindGetsCardsYes: "Yes",
+  blindGetsCards: "BLIND gets cards",
+  blindNoCards: "No cards — bid blind",
+  blindGetsCardsYes: "Yes (can't see)",
   blindGetsCardsNo: "No (default)",
 
   lobbyBlindCards: "BLIND cards: {value}",
@@ -135,11 +135,11 @@ const en = {
   rule2: "On your turn: bid count + rank (e.g. 3 sixes). Rank order: 3 → Ace. 2s cannot be bid.",
   rule3: 'Say "Open" to reveal all cards. Count = bid rank + all 2s (wild).',
   rule4: "Count ≥ bid → opener loses. Count < bid → last bidder loses.",
-  rule5: "Loser gets +1 card. At the blind limit they become BLIND. If the room hides BLIND cards, they bid without seeing them.",
+  rule5: "Loser gets +1 card. At the blind limit they become BLIND and can never see their cards.",
   rule6: "BLIND who loses is out. Last player with cards wins.",
   rule7: "BLIND rule: BLIND bids. If the next player raises, play continues normally.",
   rule8: "If the next player Opens and the bid is correct: BLIND returns with 5 cards; opener gets +1 penalty.",
-  rule9: "Optional room rule: BLIND can see their cards — they keep their cards at the limit and bid normally; another loss eliminates them.",
+  rule9: "Optional room rule: BLIND gets cards at the limit (e.g. 5) but still cannot see them — cards count in play. If off, BLIND has no cards and bids blind.",
   rulesTitle: "How to Play?",
 } as const;
 
@@ -185,9 +185,9 @@ const tr: Record<keyof typeof en, string> = {
   deckDouble: "2 deste",
   blindThreshold: "BLIND eşiği",
   blindThresholdCards: "{count} kart",
-  blindGetsCards: "BLIND kartları",
-  blindNoCards: "BLIND gizli",
-  blindGetsCardsYes: "Evet",
+  blindGetsCards: "BLIND'e kart ver",
+  blindNoCards: "Kartsız — kör tahmin",
+  blindGetsCardsYes: "Evet (görmez)",
   blindGetsCardsNo: "Hayır (varsayılan)",
 
   lobbyBlindCards: "BLIND kart: {value}",
@@ -261,11 +261,11 @@ const tr: Record<keyof typeof en, string> = {
   rule2: "Sıra sende: adet + rütbe iddia et (ör. 3 tane 6). Rütbe sırası: 3 → As. 2 iddia edilemez.",
   rule3: "İstersen Aç de — tüm kartlar açılır. Sayım = iddia edilen rütbe + tüm 2'ler (joker).",
   rule4: "Sayım ≥ iddia → açan kaybeder. Sayım < iddia → son iddia eden kaybeder.",
-  rule5: "Kaybeden +1 kart alır. BLIND eşiğinde BLIND olur. Oda kuralı gizliyse kartlarını göremez.",
+  rule5: "Kaybeden +1 kart alır. BLIND eşiğinde BLIND olur ve kartlarını asla göremez.",
   rule6: "BLIND kaybederse elenir. Kartı kalan son oyuncu kazanır.",
   rule7: "BLIND kuralı: BLIND iddia eder. Sonraki yükseltirse oyun normal sürer.",
   rule8: "Sonraki Aç derse ve iddia doğruysa: BLIND 5 kartla döner; açan +1 kart cezası alır.",
-  rule9: "Oda kuralı: BLIND kartlarını görebilir — eşikte kartları kalır, normal iddia eder; tekrar kaybederse elenir.",
+  rule9: "Oda kuralı: BLIND sınırda kart alır (ör. 5) ama yine göremez — kartlar oyunda sayılır. Kapalıysa kartsız tahmin yapar.",
   rulesTitle: "Nasıl Oynanır?",
 };
 

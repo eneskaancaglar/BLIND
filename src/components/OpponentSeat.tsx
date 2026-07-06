@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
+import { getHandDisplayCount } from "@/lib/gameLogic";
 import { Player } from "@/lib/types";
 import { CardFan } from "./CardFan";
 
@@ -8,6 +9,7 @@ type OpponentSeatProps = {
   player: Player;
   isTurn: boolean;
   showCards: boolean;
+  blindGetsCards?: boolean;
   animateDeal?: boolean;
   dealKey?: string | number;
 };
@@ -16,10 +18,12 @@ export function OpponentSeat({
   player,
   isTurn,
   showCards,
+  blindGetsCards = false,
   animateDeal,
   dealKey,
 }: OpponentSeatProps) {
   const { translate } = useLanguage();
+  const displayCount = getHandDisplayCount(player, blindGetsCards);
 
   if (player.isEliminated) {
     return (
@@ -53,11 +57,13 @@ export function OpponentSeat({
         ) : null}
       </div>
 
-      {showCards ? (
+      {showCards && player.cards.length > 0 ? (
         <CardFan cards={player.cards} size="sm" spread="tight" tilt="table" />
-      ) : player.isBlind ? (
+      ) : showCards && player.isBlind ? (
+        <span className="text-[10px] font-semibold text-amber-200">{translate("blindNoCards")}</span>
+      ) : player.isBlind && displayCount > 0 ? (
         <CardFan
-          count={player.cardCount}
+          count={displayCount}
           blind
           size="sm"
           spread="tight"
@@ -66,9 +72,11 @@ export function OpponentSeat({
           animateDeal={animateDeal}
           dealKey={dealKey}
         />
+      ) : player.isBlind ? (
+        <span className="text-[10px] font-semibold text-amber-200">{translate("blindNoCards")}</span>
       ) : (
         <CardFan
-          count={player.cardCount}
+          count={displayCount}
           faceDown
           size="sm"
           spread="tight"
