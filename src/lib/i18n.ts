@@ -16,7 +16,7 @@ export const DEFAULT_ROOM_SETTINGS: RoomSettings = {
   blindThreshold: 6,
 };
 
-type Vars = Record<string, string | number>;
+export type Vars = Record<string, string | number>;
 
 const en = {
   cardGame: "Card Game",

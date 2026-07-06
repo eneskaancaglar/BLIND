@@ -5,6 +5,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { PlayerList } from "@/components/PlayerList";
 import { useLanguage } from "@/context/LanguageContext";
 import { isFirebaseConfigured } from "@/lib/firebase";
+import { t } from "@/lib/i18n";
 import { Player, Room } from "@/lib/types";
 import {
   buildJoinLink,
@@ -20,7 +21,7 @@ type RoomLobbyProps = {
 };
 
 export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) {
-  const { translate } = useLanguage();
+  const { translate, language } = useLanguage();
   const [playerId, setPlayerId] = useState("");
   const [shareLink, setShareLink] = useState("");
   const [copied, setCopied] = useState(false);
@@ -40,7 +41,7 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
     const detach = attachRoomSync(roomCode, {
       onRoom: (nextRoom) => {
         if (!nextRoom) {
-          setError(translate("lobbyNotFound"));
+          setError(t(language, "lobbyNotFound"));
           return;
         }
         setRoom(nextRoom);
@@ -53,7 +54,7 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
     });
 
     return detach;
-  }, [roomCode, onGameStarted]);
+  }, [roomCode, onGameStarted, language]);
 
   async function copyShareLink() {
     if (!shareLink) return;

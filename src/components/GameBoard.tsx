@@ -68,7 +68,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     }
 
     prevPhaseRef.current = room.phase;
-  }, [room?.phase]);
+  }, [room]);
 
   const me = players.find((player) => player.id === playerId);
   const visiblePlayers = useMemo(() => {
