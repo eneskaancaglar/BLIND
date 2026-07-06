@@ -90,14 +90,22 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     if (!roomCode || !isFirebaseConfigured()) return;
 
     return attachRoomSync(roomCode, {
-      onSync: setSyncState,
+      onSync: (state) => {
+        setSyncState({
+          room: state.room,
+          players: state.players.map((player) => ({ ...player })),
+        });
+      },
       onError: (err) => setError(err.message),
     });
   }, [roomCode]);
 
   const applyFreshState = useCallback(async () => {
     const fresh = await refreshRoomState(roomCode);
-    setSyncState(fresh);
+    setSyncState({
+      room: fresh.room,
+      players: fresh.players.map((player) => ({ ...player })),
+    });
   }, [roomCode]);
 
   useEffect(() => {

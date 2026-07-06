@@ -33,7 +33,17 @@ import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "./i18n";
 
 const ROOMS = "rooms";
 const PLAYERS = "players";
-const SYNC_POLL_MS = 350;
+const MOBILE_POLL_MS = 220;
+const DESKTOP_POLL_MS = 600;
+
+function isMobileBrowser(): boolean {
+  if (typeof window === "undefined") return false;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
+function touchRoom<T extends Record<string, unknown>>(patch: T): T & { syncVersion: number } {
+  return { ...patch, syncVersion: Date.now() };
+}
 
 export type RoomSyncState = {
   room: Room | null;
@@ -78,7 +88,7 @@ async function batchWritePlayersAndRoom(
     });
   }
 
-  batch.update(roomRef, roomUpdate);
+  batch.update(roomRef, touchRoom(roomUpdate));
   await batch.commit();
 }
 
@@ -197,74 +207,91 @@ export function attachRoomSync(
     onError?: (error: Error) => void;
   }
 ): () => void {
-  let latestRoom: Room | null | undefined;
-  let latestPlayers: Player[] | undefined;
-
-  const emit = () => {
-    if (latestRoom === undefined || latestPlayers === undefined) return;
-    handlers.onSync({ room: latestRoom, players: latestPlayers });
-  };
-
-  const unsubs = [
-    subscribeToRoom(
-      roomCode,
-      (room) => {
-        latestRoom = room;
-        emit();
-      },
-      handlers.onError
-    ),
-    subscribeToPlayers(
-      roomCode,
-      (players) => {
-        latestPlayers = players;
-        emit();
-      },
-      handlers.onError
-    ),
-  ];
+  let stopped = false;
+  let pulling = false;
+  let pullQueued = false;
+  let pollTimer: number | null = null;
+  const mobile = isMobileBrowser();
+  const pollMs = mobile ? MOBILE_POLL_MS : DESKTOP_POLL_MS;
 
   const pullLatest = async () => {
+    if (stopped) return;
+    if (pulling) {
+      pullQueued = true;
+      return;
+    }
+
+    pulling = true;
     try {
       const state = await refreshRoomState(roomCode);
-      latestRoom = state.room;
-      latestPlayers = state.players;
-      handlers.onSync(state);
+      if (!stopped) {
+        handlers.onSync(state);
+      }
     } catch (error) {
       handlers.onError?.(new Error(toFriendlyError(error, "Senkron hatası")));
+    } finally {
+      pulling = false;
+      if (pullQueued) {
+        pullQueued = false;
+        void pullLatest();
+      }
     }
+  };
+
+  const schedulePoll = () => {
+    if (stopped) return;
+    if (pollTimer !== null) {
+      window.clearTimeout(pollTimer);
+    }
+    pollTimer = window.setTimeout(() => {
+      pollTimer = null;
+      void pullLatest().finally(schedulePoll);
+    }, pollMs);
+  };
+
+  const kick = () => {
+    void pullLatest();
   };
 
   void pullLatest();
+  schedulePoll();
 
-  const interval = window.setInterval(() => {
-    void pullLatest();
-  }, SYNC_POLL_MS);
+  const unsubs = mobile
+    ? []
+    : [
+        subscribeToRoom(
+          roomCode,
+          () => kick(),
+          handlers.onError
+        ),
+        subscribeToPlayers(
+          roomCode,
+          () => kick(),
+          handlers.onError
+        ),
+      ];
 
   const onVisible = () => {
-    if (document.visibilityState === "visible") {
-      void pullLatest();
-    }
+    if (document.visibilityState === "visible") kick();
   };
 
-  const onOnline = () => {
-    void pullLatest();
-  };
-
-  const onFocus = () => {
-    void pullLatest();
+  const onPageShow = (event: PageTransitionEvent) => {
+    if (event.persisted) kick();
   };
 
   document.addEventListener("visibilitychange", onVisible);
-  window.addEventListener("online", onOnline);
-  window.addEventListener("focus", onFocus);
+  window.addEventListener("online", kick);
+  window.addEventListener("focus", kick);
+  window.addEventListener("pageshow", onPageShow);
 
   return () => {
+    stopped = true;
     unsubs.forEach((unsub) => unsub());
-    window.clearInterval(interval);
+    if (pollTimer !== null) window.clearTimeout(pollTimer);
     document.removeEventListener("visibilitychange", onVisible);
-    window.removeEventListener("online", onOnline);
-    window.removeEventListener("focus", onFocus);
+    window.removeEventListener("online", kick);
+    window.removeEventListener("focus", kick);
+    window.removeEventListener("pageshow", onPageShow);
   };
 }
 
@@ -305,6 +332,7 @@ export async function createRoom(
     lastLoserName: null,
     revealResult: null,
     createdAt: Date.now(),
+    syncVersion: Date.now(),
   };
 
   const player: Player = {
@@ -367,9 +395,9 @@ export async function joinRoom(roomCode: string, playerName: string): Promise<vo
   };
 
   await setDoc(playerRef, player);
-  await updateDoc(roomRef, {
+  await updateDoc(roomRef, touchRoom({
     turnOrder: [...room.turnOrder, playerId],
-  });
+  }));
 
   localStorage.setItem("blind_room_code", normalizedCode);
 }
@@ -442,10 +470,10 @@ export async function placeBid(
   if (currentPlayerId !== playerId) throw new Error("Sıra sizde değil.");
 
   const bid: Bid = { count, rank, playerId, playerName };
-  await updateDoc(roomRef, {
+  await updateDoc(roomRef, touchRoom({
     currentBid: bid,
     currentTurnIndex: nextTurnIndex(room.turnOrder, room.currentTurnIndex),
-  });
+  }));
 }
 
 export async function openChallenge(
@@ -475,12 +503,12 @@ export async function openChallenge(
     room.turnOrder
   );
 
-  await updateDoc(roomRef, {
+  await updateDoc(roomRef, touchRoom({
     phase: "revealed",
     revealResult,
     lastLoserId: revealResult.loserId,
     lastLoserName: revealResult.loserName,
-  });
+  }));
 }
 
 export async function continueAfterReveal(roomCode: string, actorId: string): Promise<void> {
@@ -585,6 +613,7 @@ export async function leaveGame(roomCode: string, playerId: string): Promise<voi
     isBlind: false,
     isHost: false,
   });
+  await updateDoc(roomRef, touchRoom({}));
 
   const updatedPlayers = players.map((player) =>
     player.id === playerId
@@ -598,14 +627,14 @@ export async function leaveGame(roomCode: string, playerId: string): Promise<voi
   if (winner || active.length <= 1) {
     const w = winner ?? active[0];
     if (w) {
-      await updateDoc(roomRef, {
+      await updateDoc(roomRef, touchRoom({
         status: "finished",
         phase: "round_end",
         winnerId: w.id,
         winnerName: w.name,
         revealResult: null,
         ...(room.hostId === playerId ? { hostId: w.id } : {}),
-      });
+      }));
       await updateDoc(doc(getDb(), ROOMS, roomCode, PLAYERS, w.id), { isHost: true });
     }
     clearStoredRoomCode();
@@ -637,7 +666,7 @@ export async function leaveGame(roomCode: string, playerId: string): Promise<voi
   }
 
   if (Object.keys(roomUpdates).length > 0) {
-    await updateDoc(roomRef, roomUpdates);
+    await updateDoc(roomRef, touchRoom(roomUpdates));
   }
 
   if (room.phase === "revealed" && room.revealResult && active[0]) {
@@ -653,59 +682,24 @@ export async function leaveGame(roomCode: string, playerId: string): Promise<voi
 
 export function subscribeToRoom(
   roomCode: string,
-  onRoom: (room: Room | null) => void,
+  onChange: () => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  const roomRef = doc(getDb(), ROOMS, roomCode);
-
   return onSnapshot(
-    roomRef,
-    (snapshot) => {
-      if (!snapshot.exists()) {
-        onRoom(null);
-        return;
-      }
-
-      onRoom(snapshot.data() as Room);
-
-      if (snapshot.metadata.fromCache) {
-        void getDocFromServer(roomRef)
-          .then((serverSnap) => {
-            if (serverSnap.exists()) {
-              onRoom(serverSnap.data() as Room);
-            }
-          })
-          .catch(() => {});
-      }
-    },
+    doc(getDb(), ROOMS, roomCode),
+    () => onChange(),
     (error) => onError?.(error)
   );
 }
 
 export function subscribeToPlayers(
   roomCode: string,
-  onPlayers: (players: Player[]) => void,
+  onChange: () => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  const playersQuery = query(
-    collection(getDb(), ROOMS, roomCode, PLAYERS),
-    orderBy("joinedAt", "asc")
-  );
-
   return onSnapshot(
-    playersQuery,
-    (snapshot) => {
-      const players = snapshot.docs.map((d) => d.data() as Player);
-      onPlayers(players);
-
-      if (snapshot.metadata.fromCache) {
-        void getDocsFromServer(playersQuery)
-          .then((serverSnap) => {
-            onPlayers(serverSnap.docs.map((d) => d.data() as Player));
-          })
-          .catch(() => {});
-      }
-    },
+    query(collection(getDb(), ROOMS, roomCode, PLAYERS), orderBy("joinedAt", "asc")),
+    () => onChange(),
     (error) => onError?.(error)
   );
 }

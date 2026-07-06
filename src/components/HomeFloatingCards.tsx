@@ -7,10 +7,12 @@ import type { Card, Suit } from "@/lib/types";
 const SUITS: Suit[] = ["H", "D", "C", "S"];
 const RANKS = ["A", "K", "Q", "J", "10", "9", "8", "7"] as const;
 
+const X_OFFSETS = [-105, -75, -45, -15, 15, 45, 75, 105, -90, -30, 30, 90];
+
 type Floater = {
   id: number;
   card: Card;
-  left: number;
+  xOffset: number;
   top: number;
   delay: number;
   duration: number;
@@ -29,11 +31,11 @@ function buildFloaters(count: number): Floater[] {
   return Array.from({ length: count }, (_, i) => ({
     id: i,
     card: randomCard(i * 7 + 3),
-    left: 28 + ((i * 19 + 7) % 44),
-    top: 10 + ((i * 23 + 5) % 72),
+    xOffset: X_OFFSETS[i % X_OFFSETS.length],
+    top: 14 + ((i * 17 + 5) % 62),
     delay: (i % 8) * 0.85,
     duration: 11 + (i % 6) * 1.8,
-    rotation: -22 + (i % 9) * 6,
+    rotation: -18 + (i % 9) * 5,
     drift: i % 2 === 0 ? 1 : -1,
   }));
 }
@@ -48,10 +50,11 @@ export function HomeFloatingCards() {
           key={item.id}
           className="home-floater absolute opacity-[0.22]"
           style={{
-            left: `${item.left}%`,
+            left: "50%",
             top: `${item.top}%`,
             animationDelay: `${item.delay}s`,
             animationDuration: `${item.duration}s`,
+            ["--x" as string]: `${item.xOffset}px`,
             ["--drift" as string]: item.drift,
             ["--rot" as string]: `${item.rotation}deg`,
           }}

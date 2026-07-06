@@ -48,7 +48,10 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
           setError(t(language, "lobbyNotFound"));
           return;
         }
-        setSyncState({ room: nextRoom, players: nextPlayers });
+        setSyncState({
+          room: nextRoom,
+          players: nextPlayers.map((player) => ({ ...player })),
+        });
         if (nextRoom.status === "playing" || nextRoom.status === "finished") {
           onGameStarted();
         }

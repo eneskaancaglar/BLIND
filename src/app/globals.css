@@ -299,10 +299,10 @@ button:disabled {
 @keyframes home-float {
   0%,
   100% {
-    transform: translateX(-50%) translateY(0) rotate(var(--rot, 0deg));
+    transform: translateX(calc(-50% + var(--x, 0px))) translateY(0) rotate(var(--rot, 0deg));
   }
   50% {
-    transform: translateX(calc(-50% + var(--drift, 1) * 16px)) translateY(-22px)
+    transform: translateX(calc(-50% + var(--x, 0px) + var(--drift, 1) * 14px)) translateY(-22px)
       rotate(calc(var(--rot, 0deg) + 9deg));
   }
 }

@@ -49,6 +49,7 @@ export type Room = {
   lastLoserName: string | null;
   revealResult: RevealResult | null;
   createdAt: number;
+  syncVersion?: number;
 };
 
 export type Player = {
