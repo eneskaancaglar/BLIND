@@ -38,10 +38,10 @@ function RoomSettingsPanel({
 
   return (
     <div className="home-panel-light space-y-4 rounded-2xl p-4">
-      <p className="text-sm font-bold text-fuchsia-100">{translate("lobbySettings")}</p>
+      <p className="text-sm font-medium text-slate-200/90">{translate("lobbySettings")}</p>
 
       <div>
-        <p className="mb-2 text-xs font-medium text-cyan-200/90">{translate("deckCount")}</p>
+        <p className="mb-2 text-xs text-slate-400">{translate("deckCount")}</p>
         <div className="grid grid-cols-2 gap-2">
           {([1, 2] as const).map((count) => (
             <button
@@ -52,9 +52,7 @@ function RoomSettingsPanel({
                 setRoomSettings((s) => ({ ...s, deckCount: count }));
               }}
               className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
-                roomSettings.deckCount === count
-                  ? "home-chip-active-fuchsia"
-                  : ""
+                roomSettings.deckCount === count ? "home-chip-active" : ""
               }`}
             >
               {count === 1 ? translate("deckSingle") : translate("deckDouble")}
@@ -64,7 +62,7 @@ function RoomSettingsPanel({
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-medium text-amber-200/90">{translate("blindThreshold")}</p>
+        <p className="mb-2 text-xs text-slate-400">{translate("blindThreshold")}</p>
         <div className="grid grid-cols-3 gap-2">
           {([5, 6, 7] as const).map((threshold) => (
             <button
@@ -75,9 +73,7 @@ function RoomSettingsPanel({
                 setRoomSettings((s) => ({ ...s, blindThreshold: threshold }));
               }}
               className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
-                roomSettings.blindThreshold === threshold
-                  ? "home-chip-active-amber"
-                  : ""
+                roomSettings.blindThreshold === threshold ? "home-chip-active" : ""
               }`}
             >
               {translate("blindThresholdCards", { count: threshold })}
@@ -87,7 +83,7 @@ function RoomSettingsPanel({
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-medium text-fuchsia-200/90">{translate("blindGetsCards")}</p>
+        <p className="mb-2 text-xs text-slate-400">{translate("blindGetsCards")}</p>
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -96,7 +92,7 @@ function RoomSettingsPanel({
               setRoomSettings((s) => ({ ...s, blindGetsCards: false }));
             }}
             className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
-              !roomSettings.blindGetsCards ? "home-chip-active-cyan" : ""
+              !roomSettings.blindGetsCards ? "home-chip-active" : ""
             }`}
           >
             {translate("blindGetsCardsNo")}
@@ -108,7 +104,7 @@ function RoomSettingsPanel({
               setRoomSettings((s) => ({ ...s, blindGetsCards: true }));
             }}
             className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
-              roomSettings.blindGetsCards ? "home-chip-active-fuchsia" : ""
+              roomSettings.blindGetsCards ? "home-chip-active" : ""
             }`}
           >
             {translate("blindGetsCardsYes")}
@@ -270,17 +266,20 @@ export default function HomeClient() {
     <>
       <HowToPlayModal open={showRules} onClose={() => setShowRules(false)} />
 
-      <main className="home-shell relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col gap-4 px-4 py-6">
+      <main className="home-shell relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-0 pt-10">
         <HomeFloatingCards />
 
-        <div className="relative z-10 text-center">
-          <h1 className="bg-gradient-to-r from-rose-200 via-fuchsia-200 to-cyan-300 bg-clip-text text-6xl font-black tracking-tight text-transparent drop-shadow-[0_0_28px_rgba(232,121,249,0.35)]">
-            BLIND
-          </h1>
-        </div>
+        <div className="relative z-10 flex flex-1 flex-col gap-5">
+          <header className="home-brand-wrap">
+            <span className="home-brand-line" aria-hidden />
+            <h1 className="home-brand-title">BLIND</h1>
+            <p className="home-brand-tagline">{translate("homeTagline")}</p>
+            <span className="home-brand-line" aria-hidden />
+          </header>
 
-        <label className="home-panel-light relative z-10 block space-y-2 rounded-2xl p-4">
-          <span className="text-sm font-medium text-violet-100">{translate("playerName")}</span>
+          <div className="mt-2 space-y-5">
+        <label className="home-panel-light block space-y-2 rounded-2xl p-4">
+          <span className="text-sm font-medium text-slate-300">{translate("playerName")}</span>
           <input
             value={name}
             onChange={(e) => {
@@ -293,33 +292,33 @@ export default function HomeClient() {
         </label>
 
         {inviteCode ? (
-          <div className="relative z-10 rounded-2xl border border-emerald-400/40 bg-emerald-500/15 p-4 text-center text-sm text-emerald-100">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center text-sm text-slate-200">
             <p className="font-semibold">{translate("invitedToRoom", { code: inviteCode })}</p>
           </div>
         ) : null}
 
         {!firebaseReady ? (
-          <div className="relative z-10 rounded-2xl border border-amber-400/40 bg-amber-500/10 p-3 text-center text-sm text-amber-100">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-center text-sm text-slate-300">
             {translate("firebaseMissing")}
           </div>
         ) : null}
 
         {error ? (
-          <div className="relative z-10 rounded-2xl border border-red-400/40 bg-red-500/15 p-3 text-center text-sm text-red-200">
+          <div className="rounded-2xl border border-red-400/25 bg-red-950/30 p-3 text-center text-sm text-red-200/90">
             {error}
           </div>
         ) : null}
 
-        <div className="home-panel relative z-10 space-y-4 rounded-3xl p-5 shadow-xl">
+        <div className="home-panel space-y-4 rounded-3xl p-5">
           <form onSubmit={handleJoin} className="space-y-4">
             <label className="block space-y-2">
-              <span className="text-sm text-violet-100">{translate("roomCode")}</span>
+              <span className="text-sm text-slate-300">{translate("roomCode")}</span>
               <input
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                 placeholder={translate("roomCodePlaceholder")}
                 maxLength={6}
-                className="home-input home-input-cyan w-full rounded-xl px-4 py-3.5 text-center text-xl tracking-[0.35em] text-white outline-none placeholder:tracking-[0.35em]"
+                className="home-input w-full rounded-xl px-4 py-3.5 text-center text-xl tracking-[0.35em] text-white outline-none placeholder:tracking-[0.35em]"
               />
             </label>
 
@@ -330,7 +329,7 @@ export default function HomeClient() {
                 resumeAudio();
                 play("click");
               }}
-              className="home-btn-join w-full rounded-xl py-3.5 text-lg font-bold transition hover:brightness-110 disabled:opacity-50"
+              className="home-btn-join w-full rounded-xl py-3.5 text-base font-semibold disabled:opacity-50"
             >
               {loading
                 ? translate("wait")
@@ -341,13 +340,13 @@ export default function HomeClient() {
           </form>
         </div>
 
-        <div className="relative z-10 space-y-3">
+        <div className="space-y-3">
           {!showCreateSetup ? (
             <button
               type="button"
               disabled={loading || !firebaseReady}
               onClick={() => clickButton(() => setShowCreateSetup(true))}
-              className="home-btn-create w-full rounded-2xl py-3.5 text-lg font-bold transition hover:brightness-110 disabled:opacity-50"
+              className="home-btn-create w-full rounded-2xl py-3.5 text-base font-semibold disabled:opacity-50"
             >
               {translate("createRoom")}
             </button>
@@ -362,33 +361,34 @@ export default function HomeClient() {
                 type="button"
                 disabled={loading || !firebaseReady}
                 onClick={() => clickButton(() => void handleCreate())}
-                className="home-btn-start w-full rounded-xl py-3.5 text-lg font-bold transition hover:brightness-110 disabled:opacity-50"
+                className="home-btn-start w-full rounded-xl py-3.5 text-base font-semibold disabled:opacity-50"
               >
                 {loading ? translate("wait") : translate("startRoom")}
               </button>
               <button
                 type="button"
                 onClick={() => clickButton(() => setShowCreateSetup(false))}
-                className="w-full py-2 text-center text-sm text-violet-200/70 underline"
+                className="w-full py-2 text-center text-sm text-slate-400 underline"
               >
                 {translate("close")}
               </button>
             </div>
           )}
         </div>
-
-        <button
-          type="button"
-          onClick={() => clickButton(() => setShowRules(true))}
-          className="home-btn-rules relative z-10 w-full rounded-2xl py-3 text-sm font-bold transition hover:brightness-110"
-        >
-          {translate("howToPlay")}
-        </button>
-
-        <div className="relative z-10 mt-auto flex items-center justify-center gap-2 pb-1">
-          <LanguageSwitcher compact />
-          <SoundToggle compact />
+          </div>
         </div>
+
+        <footer className="home-footer-bar relative z-10">
+          <button
+            type="button"
+            onClick={() => clickButton(() => setShowRules(true))}
+            className="home-footer-btn"
+          >
+            {translate("howToPlay")}
+          </button>
+          <LanguageSwitcher footer />
+          <SoundToggle footer />
+        </footer>
       </main>
     </>
   );

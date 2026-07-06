@@ -40,6 +40,7 @@ const en = {
   soundOff: "Sound off",
 
   homeSubtitle: "Create a room, share the code, play from your phone.",
+  homeTagline: "Bid boldly. Stay hidden. Win the last hand.",
   howToPlay: "How to Play?",
   invitedToRoom: "You're invited to room {code}",
   firebaseMissing: "No Firebase connection — check .env.local",
@@ -167,6 +168,7 @@ const tr: Record<keyof typeof en, string> = {
   soundOff: "Ses kapalı",
 
   homeSubtitle: "Oda kur, kodu paylaş, telefondan oyna.",
+  homeTagline: "Cesurca iddia et. Gizli kal. Son eli kazan.",
   howToPlay: "Nasıl Oynanır?",
   invitedToRoom: "{code} odasına davet edildin",
   firebaseMissing: "Firebase bağlantısı yok — .env.local kontrol et",

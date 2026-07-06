@@ -6,13 +6,27 @@ import type { Language } from "@/lib/i18n";
 type LanguageSwitcherProps = {
   className?: string;
   compact?: boolean;
+  footer?: boolean;
 };
 
-export function LanguageSwitcher({ className = "", compact = false }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ className = "", compact = false, footer = false }: LanguageSwitcherProps) {
   const { language, setLanguage, translate } = useLanguage();
 
   function select(lang: Language) {
     setLanguage(lang);
+  }
+
+  if (footer) {
+    return (
+      <button
+        type="button"
+        onClick={() => select(language === "en" ? "tr" : "en")}
+        className={`home-footer-btn ${className}`}
+        aria-label={translate("language")}
+      >
+        {language === "en" ? translate("english") : translate("turkish")}
+      </button>
+    );
   }
 
   return (
@@ -31,8 +45,8 @@ export function LanguageSwitcher({ className = "", compact = false }: LanguageSw
               compact ? "px-2 py-1 text-[10px]" : "px-3 py-1.5 text-xs"
             } ${
               language === lang
-                ? "bg-gradient-to-r from-fuchsia-500 to-violet-600 text-white"
-                : "text-violet-200/70 hover:text-white"
+                ? "bg-white/15 text-white"
+                : "text-slate-300/70 hover:text-white"
             }`}
           >
             {lang === "en" ? translate("english") : translate("turkish")}

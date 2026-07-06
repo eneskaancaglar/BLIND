@@ -7,9 +7,10 @@ import { resumeAudio } from "@/lib/sounds";
 type SoundToggleProps = {
   className?: string;
   compact?: boolean;
+  footer?: boolean;
 };
 
-export function SoundToggle({ className = "", compact = false }: SoundToggleProps) {
+export function SoundToggle({ className = "", compact = false, footer = false }: SoundToggleProps) {
   const { enabled, setEnabled, play } = useSound();
   const { translate } = useLanguage();
 
@@ -20,6 +21,22 @@ export function SoundToggle({ className = "", compact = false }: SoundToggleProp
     if (next) play("click");
   }
 
+  if (footer) {
+    return (
+      <button
+        type="button"
+        onClick={toggle}
+        aria-pressed={enabled}
+        className={`home-footer-btn ${className}`}
+      >
+        <span aria-hidden className="mr-1">
+          {enabled ? "🔊" : "🔇"}
+        </span>
+        {enabled ? translate("soundOn") : translate("soundOff")}
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"
@@ -27,7 +44,7 @@ export function SoundToggle({ className = "", compact = false }: SoundToggleProp
       aria-pressed={enabled}
       aria-label={enabled ? translate("soundOff") : translate("soundOn")}
       title={enabled ? translate("soundOff") : translate("soundOn")}
-      className={`flex items-center justify-center rounded-full border border-white/10 bg-black/30 text-violet-100 transition hover:bg-black/50 ${
+      className={`flex items-center justify-center rounded-full border border-white/10 bg-black/30 text-slate-200 transition hover:bg-black/50 ${
         compact ? "h-7 w-7 text-sm" : "gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold"
       } ${className}`}
     >
