@@ -1,12 +1,14 @@
 "use client";
 
 import {
+  addDoc,
   collection,
   doc,
   getDoc,
   getDocFromServer,
   getDocs,
   getDocsFromServer,
+  limit,
   onSnapshot,
   orderBy,
   query,
@@ -28,11 +30,12 @@ import {
   nextTurnIndex,
   resolveChallenge,
 } from "./gameLogic";
-import { Bid, Player, Rank, Room } from "./types";
+import { Bid, ChatMessage, Player, Rank, Room } from "./types";
 import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "./i18n";
 
 const ROOMS = "rooms";
 const PLAYERS = "players";
+const MESSAGES = "messages";
 const MOBILE_POLL_MS = 220;
 const DESKTOP_POLL_MS = 600;
 
@@ -730,5 +733,49 @@ export function maskPlayersForViewer(
     }
 
     return { ...player, cards: [] };
+  });
+}
+
+export function attachMessageSync(
+  roomCode: string,
+  handlers: {
+    onMessages: (messages: ChatMessage[]) => void;
+    onError?: (error: Error) => void;
+  }
+): () => void {
+  const q = query(
+    collection(getDb(), ROOMS, roomCode, MESSAGES),
+    orderBy("createdAt", "desc"),
+    limit(40)
+  );
+
+  const unsub = onSnapshot(
+    q,
+    (snapshot) => {
+      const messages = snapshot.docs
+        .map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<ChatMessage, "id">),
+        }))
+        .reverse();
+      handlers.onMessages(messages);
+    },
+    (error) => handlers.onError?.(new Error(toFriendlyError(error, "Mesaj senkron hatası")))
+  );
+
+  return unsub;
+}
+
+export async function sendEmojiMessage(
+  roomCode: string,
+  playerId: string,
+  playerName: string,
+  emoji: string
+): Promise<void> {
+  await addDoc(collection(getDb(), ROOMS, roomCode, MESSAGES), {
+    playerId,
+    playerName,
+    emoji,
+    createdAt: Date.now(),
   });
 }

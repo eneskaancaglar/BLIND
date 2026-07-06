@@ -36,18 +36,26 @@ const TILT_CLASS = {
   flat: "card-tilt-flat",
 };
 
-function CardBack({ size, blind }: { size: CardSize; blind?: boolean }) {
+function CardBack({
+  size,
+  blind,
+  tableBack,
+}: {
+  size: CardSize;
+  blind?: boolean;
+  tableBack?: boolean;
+}) {
   return (
-    <div className={`card-body card-body-back ${SIZE_CLASSES[size]}`}>
-      <div className="card-back-pattern absolute inset-1 rounded-[0.6rem]" />
-      <div className="card-back-diamond absolute inset-3 rounded-md border border-white/15" />
+    <div
+      className={`card-body ${tableBack ? "card-body-back-table" : "card-body-back"} ${SIZE_CLASSES[size]}`}
+    >
+      <div className="card-back-pattern absolute inset-[3px]" />
+      <div className="card-back-frame" />
       <div className="absolute inset-0 flex items-center justify-center">
         {blind ? (
-          <span className="text-2xl font-black text-white/90 drop-shadow">?</span>
+          <span className="text-xl font-light tracking-widest text-slate-300/90">?</span>
         ) : (
-          <span className="text-[0.65rem] font-bold tracking-[0.25em] text-white/50 sm:text-xs">
-            BLIND
-          </span>
+          <span className="card-back-label">BLIND</span>
         )}
       </div>
     </div>
@@ -57,40 +65,40 @@ function CardBack({ size, blind }: { size: CardSize; blind?: boolean }) {
 function CardFace({ card, size }: { card: Card; size: CardSize }) {
   const suit = SUIT_SYMBOLS[card.suit];
   const isRed = card.suit === "H" || card.suit === "D";
-  const inkClass = isRed ? "text-red-700" : "text-slate-900";
+  const inkClass = isRed ? "text-red-800" : "text-slate-900";
 
   return (
     <div className={`card-body card-body-face ${SIZE_CLASSES[size]}`}>
-      <div className="card-face-shine pointer-events-none absolute inset-0 rounded-[0.65rem]" />
+      <div className="card-face-shine pointer-events-none absolute inset-0" />
 
       <div
-        className={`absolute left-1.5 top-1.5 flex flex-col items-center leading-none ${inkClass}`}
+        className={`absolute left-1 top-1 flex flex-col items-center leading-none ${inkClass}`}
       >
-        <span className="font-black drop-shadow-sm">{card.rank}</span>
-        <span className="text-[0.9em] font-bold">{suit}</span>
+        <span className="font-semibold tracking-tight">{card.rank}</span>
+        <span className="text-[0.85em] font-medium">{suit}</span>
       </div>
 
       <div
         className={`absolute inset-0 flex items-center justify-center ${CENTER_SUIT[size]} ${inkClass}`}
       >
-        <span className="drop-shadow-sm">{suit}</span>
+        <span className="font-medium">{suit}</span>
       </div>
 
       <div
-        className={`absolute bottom-1.5 right-1.5 flex rotate-180 flex-col items-center leading-none ${inkClass}`}
+        className={`absolute bottom-1 right-1 flex rotate-180 flex-col items-center leading-none ${inkClass}`}
       >
-        <span className="font-black">{card.rank}</span>
-        <span className="text-[0.9em] font-bold">{suit}</span>
+        <span className="font-semibold tracking-tight">{card.rank}</span>
+        <span className="text-[0.85em] font-medium">{suit}</span>
       </div>
 
       {card.rank === "2" ? (
-        <div className="absolute right-1 top-1 rounded-md bg-gradient-to-r from-amber-300 to-yellow-400 px-1.5 py-0.5 text-[8px] font-black text-amber-950 shadow">
+        <div className="absolute right-0.5 top-0.5 rounded-sm border border-amber-400/40 bg-amber-100 px-1 py-0.5 text-[7px] font-semibold tracking-wide text-amber-900">
           JOKER
         </div>
       ) : null}
 
       <div
-        className={`pointer-events-none absolute inset-0 rounded-[0.65rem] ring-1 ring-inset ${isRed ? "ring-red-300/40" : "ring-slate-400/30"}`}
+        className={`pointer-events-none absolute inset-0 ring-1 ring-inset ${isRed ? "ring-red-300/30" : "ring-slate-400/25"}`}
       />
     </div>
   );
@@ -107,12 +115,13 @@ export function PlayingCard({
   style,
 }: PlayingCardProps) {
   const showBack = hidden || blind || faceDown || !card;
+  const tableBack = Boolean(faceDown && !blind);
 
   return (
     <div className={`card-scene ${className}`} style={style}>
       <div className={TILT_CLASS[tilt]}>
         {showBack ? (
-          <CardBack size={size} blind={blind} />
+          <CardBack size={size} blind={blind} tableBack={tableBack} />
         ) : (
           <CardFace card={card} size={size} />
         )}

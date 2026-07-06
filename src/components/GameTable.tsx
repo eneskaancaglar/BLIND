@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { getHandDisplayCount } from "@/lib/gameLogic";
 import { getOpponentSeatPosition } from "@/lib/seatLayout";
-import { Player, Room } from "@/lib/types";
+import { getHandDisplayCount } from "@/lib/gameLogic";
+import { ChatMessage, Player, Room } from "@/lib/types";
 import { CardFan } from "./CardFan";
+import { EmojiChat } from "./EmojiChat";
 import { OpponentSeat } from "./OpponentSeat";
 import { SoundToggle } from "./SoundToggle";
 
@@ -36,6 +38,7 @@ export function GameTable({
   onHomeClick,
 }: GameTableProps) {
   const { translate } = useLanguage();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const blindGetsCards = room.blindGetsCards ?? false;
   const handCount = me ? getHandDisplayCount(me, blindGetsCards) : 0;
   const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
@@ -53,12 +56,10 @@ export function GameTable({
 
   return (
     <div className="game-shell flex min-h-[100dvh] flex-col">
-      <header className="flex items-center justify-between gap-2 px-4 py-3">
+      <header className="relative z-20 flex items-center justify-between gap-2 px-4 py-3">
         <div className="min-w-0 flex-1">
-          <p className="bg-gradient-to-r from-fuchsia-300 to-cyan-300 bg-clip-text text-[10px] font-bold uppercase tracking-[0.3em] text-transparent">
-            BLIND
-          </p>
-          <p className="truncate text-sm font-semibold text-white/90">
+          <p className="game-header-brand">BLIND</p>
+          <p className="truncate text-sm font-medium text-slate-200">
             {translate("lobbyRoom")} {roomCode}
           </p>
         </div>
@@ -67,24 +68,30 @@ export function GameTable({
             <button
               type="button"
               onClick={onHomeClick}
-              className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white/90 transition hover:bg-white/20"
+              className="home-footer-btn !min-h-8 px-3 py-2 text-xs"
             >
               {translate("home")}
             </button>
           ) : null}
+          <EmojiChat
+            roomCode={roomCode}
+            playerId={playerId}
+            playerName={me?.name ?? ""}
+            onMessagesChange={setMessages}
+          />
           <SoundToggle compact />
-          <div className="rounded-full bg-white/10 px-3 py-1 text-right text-xs text-cyan-100">
-            <p>
+          <div className="game-chip px-3 py-1.5 text-right text-xs">
+            <p className="text-slate-400">
               {translate("round")} {room.roundNumber}
             </p>
-            <p className="font-medium">{phaseLabel}</p>
+            <p className="font-medium text-slate-200">{phaseLabel}</p>
           </div>
         </div>
       </header>
 
-      <div className="relative mx-2 mb-2 flex flex-1 flex-col overflow-hidden rounded-[2rem] border-2 border-emerald-600/30 shadow-2xl">
+      <div className="relative mx-2 mb-2 flex flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
         <div className="table-felt absolute inset-0" />
-        <div className="table-rim pointer-events-none absolute inset-0 rounded-[2rem]" />
+        <div className="table-rim pointer-events-none absolute inset-0 rounded-2xl" />
         <div className="table-glow pointer-events-none absolute inset-0" />
 
         <div className="relative z-10 flex flex-1 flex-col p-3">
@@ -100,6 +107,7 @@ export function GameTable({
                     blindGetsCards={blindGetsCards}
                     animateDeal={animateDeal}
                     dealKey={dealKey}
+                    messages={messages}
                   />
                 </div>
               );
@@ -107,30 +115,30 @@ export function GameTable({
           </div>
 
           <div className="mx-auto w-full max-w-xs px-2">
-            <div className="center-pot rounded-3xl px-5 py-5 text-center">
+            <div className="center-pot rounded-2xl px-5 py-5 text-center">
               {room.currentBid && room.phase === "bidding" ? (
                 <>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-200/80">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400">
                     {translate("currentBid")}
                   </p>
-                  <p className="mt-1 text-3xl font-black text-white drop-shadow">
+                  <p className="mt-1 text-3xl font-light tracking-wide text-white">
                     {room.currentBid.count}× {room.currentBid.rank}
                   </p>
-                  <p className="mt-1 text-sm text-cyan-100/80">{room.currentBid.playerName}</p>
+                  <p className="mt-1 text-sm text-slate-400">{room.currentBid.playerName}</p>
                 </>
               ) : room.phase === "revealed" ? (
                 <>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-red-200/80">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400">
                     {translate("cardsRevealed")}
                   </p>
-                  <p className="mt-1 text-xl font-bold text-white">{translate("counting")}</p>
+                  <p className="mt-1 text-xl font-medium text-white">{translate("counting")}</p>
                 </>
               ) : (
                 <>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-cyan-100/70">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400">
                     {translate("turn")}
                   </p>
-                  <p className="mt-1 text-2xl font-bold text-white">{turnName ?? "..."}</p>
+                  <p className="mt-1 text-2xl font-light text-white">{turnName ?? "..."}</p>
                 </>
               )}
             </div>
@@ -143,14 +151,14 @@ export function GameTable({
       <div className="player-hand relative px-1 pb-5 pt-4">
         <div className="mb-3 flex items-center justify-between px-3">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-bold text-white">
+            <p className="text-sm font-semibold text-slate-100">
               {me?.name ?? translate("you")}
-              <span className="ml-2 text-xs font-normal text-cyan-200/60">
+              <span className="ml-2 text-xs font-normal text-slate-400">
                 {translate("yourHand")}
               </span>
             </p>
             {me?.isBlind && !showAllCards ? (
-              <span className="rounded-lg bg-amber-400 px-2 py-0.5 text-[10px] font-black text-amber-950">
+              <span className="game-chip px-2 py-0.5 text-[10px] font-semibold">
                 {translate("blind")}
               </span>
             ) : null}
@@ -161,9 +169,9 @@ export function GameTable({
         </div>
 
         {!me ? (
-          <p className="text-center text-sm text-white/50">{translate("playerNotFound")}</p>
+          <p className="text-center text-sm text-slate-500">{translate("playerNotFound")}</p>
         ) : me.isEliminated ? (
-          <p className="text-center text-sm text-white/50">{translate("eliminated")}</p>
+          <p className="text-center text-sm text-slate-500">{translate("eliminated")}</p>
         ) : seesOwnCards || (showAllCards && !me.isBlind) ? (
           <CardFan
             cards={me.cards}
@@ -184,10 +192,10 @@ export function GameTable({
               animateDeal={animateDeal}
               dealKey={dealKey}
             />
-            <p className="mt-2 text-center text-xs text-amber-200">{translate("cantSeeCards")}</p>
+            <p className="mt-2 text-center text-xs text-slate-400">{translate("cantSeeCards")}</p>
           </>
         ) : me.isBlind ? (
-          <p className="text-center text-sm text-amber-200">{translate("blindNoCards")}</p>
+          <p className="text-center text-sm text-slate-400">{translate("blindNoCards")}</p>
         ) : (
           <CardFan
             cards={me.cards}

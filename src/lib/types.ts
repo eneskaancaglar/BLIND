@@ -81,6 +81,16 @@ export type PlayerView = Omit<Player, "cards"> & {
   hiddenCount?: number;
 };
 
+export type ChatMessage = {
+  id: string;
+  playerId: string;
+  playerName: string;
+  emoji: string;
+  createdAt: number;
+};
+
+export const EMOJI_REACTIONS = ["😡", "😂", "😢", "👏", "🙄", "😎", "🔥", "😱"] as const;
+
 export const RANKS: Rank[] = [
   "3",
   "4",

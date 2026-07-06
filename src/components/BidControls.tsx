@@ -69,8 +69,8 @@ export function BidControls({
   }
 
   return (
-    <div className="rounded-2xl border border-emerald-800/50 bg-black/50 p-4 backdrop-blur-md">
-      <p className="mb-3 text-center text-sm font-semibold text-emerald-100">
+    <div className="home-panel-light rounded-2xl p-4">
+      <p className="mb-3 text-center text-sm font-medium text-slate-200">
         {translate("bidYourMove")}
       </p>
 
@@ -79,25 +79,25 @@ export function BidControls({
           type="button"
           disabled={disabled || loading || count <= 1}
           onClick={() => setCount((c) => Math.max(1, c - 1))}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-800 text-2xl font-bold text-white"
+          className="game-chip flex h-11 w-11 items-center justify-center text-xl font-medium text-slate-100"
         >
           −
         </button>
         <div className="text-center">
-          <p className="text-[10px] uppercase text-neutral-400">{translate("bidCount")}</p>
-          <p className="text-4xl font-black text-white">{count}</p>
+          <p className="text-[10px] uppercase tracking-wider text-slate-400">{translate("bidCount")}</p>
+          <p className="text-4xl font-light text-white">{count}</p>
         </div>
         <button
           type="button"
           disabled={disabled || loading || count >= maxCount}
           onClick={() => setCount((c) => c + 1)}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-800 text-2xl font-bold text-white"
+          className="game-chip flex h-11 w-11 items-center justify-center text-xl font-medium text-slate-100"
         >
           +
         </button>
       </div>
 
-      <p className="mb-2 text-center text-[10px] uppercase tracking-wider text-neutral-400">
+      <p className="mb-2 text-center text-[10px] uppercase tracking-wider text-slate-400">
         {translate("bidRank")}
       </p>
       <div className="mb-4 grid grid-cols-4 gap-1.5 sm:grid-cols-6">
@@ -107,10 +107,8 @@ export function BidControls({
             type="button"
             disabled={disabled || loading}
             onClick={() => setRank(r)}
-            className={`rounded-lg border py-2 text-sm font-bold transition ${
-              rank === r
-                ? "border-emerald-400 bg-emerald-600 text-white shadow-lg shadow-emerald-900/50"
-                : "border-neutral-600 bg-neutral-900/80 text-neutral-200 hover:border-neutral-400"
+            className={`home-chip rounded-lg py-2 text-sm font-semibold transition ${
+              rank === r ? "home-chip-active" : ""
             }`}
           >
             {r}
@@ -118,7 +116,7 @@ export function BidControls({
         ))}
       </div>
 
-      <p className="mb-3 text-center text-xs text-emerald-200/60">
+      <p className="mb-3 text-center text-xs text-slate-400">
         {translate("bidLabel", {
           count,
           rank: rankLabel(language, rank),
@@ -126,17 +124,19 @@ export function BidControls({
       </p>
 
       {!valid ? (
-        <p className="mb-2 text-center text-xs text-amber-300">{translate("bidHigher")}</p>
+        <p className="mb-2 text-center text-xs text-slate-300">{translate("bidHigher")}</p>
       ) : null}
 
-      {error ? <p className="mb-2 text-center text-xs text-red-400">{error}</p> : null}
+      {error ? (
+        <p className="mb-2 text-center text-xs text-red-300/90">{error}</p>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
           disabled={disabled || loading || !valid}
           onClick={handleBid}
-          className="rounded-xl bg-emerald-600 py-3.5 text-base font-bold text-white shadow-lg shadow-emerald-950/50"
+          className="home-btn-join w-full rounded-xl py-3.5 text-sm font-semibold disabled:opacity-50"
         >
           {translate("bidPlace")}
         </button>
@@ -144,7 +144,7 @@ export function BidControls({
           type="button"
           disabled={disabled || loading || !canOpen}
           onClick={handleOpen}
-          className="rounded-xl bg-red-600 py-3.5 text-base font-bold text-white shadow-lg shadow-red-950/50"
+          className="w-full rounded-xl border border-red-400/25 bg-red-950/35 py-3.5 text-sm font-semibold text-red-100 transition hover:bg-red-950/50 disabled:opacity-50"
         >
           {translate("bidOpen")}
         </button>

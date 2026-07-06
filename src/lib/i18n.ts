@@ -131,6 +131,10 @@ const en = {
   bidOpenFail: "Could not open.",
   errContinue: "Could not continue.",
 
+  chatTitle: "Reactions",
+  chatToggle: "Open reactions",
+  chatEmpty: "Pick an emoji below",
+
   rankJ: "Jack",
   rankQ: "Queen",
   rankK: "King",
@@ -261,6 +265,10 @@ const tr: Record<keyof typeof en, string> = {
   bidFail: "İddia verilemedi.",
   bidOpenFail: "Açma başarısız.",
   errContinue: "Devam edilemedi.",
+
+  chatTitle: "Tepkiler",
+  chatToggle: "Tepkileri aç",
+  chatEmpty: "Aşağıdan bir emoji seç",
 
   rankJ: "Vale",
   rankQ: "Kız",

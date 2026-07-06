@@ -2,7 +2,8 @@
 
 import { useLanguage } from "@/context/LanguageContext";
 import { getHandDisplayCount } from "@/lib/gameLogic";
-import { Player } from "@/lib/types";
+import { ChatMessage, Player } from "@/lib/types";
+import { getRecentReaction } from "./EmojiChat";
 import { CardFan } from "./CardFan";
 
 type OpponentSeatProps = {
@@ -12,6 +13,7 @@ type OpponentSeatProps = {
   blindGetsCards?: boolean;
   animateDeal?: boolean;
   dealKey?: string | number;
+  messages?: ChatMessage[];
 };
 
 export function OpponentSeat({
@@ -21,17 +23,19 @@ export function OpponentSeat({
   blindGetsCards = false,
   animateDeal,
   dealKey,
+  messages = [],
 }: OpponentSeatProps) {
   const { translate } = useLanguage();
   const displayCount = getHandDisplayCount(player, blindGetsCards);
+  const reaction = getRecentReaction(messages, player.id);
 
   if (player.isEliminated) {
     return (
       <div className="flex flex-col items-center opacity-40">
-        <p className="mb-1 max-w-[6rem] truncate text-xs font-semibold text-white/60">
+        <p className="mb-1 max-w-[6rem] truncate text-xs font-medium text-slate-400">
           {player.name}
         </p>
-        <span className="rounded-full bg-black/30 px-2 py-0.5 text-[10px] text-white/40">
+        <span className="game-chip px-2 py-0.5 text-[10px]">
           {translate("eliminated")}
         </span>
       </div>
@@ -40,18 +44,26 @@ export function OpponentSeat({
 
   return (
     <div
-      className={`flex min-w-[6.5rem] flex-col items-center rounded-2xl px-3 py-3 transition ${
-        isTurn
-          ? "bg-amber-400/20 ring-2 ring-amber-300 shadow-lg shadow-amber-500/20"
-          : "bg-black/25 backdrop-blur-sm"
+      className={`opponent-seat relative flex min-w-[6.5rem] flex-col items-center px-3 py-3 transition ${
+        isTurn ? "opponent-seat-turn" : ""
       }`}
     >
+      {reaction ? (
+        <span
+          key={reaction.id}
+          className="seat-emoji-bubble absolute -top-5 z-20 text-xl"
+          aria-hidden
+        >
+          {reaction.emoji}
+        </span>
+      ) : null}
+
       <div className="mb-2 flex flex-wrap items-center justify-center gap-1">
-        <span className="max-w-[5.5rem] truncate text-xs font-bold text-white">
+        <span className="max-w-[5.5rem] truncate text-xs font-semibold text-slate-100">
           {player.name}
         </span>
         {player.isBlind && !showCards ? (
-          <span className="rounded-md bg-amber-400 px-1.5 py-0.5 text-[9px] font-black text-amber-950">
+          <span className="game-chip px-1.5 py-0.5 text-[9px] font-semibold">
             {translate("blind")}
           </span>
         ) : null}
@@ -60,7 +72,7 @@ export function OpponentSeat({
       {showCards && player.cards.length > 0 ? (
         <CardFan cards={player.cards} size="sm" spread="tight" tilt="table" />
       ) : showCards && player.isBlind ? (
-        <span className="text-[10px] font-semibold text-amber-200">{translate("blindNoCards")}</span>
+        <span className="text-[10px] font-medium text-slate-400">{translate("blindNoCards")}</span>
       ) : player.isBlind && displayCount > 0 ? (
         <CardFan
           count={displayCount}
@@ -73,7 +85,7 @@ export function OpponentSeat({
           dealKey={dealKey}
         />
       ) : player.isBlind ? (
-        <span className="text-[10px] font-semibold text-amber-200">{translate("blindNoCards")}</span>
+        <span className="text-[10px] font-medium text-slate-400">{translate("blindNoCards")}</span>
       ) : (
         <CardFan
           count={displayCount}

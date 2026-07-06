@@ -54,54 +54,72 @@ button:disabled {
 
 .card-body {
   position: relative;
-  border-radius: 0.65rem;
+  border-radius: 0.25rem;
   transform-style: preserve-3d;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.2) inset,
-    0 2px 4px rgba(0, 0, 0, 0.25),
-    0 8px 16px rgba(0, 0, 0, 0.35),
-    0 16px 32px rgba(0, 0, 0, 0.2);
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    0 6px 14px rgba(0, 0, 0, 0.35);
 }
 
 .card-body-face {
-  background: linear-gradient(155deg, #ffffff 0%, #f8fafc 45%, #e2e8f0 100%);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: linear-gradient(160deg, #ffffff 0%, #f1f5f9 50%, #e2e8f0 100%);
+  border: 1px solid rgba(15, 23, 42, 0.12);
 }
 
 .card-face-shine {
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.55) 0%,
-    transparent 45%,
+    rgba(255, 255, 255, 0.4) 0%,
+    transparent 40%,
     transparent 100%
   );
+  border-radius: 0.2rem;
 }
 
 .card-body-back {
-  background: linear-gradient(145deg, #2563eb 0%, #1d4ed8 40%, #1e3a8a 100%);
-  border: 2px solid #1e40af;
+  background: linear-gradient(155deg, #1e293b 0%, #0f172a 55%, #020617 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.card-body-back-table {
+  background: linear-gradient(160deg, #111827 0%, #0b1220 45%, #030712 100%);
+  border: 1px solid rgba(148, 163, 184, 0.22);
 }
 
 .card-back-pattern {
   background:
     repeating-linear-gradient(
-      45deg,
-      rgba(255, 255, 255, 0.07) 0px,
-      rgba(255, 255, 255, 0.07) 3px,
-      transparent 3px,
-      transparent 8px
+      0deg,
+      rgba(255, 255, 255, 0.04) 0px,
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 1px,
+      transparent 6px
     ),
     repeating-linear-gradient(
-      -45deg,
-      rgba(255, 255, 255, 0.05) 0px,
-      rgba(255, 255, 255, 0.05) 3px,
-      transparent 3px,
-      transparent 8px
+      90deg,
+      rgba(255, 255, 255, 0.04) 0px,
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 1px,
+      transparent 6px
     );
+  border-radius: 0.15rem;
 }
 
-.card-back-diamond {
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+.card-back-frame {
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.1rem;
+}
+
+.card-back-label {
+  font-size: 0.55rem;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.75);
 }
 
 .count-badge {
@@ -109,13 +127,15 @@ button:disabled {
   min-width: 1.75rem;
   align-items: center;
   justify-content: center;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, #f472b6, #a855f7);
+  border-radius: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.75);
   padding: 0.15rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: white;
-  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.45);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(226, 232, 240, 0.9);
+  box-shadow: none;
 }
 
 .count-badge-lg {
@@ -126,36 +146,135 @@ button:disabled {
 
 /* Oyun masası */
 .game-shell {
-  background: linear-gradient(180deg, #1a0a2e 0%, #0f172a 50%, #0c4a4e 100%);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(217, 70, 239, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(34, 211, 238, 0.08) 0%, transparent 50%),
+    linear-gradient(165deg, #1e1035 0%, #0f172a 45%, #134e4a 100%);
 }
 
 .table-felt {
   background:
-    radial-gradient(ellipse at 50% 20%, rgba(52, 211, 153, 0.25) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 100%, rgba(0, 0, 0, 0.45) 0%, transparent 50%),
-    linear-gradient(165deg, #14532d 0%, #166534 35%, #064e3b 100%);
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 25%, rgba(255, 255, 255, 0.05) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(0, 0, 0, 0.35) 0%, transparent 50%),
+    linear-gradient(165deg, #111827 0%, #0f172a 40%, #0b1220 100%);
+  background-size: 22px 22px, 22px 22px, 100% 100%, 100% 100%, 100% 100%;
 }
 
 .table-rim {
   box-shadow:
-    inset 0 0 0 6px rgba(120, 53, 15, 0.35),
-    inset 0 0 60px rgba(0, 0, 0, 0.35);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 0 4px rgba(0, 0, 0, 0.25),
+    inset 0 0 80px rgba(0, 0, 0, 0.35);
 }
 
 .table-glow {
-  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.2);
 }
 
 .center-pot {
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.25) 100%);
-  border: 2px solid rgba(251, 191, 36, 0.25);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(8px);
 }
 
 .player-hand {
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, rgba(15, 23, 42, 0.9) 100%);
-  border-top: 1px solid rgba(34, 211, 238, 0.15);
-  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.4);
+  background: rgba(15, 23, 42, 0.52);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+.game-header-brand {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.38em;
+  text-indent: 0.38em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.55);
+}
+
+.game-chip {
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(226, 232, 240, 0.78);
+}
+
+.game-chip-active {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+.opponent-seat {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(6px);
+}
+
+.opponent-seat-turn {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 24px rgba(255, 255, 255, 0.06);
+}
+
+.emoji-chat-panel {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.32);
+}
+
+.emoji-chat-msg {
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.emoji-reaction-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 1.25rem;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.emoji-reaction-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.06);
+}
+
+.seat-emoji-bubble {
+  animation: seat-emoji-pop 2.8s ease-out forwards;
+}
+
+@keyframes seat-emoji-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.7);
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(0) scale(1.1);
+  }
+  75% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.9);
+  }
 }
 
 /* Ana sayfa */
