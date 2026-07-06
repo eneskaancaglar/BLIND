@@ -25,12 +25,12 @@ function randomCard(seed: number): Card {
   };
 }
 
-function buildFloaters(count: number): Floater[] {
+function buildFloaters(count: number, seed: number): Floater[] {
   return Array.from({ length: count }, (_, i) => ({
     id: i,
-    card: randomCard(i * 7 + 3),
-    left: 5 + ((i * 17) % 85),
-    top: 8 + ((i * 23) % 78),
+    card: randomCard(i * 7 + 3 + seed),
+    left: 5 + ((i * 17 + seed) % 85),
+    top: 8 + ((i * 23 + seed) % 78),
     delay: (i % 6) * 0.7,
     duration: 9 + (i % 5) * 2,
     rotation: -25 + (i % 7) * 8,
@@ -40,7 +40,7 @@ function buildFloaters(count: number): Floater[] {
 
 export function HomeFloatingCards() {
   const [tick, setTick] = useState(0);
-  const floaters = useMemo(() => buildFloaters(10), [tick]);
+  const floaters = useMemo(() => buildFloaters(10, tick), [tick]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {

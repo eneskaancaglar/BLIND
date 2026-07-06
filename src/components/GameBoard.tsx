@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BidControls } from "@/components/BidControls";
 import { GameTable } from "@/components/GameTable";
 import { RoundResultOverlay } from "@/components/RoundResultOverlay";
@@ -46,30 +46,36 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const winSoundRef = useRef(false);
   const dealSoundRef = useRef<string | null>(null);
 
-  function clearTransitionTimer() {
+  const clearTransitionTimer = useCallback(() => {
     if (transitionTimerRef.current !== null) {
       window.clearTimeout(transitionTimerRef.current);
       transitionTimerRef.current = null;
     }
-  }
+  }, []);
 
-  function endTransition() {
+  const endTransition = useCallback(() => {
     clearTransitionTimer();
     setShowTransition(false);
-  }
+  }, [clearTransitionTimer]);
 
-  function startTransition(ms = TRANSITION_MS) {
-    clearTransitionTimer();
-    setShowTransition(true);
-    transitionTimerRef.current = window.setTimeout(() => {
-      endTransition();
-    }, ms);
-  }
+  const startTransition = useCallback(
+    (ms = TRANSITION_MS) => {
+      clearTransitionTimer();
+      setShowTransition(true);
+      transitionTimerRef.current = window.setTimeout(() => {
+        endTransition();
+      }, ms);
+    },
+    [clearTransitionTimer, endTransition]
+  );
+
+  const roomPhase = room?.phase;
+  const roomRoundNumber = room?.roundNumber ?? 0;
 
   useEffect(() => {
     setPlayerId(getPlayerId());
     return () => clearTransitionTimer();
-  }, []);
+  }, [clearTransitionTimer]);
 
   useEffect(() => {
     if (!roomCode || !isFirebaseConfigured()) return;
@@ -82,37 +88,37 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   }, [roomCode]);
 
   useEffect(() => {
-    if (!room) return;
+    if (!roomPhase) return;
 
     const prev = prevPhaseRef.current;
-    if (prev === "revealed" && room.phase === "bidding" && !skipPhaseTransitionRef.current) {
+    if (prev === "revealed" && roomPhase === "bidding" && !skipPhaseTransitionRef.current) {
       startTransition();
     }
 
-    if (skipPhaseTransitionRef.current && room.phase === "bidding") {
+    if (skipPhaseTransitionRef.current && roomPhase === "bidding") {
       skipPhaseTransitionRef.current = false;
     }
 
-    prevPhaseRef.current = room.phase;
-  }, [room?.phase]);
+    prevPhaseRef.current = roomPhase;
+  }, [roomPhase, startTransition]);
 
   useEffect(() => {
-    if (!room || room.roundNumber <= 0 || room.phase !== "bidding") return;
-    if (prevRoundRef.current === room.roundNumber) return;
+    if (roomRoundNumber <= 0 || roomPhase !== "bidding") return;
+    if (prevRoundRef.current === roomRoundNumber) return;
 
-    prevRoundRef.current = room.roundNumber;
+    prevRoundRef.current = roomRoundNumber;
     setAnimateDeal(true);
     const timer = window.setTimeout(() => setAnimateDeal(false), 1400);
     return () => window.clearTimeout(timer);
-  }, [room?.roundNumber, room?.phase]);
+  }, [roomRoundNumber, roomPhase]);
 
   useEffect(() => {
-    if (!animateDeal || !room) return;
+    if (!animateDeal || roomRoundNumber <= 0) return;
 
     const me = players.find((p) => p.id === playerId);
     if (!me || me.isEliminated || me.cardCount === 0) return;
 
-    const key = `${room.roundNumber}-${me.cardCount}`;
+    const key = `${roomRoundNumber}-${me.cardCount}`;
     if (dealSoundRef.current === key) return;
     dealSoundRef.current = key;
 
@@ -126,7 +132,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     }
 
     return () => timers.forEach((t) => window.clearTimeout(t));
-  }, [animateDeal, room?.roundNumber, players, playerId, play]);
+  }, [animateDeal, roomRoundNumber, players, playerId, play]);
 
   useEffect(() => {
     if (room?.phase === "revealed" && room.revealResult) {
