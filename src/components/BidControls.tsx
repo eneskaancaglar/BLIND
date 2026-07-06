@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useSound } from "@/context/SoundContext";
 import { getMinimumBid, isValidBid } from "@/lib/gameLogic";
 import { rankLabel } from "@/lib/i18n";
 import { Bid, RANKS, Rank } from "@/lib/types";
@@ -26,6 +27,7 @@ export function BidControls({
   canOpen,
 }: BidControlsProps) {
   const { translate, language } = useLanguage();
+  const { play } = useSound();
   const minimum = useMemo(() => getMinimumBid(currentBid), [currentBid]);
   const [count, setCount] = useState(minimum.count);
   const [rank, setRank] = useState<Rank>(minimum.rank);
@@ -43,6 +45,7 @@ export function BidControls({
   async function handleBid() {
     setLoading(true);
     setError("");
+    play("click");
     try {
       await onBid(count, rank);
     } catch (err) {
@@ -55,6 +58,7 @@ export function BidControls({
   async function handleOpen() {
     setLoading(true);
     setError("");
+    play("open");
     try {
       await onOpen();
     } catch (err) {

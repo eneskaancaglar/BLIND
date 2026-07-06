@@ -1,7 +1,9 @@
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
+import { useSound } from "@/context/SoundContext";
 import { formatRevealSummary } from "@/lib/i18n";
+import { resumeAudio } from "@/lib/sounds";
 import type { RevealResult } from "@/lib/types";
 
 type RoundResultOverlayProps = {
@@ -20,7 +22,14 @@ export function RoundResultOverlay({
   onContinue,
 }: RoundResultOverlayProps) {
   const { translate, language } = useLanguage();
+  const { play } = useSound();
   const summary = formatRevealSummary(language, result, bidCount);
+
+  function handleContinue() {
+    resumeAudio();
+    play("click");
+    onContinue();
+  }
 
   return (
     <div className="round-overlay round-overlay-result fixed inset-0 z-40 flex items-center justify-center p-4">
@@ -62,7 +71,7 @@ export function RoundResultOverlay({
           <button
             type="button"
             disabled={loading}
-            onClick={onContinue}
+            onClick={handleContinue}
             className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 py-4 text-lg font-bold text-white shadow-lg shadow-emerald-900/40 transition hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
           >
             {loading ? translate("wait") : translate("revealNextRound")}

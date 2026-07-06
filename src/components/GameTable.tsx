@@ -1,9 +1,11 @@
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
+import { getOpponentSeatPosition } from "@/lib/seatLayout";
 import { Player, Room } from "@/lib/types";
-import { CardFan } from "./CardFan";
+import { HandHeldCards } from "./HandHeldCards";
 import { OpponentSeat } from "./OpponentSeat";
+import { SoundToggle } from "./SoundToggle";
 
 type GameTableProps = {
   room: Room;
@@ -13,6 +15,8 @@ type GameTableProps = {
   playerId: string;
   turnPlayerId?: string;
   showAllCards: boolean;
+  animateDeal?: boolean;
+  dealKey?: string | number;
   children?: React.ReactNode;
 };
 
@@ -24,6 +28,8 @@ export function GameTable({
   playerId,
   turnPlayerId,
   showAllCards,
+  animateDeal,
+  dealKey,
   children,
 }: GameTableProps) {
   const { translate } = useLanguage();
@@ -50,11 +56,14 @@ export function GameTable({
             {translate("lobbyRoom")} {roomCode}
           </p>
         </div>
-        <div className="rounded-full bg-white/10 px-3 py-1 text-right text-xs text-cyan-100">
-          <p>
-            {translate("round")} {room.roundNumber}
-          </p>
-          <p className="font-medium">{phaseLabel}</p>
+        <div className="flex items-center gap-2">
+          <SoundToggle compact />
+          <div className="rounded-full bg-white/10 px-3 py-1 text-right text-xs text-cyan-100">
+            <p>
+              {translate("round")} {room.roundNumber}
+            </p>
+            <p className="font-medium">{phaseLabel}</p>
+          </div>
         </div>
       </header>
 
@@ -64,18 +73,25 @@ export function GameTable({
         <div className="table-glow pointer-events-none absolute inset-0" />
 
         <div className="relative z-10 flex flex-1 flex-col p-3">
-          <div className="mb-2 flex flex-wrap justify-center gap-3 sm:gap-5">
-            {opponents.map((player) => (
-              <OpponentSeat
-                key={player.id}
-                player={player}
-                isTurn={player.id === turnPlayerId}
-                showCards={showAllCards}
-              />
-            ))}
+          <div className="opponents-table relative min-h-[9rem] flex-1">
+            {opponents.map((player, index) => {
+              const seat = getOpponentSeatPosition(index, opponents.length);
+              return (
+                <div key={player.id} className={`opponent-slot opponent-slot-${seat}`}>
+                  <OpponentSeat
+                    player={player}
+                    isTurn={player.id === turnPlayerId}
+                    showCards={showAllCards}
+                    seatPosition={seat}
+                    animateDeal={animateDeal}
+                    dealKey={dealKey}
+                  />
+                </div>
+              );
+            })}
           </div>
 
-          <div className="mx-auto my-auto w-full max-w-xs px-2">
+          <div className="mx-auto w-full max-w-xs px-2">
             <div className="center-pot rounded-3xl px-5 py-5 text-center">
               {room.currentBid && room.phase === "bidding" ? (
                 <>
@@ -110,13 +126,10 @@ export function GameTable({
       </div>
 
       <div className="player-hand relative px-1 pb-5 pt-4">
-        <div className="mb-3 flex items-center justify-between px-3">
+        <div className="mb-2 flex items-center justify-between px-3">
           <div className="flex items-center gap-2">
             <p className="text-sm font-bold text-white">
               {me?.name ?? translate("you")}
-              <span className="ml-2 text-xs font-normal text-cyan-200/60">
-                {translate("yourHand")}
-              </span>
             </p>
             {me?.isBlind && !showAllCards ? (
               <span className="rounded-lg bg-amber-400 px-2 py-0.5 text-[10px] font-black text-amber-950">
@@ -129,20 +142,29 @@ export function GameTable({
           ) : null}
         </div>
 
-        {!me ? (
-          <p className="text-center text-sm text-white/50">{translate("playerNotFound")}</p>
-        ) : me.isEliminated ? (
-          <p className="text-center text-sm text-white/50">{translate("eliminated")}</p>
-        ) : showAllCards || (!me.isBlind && me.cards.length > 0) ? (
-          <CardFan cards={me.cards} size="xl" spread="wide" tilt="hand" />
-        ) : me.isBlind ? (
-          <>
-            <CardFan count={me.cardCount} blind size="xl" spread="wide" tilt="hand" />
-            <p className="mt-2 text-center text-xs text-amber-200">{translate("cantSeeCards")}</p>
-          </>
-        ) : (
-          <CardFan cards={me.cards} size="xl" spread="wide" tilt="hand" />
-        )}
+        <div className="flex justify-center">
+          {!me ? (
+            <p className="text-center text-sm text-white/50">{translate("playerNotFound")}</p>
+          ) : me.isEliminated ? (
+            <p className="text-center text-sm text-white/50">{translate("eliminated")}</p>
+          ) : (
+            <HandHeldCards
+              cards={me.cards}
+              count={me.cardCount}
+              blind={me.isBlind && !showAllCards}
+              faceDown={me.isBlind && !showAllCards}
+              showCards={showAllCards || (!me.isBlind && me.cards.length > 0)}
+              size="xl"
+              orientation="up"
+              animateDeal={animateDeal}
+              dealKey={dealKey}
+            />
+          )}
+        </div>
+
+        {me?.isBlind && !showAllCards ? (
+          <p className="mt-2 text-center text-xs text-amber-200">{translate("cantSeeCards")}</p>
+        ) : null}
       </div>
     </div>
   );

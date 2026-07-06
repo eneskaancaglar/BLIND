@@ -34,6 +34,8 @@ const en = {
   language: "Language",
   english: "English",
   turkish: "Turkish",
+  soundOn: "Sound on",
+  soundOff: "Sound off",
 
   homeSubtitle: "Create a room, share the code, play from your phone.",
   howToPlay: "How to Play?",
@@ -145,6 +147,8 @@ const tr: Record<keyof typeof en, string> = {
   language: "Dil",
   english: "English",
   turkish: "Türkçe",
+  soundOn: "Ses açık",
+  soundOff: "Ses kapalı",
 
   homeSubtitle: "Oda kur, kodu paylaş, telefondan oyna.",
   howToPlay: "Nasıl Oynanır?",

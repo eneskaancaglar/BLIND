@@ -3,13 +3,16 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { GameBoard } from "@/components/GameBoard";
+import { HomeFloatingCards } from "@/components/HomeFloatingCards";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { PlayingCard } from "@/components/PlayingCard";
+import { SoundToggle } from "@/components/SoundToggle";
 import { RoomLobby } from "@/components/RoomLobby";
 import { useLanguage } from "@/context/LanguageContext";
+import { useSound } from "@/context/SoundContext";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "@/lib/i18n";
+import { resumeAudio } from "@/lib/sounds";
 import {
   clearStoredRoomCode,
   createRoom,
@@ -26,6 +29,7 @@ export default function HomeClient() {
   const searchParams = useSearchParams();
   const inviteCode = searchParams.get("room")?.toUpperCase() ?? "";
   const { translate } = useLanguage();
+  const { play } = useSound();
 
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
@@ -77,6 +81,12 @@ export default function HomeClient() {
   const goGame = useCallback(() => {
     setScreen("game");
   }, []);
+
+  function clickButton(action: () => void) {
+    resumeAudio();
+    play("click");
+    action();
+  }
 
   async function enterRoom(code: string, startScreen: Screen) {
     setActiveRoomCode(code);
@@ -153,8 +163,9 @@ export default function HomeClient() {
 
   if (!mounted || restoring) {
     return (
-      <main className="home-shell flex min-h-[100dvh] items-center justify-center px-4">
-        <p className="text-violet-200/60">{translate("loading")}</p>
+      <main className="home-shell relative flex min-h-[100dvh] items-center justify-center px-4">
+        <HomeFloatingCards />
+        <p className="relative z-10 text-violet-200/60">{translate("loading")}</p>
       </main>
     );
   }
@@ -163,55 +174,22 @@ export default function HomeClient() {
     <>
       <HowToPlayModal open={showRules} onClose={() => setShowRules(false)} />
 
-      <main className="home-shell mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 py-8">
-        <div className="mb-4 flex justify-end">
+      <main className="home-shell relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 py-6">
+        <HomeFloatingCards />
+
+        <div className="relative z-10 mb-6 flex items-center justify-between">
           <LanguageSwitcher />
+          <SoundToggle compact />
         </div>
 
-        <div className="home-card-deco pointer-events-none relative mx-auto mb-6 h-24 w-full max-w-xs">
-          <PlayingCard
-            card={{ rank: "A", suit: "H" }}
-            size="md"
-            tilt="hand"
-            className="absolute left-4 top-2"
-            style={{ transform: "rotate(-18deg)", zIndex: 1 }}
-          />
-          <PlayingCard
-            card={{ rank: "K", suit: "S" }}
-            size="md"
-            tilt="hand"
-            className="absolute left-1/2 top-0 -translate-x-1/2"
-            style={{ zIndex: 3 }}
-          />
-          <PlayingCard
-            card={{ rank: "7", suit: "D" }}
-            size="md"
-            tilt="hand"
-            className="absolute right-4 top-2"
-            style={{ transform: "rotate(18deg)", zIndex: 2 }}
-          />
-        </div>
-
-        <div className="mb-8 text-center">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.35em] text-fuchsia-300/80">
-            {translate("cardGame")}
-          </p>
-          <h1 className="bg-gradient-to-r from-white via-fuchsia-100 to-cyan-200 bg-clip-text text-5xl font-black tracking-tight text-transparent">
+        <div className="relative z-10 mb-8 text-center">
+          <h1 className="bg-gradient-to-r from-white via-fuchsia-100 to-cyan-200 bg-clip-text text-6xl font-black tracking-tight text-transparent drop-shadow-sm">
             BLIND
           </h1>
-          <p className="mt-3 text-sm text-violet-200/70">{translate("homeSubtitle")}</p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowRules(true)}
-          className="mb-5 w-full rounded-2xl border border-cyan-400/40 bg-cyan-500/10 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
-        >
-          {translate("howToPlay")}
-        </button>
-
         {inviteCode ? (
-          <div className="mb-4 rounded-2xl border border-emerald-400/40 bg-emerald-500/15 p-4 text-center text-sm text-emerald-100">
+          <div className="relative z-10 mb-4 rounded-2xl border border-emerald-400/40 bg-emerald-500/15 p-4 text-center text-sm text-emerald-100">
             <p className="font-semibold">
               {translate("invitedToRoom", { code: inviteCode })}
             </p>
@@ -219,22 +197,18 @@ export default function HomeClient() {
         ) : null}
 
         {!firebaseReady ? (
-          <div className="mb-4 rounded-2xl border border-amber-400/40 bg-amber-500/10 p-3 text-center text-sm text-amber-100">
+          <div className="relative z-10 mb-4 rounded-2xl border border-amber-400/40 bg-amber-500/10 p-3 text-center text-sm text-amber-100">
             {translate("firebaseMissing")}
           </div>
-        ) : (
-          <div className="mb-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-2 text-center text-xs text-emerald-200">
-            {translate("firebaseReady")}
-          </div>
-        )}
+        ) : null}
 
         {error ? (
-          <div className="mb-4 rounded-2xl border border-red-400/40 bg-red-500/15 p-3 text-center text-sm text-red-200">
+          <div className="relative z-10 mb-4 rounded-2xl border border-red-400/40 bg-red-500/15 p-3 text-center text-sm text-red-200">
             {error}
           </div>
         ) : null}
 
-        <div className="home-panel space-y-5 rounded-3xl p-6 shadow-xl">
+        <div className="home-panel relative z-10 flex flex-1 flex-col space-y-5 rounded-3xl p-6 shadow-xl">
           <label className="block space-y-2">
             <span className="text-sm text-violet-200/80">{translate("playerName")}</span>
             <input
@@ -258,7 +232,10 @@ export default function HomeClient() {
                   <button
                     key={count}
                     type="button"
-                    onClick={() => setRoomSettings((s) => ({ ...s, deckCount: count }))}
+                    onClick={() => {
+                      play("click");
+                      setRoomSettings((s) => ({ ...s, deckCount: count }));
+                    }}
                     className={`rounded-xl py-2.5 text-sm font-semibold transition ${
                       roomSettings.deckCount === count
                         ? "bg-fuchsia-600 text-white"
@@ -278,9 +255,10 @@ export default function HomeClient() {
                   <button
                     key={threshold}
                     type="button"
-                    onClick={() =>
-                      setRoomSettings((s) => ({ ...s, blindThreshold: threshold }))
-                    }
+                    onClick={() => {
+                      play("click");
+                      setRoomSettings((s) => ({ ...s, blindThreshold: threshold }));
+                    }}
                     className={`rounded-xl py-2.5 text-sm font-semibold transition ${
                       roomSettings.blindThreshold === threshold
                         ? "bg-amber-500 text-amber-950"
@@ -297,18 +275,11 @@ export default function HomeClient() {
           <button
             type="button"
             disabled={loading || !firebaseReady}
-            onClick={handleCreate}
+            onClick={() => clickButton(() => void handleCreate())}
             className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 to-violet-600 py-4 text-lg font-bold text-white shadow-lg shadow-fuchsia-900/30 disabled:opacity-50"
           >
             {loading ? translate("wait") : translate("createRoom")}
           </button>
-
-          <div className="relative py-1 text-center">
-            <span className="relative z-10 bg-transparent px-3 text-xs text-violet-300/50">
-              {translate("or")}
-            </span>
-            <div className="absolute inset-x-0 top-1/2 border-t border-white/10" />
-          </div>
 
           <form onSubmit={handleJoin} className="space-y-4">
             <label className="block space-y-2">
@@ -325,6 +296,10 @@ export default function HomeClient() {
             <button
               type="submit"
               disabled={loading || !firebaseReady}
+              onClick={() => {
+                resumeAudio();
+                play("click");
+              }}
               className="w-full rounded-2xl border border-cyan-400/40 bg-cyan-500/15 py-4 text-lg font-bold text-cyan-50 disabled:opacity-50"
             >
               {loading
@@ -334,6 +309,14 @@ export default function HomeClient() {
                   : translate("joinRoom")}
             </button>
           </form>
+
+          <button
+            type="button"
+            onClick={() => clickButton(() => setShowRules(true))}
+            className="mt-auto w-full rounded-2xl border border-cyan-400/30 bg-cyan-500/10 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
+          >
+            {translate("howToPlay")}
+          </button>
         </div>
       </main>
     </>
