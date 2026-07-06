@@ -28,16 +28,21 @@ function randomCard(seed: number): Card {
 }
 
 function buildFloaters(count: number): Floater[] {
-  return Array.from({ length: count }, (_, i) => ({
-    id: i,
-    card: randomCard(i * 7 + 3),
-    xOffset: X_OFFSETS[i % X_OFFSETS.length],
-    top: 14 + ((i * 17 + 5) % 62),
-    delay: (i % 8) * 0.85,
-    duration: 11 + (i % 6) * 1.8,
-    rotation: -18 + (i % 9) * 5,
-    drift: i % 2 === 0 ? 1 : -1,
-  }));
+  return Array.from({ length: count }, (_, i) => {
+    const duration = 10 + (i % 5) * 2.2;
+    const phase = (i * 1.85) % duration;
+
+    return {
+      id: i,
+      card: randomCard(i * 7 + 3),
+      xOffset: X_OFFSETS[i % X_OFFSETS.length],
+      top: 8 + ((i * 23 + 11) % 78),
+      delay: -phase,
+      duration,
+      rotation: -18 + (i % 9) * 5,
+      drift: i % 2 === 0 ? 1 : -1,
+    };
+  });
 }
 
 export function HomeFloatingCards() {
@@ -48,7 +53,7 @@ export function HomeFloatingCards() {
       {floaters.map((item) => (
         <div
           key={item.id}
-          className="home-floater absolute opacity-[0.42]"
+          className="home-floater absolute"
           style={{
             left: "50%",
             top: `${item.top}%`,

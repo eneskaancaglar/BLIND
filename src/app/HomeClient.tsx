@@ -38,10 +38,10 @@ function RoomSettingsPanel({
 
   return (
     <div className="home-panel-light space-y-4 rounded-2xl p-4">
-      <p className="text-sm font-semibold text-violet-100">{translate("lobbySettings")}</p>
+      <p className="text-sm font-bold text-fuchsia-100">{translate("lobbySettings")}</p>
 
       <div>
-        <p className="mb-2 text-xs text-violet-200/70">{translate("deckCount")}</p>
+        <p className="mb-2 text-xs font-medium text-cyan-200/90">{translate("deckCount")}</p>
         <div className="grid grid-cols-2 gap-2">
           {([1, 2] as const).map((count) => (
             <button
@@ -51,10 +51,10 @@ function RoomSettingsPanel({
                 play("click");
                 setRoomSettings((s) => ({ ...s, deckCount: count }));
               }}
-              className={`rounded-xl py-2.5 text-sm font-semibold transition ${
+              className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
                 roomSettings.deckCount === count
-                  ? "bg-fuchsia-600 text-white"
-                  : "bg-black/30 text-violet-200/80 hover:bg-black/50"
+                  ? "home-chip-active-fuchsia"
+                  : ""
               }`}
             >
               {count === 1 ? translate("deckSingle") : translate("deckDouble")}
@@ -64,7 +64,7 @@ function RoomSettingsPanel({
       </div>
 
       <div>
-        <p className="mb-2 text-xs text-violet-200/70">{translate("blindThreshold")}</p>
+        <p className="mb-2 text-xs font-medium text-amber-200/90">{translate("blindThreshold")}</p>
         <div className="grid grid-cols-3 gap-2">
           {([5, 6, 7] as const).map((threshold) => (
             <button
@@ -74,10 +74,10 @@ function RoomSettingsPanel({
                 play("click");
                 setRoomSettings((s) => ({ ...s, blindThreshold: threshold }));
               }}
-              className={`rounded-xl py-2.5 text-sm font-semibold transition ${
+              className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
                 roomSettings.blindThreshold === threshold
-                  ? "bg-amber-500 text-amber-950"
-                  : "bg-black/30 text-violet-200/80 hover:bg-black/50"
+                  ? "home-chip-active-amber"
+                  : ""
               }`}
             >
               {translate("blindThresholdCards", { count: threshold })}
@@ -87,7 +87,7 @@ function RoomSettingsPanel({
       </div>
 
       <div>
-        <p className="mb-2 text-xs text-violet-200/70">{translate("blindGetsCards")}</p>
+        <p className="mb-2 text-xs font-medium text-fuchsia-200/90">{translate("blindGetsCards")}</p>
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -95,10 +95,8 @@ function RoomSettingsPanel({
               play("click");
               setRoomSettings((s) => ({ ...s, blindGetsCards: false }));
             }}
-            className={`rounded-xl py-2.5 text-sm font-semibold transition ${
-              !roomSettings.blindGetsCards
-                ? "bg-violet-600 text-white"
-                : "bg-black/30 text-violet-200/80 hover:bg-black/50"
+            className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
+              !roomSettings.blindGetsCards ? "home-chip-active-cyan" : ""
             }`}
           >
             {translate("blindGetsCardsNo")}
@@ -109,10 +107,8 @@ function RoomSettingsPanel({
               play("click");
               setRoomSettings((s) => ({ ...s, blindGetsCards: true }));
             }}
-            className={`rounded-xl py-2.5 text-sm font-semibold transition ${
-              roomSettings.blindGetsCards
-                ? "bg-violet-600 text-white"
-                : "bg-black/30 text-violet-200/80 hover:bg-black/50"
+            className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
+              roomSettings.blindGetsCards ? "home-chip-active-fuchsia" : ""
             }`}
           >
             {translate("blindGetsCardsYes")}
@@ -278,7 +274,7 @@ export default function HomeClient() {
         <HomeFloatingCards />
 
         <div className="relative z-10 text-center">
-          <h1 className="bg-gradient-to-r from-white via-fuchsia-100 to-cyan-200 bg-clip-text text-6xl font-black tracking-tight text-transparent drop-shadow-sm">
+          <h1 className="bg-gradient-to-r from-rose-200 via-fuchsia-200 to-cyan-300 bg-clip-text text-6xl font-black tracking-tight text-transparent drop-shadow-[0_0_28px_rgba(232,121,249,0.35)]">
             BLIND
           </h1>
         </div>
@@ -292,7 +288,7 @@ export default function HomeClient() {
               if (error) setError("");
             }}
             placeholder={translate("playerNamePlaceholder")}
-            className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3.5 text-lg text-white outline-none focus:border-fuchsia-400/60"
+            className="home-input w-full rounded-xl px-4 py-3.5 text-lg text-white outline-none"
           />
         </label>
 
@@ -323,7 +319,7 @@ export default function HomeClient() {
                 onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                 placeholder={translate("roomCodePlaceholder")}
                 maxLength={6}
-                className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3.5 text-center text-xl tracking-[0.35em] text-white outline-none placeholder:tracking-[0.35em] focus:border-cyan-400/60"
+                className="home-input home-input-cyan w-full rounded-xl px-4 py-3.5 text-center text-xl tracking-[0.35em] text-white outline-none placeholder:tracking-[0.35em]"
               />
             </label>
 
@@ -334,7 +330,7 @@ export default function HomeClient() {
                 resumeAudio();
                 play("click");
               }}
-              className="w-full rounded-xl border border-cyan-400/40 bg-cyan-500/15 py-3.5 text-lg font-bold text-cyan-50 disabled:opacity-50"
+              className="home-btn-join w-full rounded-xl py-3.5 text-lg font-bold transition hover:brightness-110 disabled:opacity-50"
             >
               {loading
                 ? translate("wait")
@@ -351,7 +347,7 @@ export default function HomeClient() {
               type="button"
               disabled={loading || !firebaseReady}
               onClick={() => clickButton(() => setShowCreateSetup(true))}
-              className="home-panel w-full rounded-2xl bg-gradient-to-r from-fuchsia-500/90 to-violet-600/90 py-3.5 text-lg font-bold text-white shadow-lg shadow-fuchsia-900/25 disabled:opacity-50"
+              className="home-btn-create w-full rounded-2xl py-3.5 text-lg font-bold transition hover:brightness-110 disabled:opacity-50"
             >
               {translate("createRoom")}
             </button>
@@ -366,7 +362,7 @@ export default function HomeClient() {
                 type="button"
                 disabled={loading || !firebaseReady}
                 onClick={() => clickButton(() => void handleCreate())}
-                className="w-full rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 py-3.5 text-lg font-bold text-white shadow-lg shadow-fuchsia-900/30 disabled:opacity-50"
+                className="home-btn-start w-full rounded-xl py-3.5 text-lg font-bold transition hover:brightness-110 disabled:opacity-50"
               >
                 {loading ? translate("wait") : translate("startRoom")}
               </button>
@@ -384,7 +380,7 @@ export default function HomeClient() {
         <button
           type="button"
           onClick={() => clickButton(() => setShowRules(true))}
-          className="relative z-10 w-full rounded-2xl border border-cyan-400/25 bg-cyan-500/10 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
+          className="home-btn-rules relative z-10 w-full rounded-2xl py-3 text-sm font-bold transition hover:brightness-110"
         >
           {translate("howToPlay")}
         </button>
