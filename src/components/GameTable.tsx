@@ -3,7 +3,7 @@
 import { useLanguage } from "@/context/LanguageContext";
 import { getOpponentSeatPosition } from "@/lib/seatLayout";
 import { Player, Room } from "@/lib/types";
-import { HandHeldCards } from "./HandHeldCards";
+import { CardFan } from "./CardFan";
 import { OpponentSeat } from "./OpponentSeat";
 import { SoundToggle } from "./SoundToggle";
 
@@ -82,7 +82,6 @@ export function GameTable({
                     player={player}
                     isTurn={player.id === turnPlayerId}
                     showCards={showAllCards}
-                    seatPosition={seat}
                     animateDeal={animateDeal}
                     dealKey={dealKey}
                   />
@@ -126,10 +125,13 @@ export function GameTable({
       </div>
 
       <div className="player-hand relative px-1 pb-5 pt-4">
-        <div className="mb-2 flex items-center justify-between px-3">
+        <div className="mb-3 flex items-center justify-between px-3">
           <div className="flex items-center gap-2">
             <p className="text-sm font-bold text-white">
               {me?.name ?? translate("you")}
+              <span className="ml-2 text-xs font-normal text-cyan-200/60">
+                {translate("yourHand")}
+              </span>
             </p>
             {me?.isBlind && !showAllCards ? (
               <span className="rounded-lg bg-amber-400 px-2 py-0.5 text-[10px] font-black text-amber-950">
@@ -142,29 +144,42 @@ export function GameTable({
           ) : null}
         </div>
 
-        <div className="flex justify-center">
-          {!me ? (
-            <p className="text-center text-sm text-white/50">{translate("playerNotFound")}</p>
-          ) : me.isEliminated ? (
-            <p className="text-center text-sm text-white/50">{translate("eliminated")}</p>
-          ) : (
-            <HandHeldCards
-              cards={me.cards}
+        {!me ? (
+          <p className="text-center text-sm text-white/50">{translate("playerNotFound")}</p>
+        ) : me.isEliminated ? (
+          <p className="text-center text-sm text-white/50">{translate("eliminated")}</p>
+        ) : showAllCards || (!me.isBlind && me.cards.length > 0) ? (
+          <CardFan
+            cards={me.cards}
+            size="xl"
+            spread="wide"
+            tilt="hand"
+            animateDeal={animateDeal}
+            dealKey={dealKey}
+          />
+        ) : me.isBlind ? (
+          <>
+            <CardFan
               count={me.cardCount}
-              blind={me.isBlind && !showAllCards}
-              faceDown={me.isBlind && !showAllCards}
-              showCards={showAllCards || (!me.isBlind && me.cards.length > 0)}
+              blind
               size="xl"
-              orientation="up"
+              spread="wide"
+              tilt="hand"
               animateDeal={animateDeal}
               dealKey={dealKey}
             />
-          )}
-        </div>
-
-        {me?.isBlind && !showAllCards ? (
-          <p className="mt-2 text-center text-xs text-amber-200">{translate("cantSeeCards")}</p>
-        ) : null}
+            <p className="mt-2 text-center text-xs text-amber-200">{translate("cantSeeCards")}</p>
+          </>
+        ) : (
+          <CardFan
+            cards={me.cards}
+            size="xl"
+            spread="wide"
+            tilt="hand"
+            animateDeal={animateDeal}
+            dealKey={dealKey}
+          />
+        )}
       </div>
     </div>
   );

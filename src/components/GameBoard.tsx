@@ -24,7 +24,7 @@ type GameBoardProps = {
   onLeave: () => void;
 };
 
-const TRANSITION_MS = 2400;
+const TRANSITION_MS = 2200;
 
 export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const { translate } = useLanguage();
@@ -35,14 +35,40 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showTransition, setShowTransition] = useState(false);
-  const [manualTransition, setManualTransition] = useState(false);
+  const [animateDeal, setAnimateDeal] = useState(false);
+
   const prevPhaseRef = useRef<Room["phase"] | null>(null);
   const skipPhaseTransitionRef = useRef(false);
   const prevRoundRef = useRef(0);
-  const [animateDeal, setAnimateDeal] = useState(false);
+  const transitionTimerRef = useRef<number | null>(null);
+  const revealSoundRef = useRef<string | null>(null);
+  const transitionSoundRef = useRef(false);
+  const winSoundRef = useRef(false);
+  const dealSoundRef = useRef<string | null>(null);
+
+  function clearTransitionTimer() {
+    if (transitionTimerRef.current !== null) {
+      window.clearTimeout(transitionTimerRef.current);
+      transitionTimerRef.current = null;
+    }
+  }
+
+  function endTransition() {
+    clearTransitionTimer();
+    setShowTransition(false);
+  }
+
+  function startTransition(ms = TRANSITION_MS) {
+    clearTransitionTimer();
+    setShowTransition(true);
+    transitionTimerRef.current = window.setTimeout(() => {
+      endTransition();
+    }, ms);
+  }
 
   useEffect(() => {
     setPlayerId(getPlayerId());
+    return () => clearTransitionTimer();
   }, []);
 
   useEffect(() => {
@@ -59,35 +85,48 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     if (!room) return;
 
     const prev = prevPhaseRef.current;
-    if (prev === "revealed" && room.phase === "bidding") {
-      if (skipPhaseTransitionRef.current) {
-        skipPhaseTransitionRef.current = false;
-        prevPhaseRef.current = room.phase;
-        return;
-      }
-      setShowTransition(true);
-      const timer = window.setTimeout(() => setShowTransition(false), TRANSITION_MS);
-      prevPhaseRef.current = room.phase;
-      return () => window.clearTimeout(timer);
+    if (prev === "revealed" && room.phase === "bidding" && !skipPhaseTransitionRef.current) {
+      startTransition();
+    }
+
+    if (skipPhaseTransitionRef.current && room.phase === "bidding") {
+      skipPhaseTransitionRef.current = false;
     }
 
     prevPhaseRef.current = room.phase;
-  }, [room]);
+  }, [room?.phase]);
 
   useEffect(() => {
-    if (!room || room.roundNumber <= 0) return;
-    if (room.phase !== "bidding") return;
+    if (!room || room.roundNumber <= 0 || room.phase !== "bidding") return;
     if (prevRoundRef.current === room.roundNumber) return;
 
     prevRoundRef.current = room.roundNumber;
     setAnimateDeal(true);
-    const timer = window.setTimeout(() => setAnimateDeal(false), 1200);
+    const timer = window.setTimeout(() => setAnimateDeal(false), 1400);
     return () => window.clearTimeout(timer);
   }, [room?.roundNumber, room?.phase]);
 
-  const revealSoundRef = useRef<string | null>(null);
-  const transitionSoundRef = useRef(false);
-  const winSoundRef = useRef(false);
+  useEffect(() => {
+    if (!animateDeal || !room) return;
+
+    const me = players.find((p) => p.id === playerId);
+    if (!me || me.isEliminated || me.cardCount === 0) return;
+
+    const key = `${room.roundNumber}-${me.cardCount}`;
+    if (dealSoundRef.current === key) return;
+    dealSoundRef.current = key;
+
+    const timers: number[] = [];
+    for (let i = 0; i < me.cardCount; i += 1) {
+      timers.push(
+        window.setTimeout(() => {
+          play("card");
+        }, 100 + i * 70)
+      );
+    }
+
+    return () => timers.forEach((t) => window.clearTimeout(t));
+  }, [animateDeal, room?.roundNumber, players, playerId, play]);
 
   useEffect(() => {
     if (room?.phase === "revealed" && room.revealResult) {
@@ -100,15 +139,14 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   }, [room?.phase, room?.revealResult, play]);
 
   useEffect(() => {
-    const active = showTransition || manualTransition;
-    if (active && !transitionSoundRef.current) {
+    if (showTransition && !transitionSoundRef.current) {
       transitionSoundRef.current = true;
       play("transition");
     }
-    if (!active) {
+    if (!showTransition) {
       transitionSoundRef.current = false;
     }
-  }, [showTransition, manualTransition, play]);
+  }, [showTransition, play]);
 
   useEffect(() => {
     if (room?.status === "finished" && room.winnerName && !winSoundRef.current) {
@@ -133,20 +171,15 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const deckCount = room?.deckCount ?? 1;
 
   const starterName =
-    room?.revealResult?.loserName ??
-    (room?.turnOrder[0]
+    room?.phase === "bidding"
       ? players.find((p) => p.id === room.turnOrder[0])?.name ?? "..."
-      : "...");
+      : room?.revealResult?.loserName ?? "...";
 
-  const transitionRound =
-    manualTransition && room
-      ? room.roundNumber + 1
-      : room?.roundNumber ?? 1;
+  const transitionRound = room?.roundNumber ?? 1;
 
-  const showResultOverlay =
-    Boolean(room?.revealResult && room.phase === "revealed" && !manualTransition && !showTransition);
-
-  const showTransitionOverlay = manualTransition || showTransition;
+  const showResultOverlay = Boolean(
+    room?.revealResult && room.phase === "revealed" && !showTransition
+  );
 
   async function handleBid(count: number, rank: Parameters<typeof placeBid>[4]) {
     if (!me || !room) return;
@@ -185,15 +218,13 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
 
     setLoading(true);
     setError("");
-    setManualTransition(true);
     skipPhaseTransitionRef.current = true;
+    startTransition(TRANSITION_MS);
 
     try {
-      await new Promise((resolve) => window.setTimeout(resolve, TRANSITION_MS));
       await continueAfterReveal(roomCode, playerId);
-      setManualTransition(false);
     } catch (err) {
-      setManualTransition(false);
+      endTransition();
       setError(err instanceof Error ? err.message : translate("errContinue"));
     } finally {
       setLoading(false);
@@ -220,7 +251,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         />
       ) : null}
 
-      {showTransitionOverlay ? (
+      {showTransition ? (
         <RoundTransitionOverlay roundNumber={transitionRound} starterName={starterName} />
       ) : null}
 

@@ -1,16 +1,13 @@
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
-import type { SeatPosition } from "@/lib/seatLayout";
-import { getHandOrientation } from "@/lib/seatLayout";
 import { Player } from "@/lib/types";
-import { HandHeldCards } from "./HandHeldCards";
+import { CardFan } from "./CardFan";
 
 type OpponentSeatProps = {
   player: Player;
   isTurn: boolean;
   showCards: boolean;
-  seatPosition: SeatPosition;
   animateDeal?: boolean;
   dealKey?: string | number;
 };
@@ -19,12 +16,10 @@ export function OpponentSeat({
   player,
   isTurn,
   showCards,
-  seatPosition,
   animateDeal,
   dealKey,
 }: OpponentSeatProps) {
   const { translate } = useLanguage();
-  const orientation = getHandOrientation(seatPosition);
 
   if (player.isEliminated) {
     return (
@@ -41,13 +36,13 @@ export function OpponentSeat({
 
   return (
     <div
-      className={`opponent-seat flex flex-col items-center rounded-2xl px-2 py-2 transition ${
+      className={`flex min-w-[6.5rem] flex-col items-center rounded-2xl px-3 py-3 transition ${
         isTurn
           ? "bg-amber-400/20 ring-2 ring-amber-300 shadow-lg shadow-amber-500/20"
-          : ""
+          : "bg-black/25 backdrop-blur-sm"
       }`}
     >
-      <div className="mb-1 flex flex-wrap items-center justify-center gap-1">
+      <div className="mb-2 flex flex-wrap items-center justify-center gap-1">
         <span className="max-w-[5.5rem] truncate text-xs font-bold text-white">
           {player.name}
         </span>
@@ -58,17 +53,31 @@ export function OpponentSeat({
         ) : null}
       </div>
 
-      <HandHeldCards
-        cards={player.cards}
-        count={player.cardCount}
-        blind={player.isBlind && !showCards}
-        faceDown={!showCards}
-        showCards={showCards}
-        size="sm"
-        orientation={orientation}
-        animateDeal={animateDeal}
-        dealKey={dealKey}
-      />
+      {showCards ? (
+        <CardFan cards={player.cards} size="sm" spread="tight" tilt="table" />
+      ) : player.isBlind ? (
+        <CardFan
+          count={player.cardCount}
+          blind
+          size="sm"
+          spread="tight"
+          tilt="table"
+          showCountBadge
+          animateDeal={animateDeal}
+          dealKey={dealKey}
+        />
+      ) : (
+        <CardFan
+          count={player.cardCount}
+          faceDown
+          size="sm"
+          spread="tight"
+          tilt="table"
+          showCountBadge
+          animateDeal={animateDeal}
+          dealKey={dealKey}
+        />
+      )}
     </div>
   );
 }

@@ -242,58 +242,6 @@ button:disabled {
   animation: result-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
 }
 
-/* El + kart tutuş */
-.hand-held {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.hand-held-up {
-  flex-direction: column-reverse;
-}
-
-.hand-held-left {
-  flex-direction: row-reverse;
-  align-items: center;
-}
-
-.hand-held-right {
-  flex-direction: row;
-  align-items: center;
-}
-
-.hand-palm-wrap {
-  width: 4.25rem;
-  height: 2.75rem;
-  margin-top: -0.35rem;
-  opacity: 0.9;
-}
-
-.hand-held-up .hand-palm-wrap {
-  margin-top: 0;
-  margin-bottom: -0.65rem;
-}
-
-.hand-held-left .hand-palm-wrap,
-.hand-held-right .hand-palm-wrap {
-  width: 3.25rem;
-  height: 2.25rem;
-  margin: 0 -0.25rem;
-}
-
-.hand-palm-svg {
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
-}
-
-.hand-cards-wrap {
-  position: relative;
-  z-index: 2;
-}
-
 /* Rakip koltukları */
 .opponents-table {
   position: relative;

@@ -49,6 +49,30 @@ function tone(
   osc.stop(ctx.currentTime + decay + 0.02);
 }
 
+function swoosh() {
+  const ctx = getContext();
+  if (!ctx) return;
+
+  if (ctx.state === "suspended") {
+    void ctx.resume();
+  }
+
+  noiseBurst(0.022, 0.045);
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(680, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(280, ctx.currentTime + 0.07);
+  gain.gain.setValueAtTime(0, ctx.currentTime);
+  gain.gain.linearRampToValueAtTime(0.028, ctx.currentTime + 0.008);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.09);
+}
+
 function noiseBurst(volume = 0.025, duration = 0.04) {
   const ctx = getContext();
   if (!ctx) return;
@@ -95,7 +119,7 @@ export function playSound(name: SoundName): void {
       noiseBurst(0.012, 0.03);
       break;
     case "card":
-      tone(480, 0.04, "triangle", 0.03, 0.003, 0.035);
+      swoosh();
       break;
     case "open":
       tone(220, 0.1, "sawtooth", 0.025, 0.01, 0.12);
