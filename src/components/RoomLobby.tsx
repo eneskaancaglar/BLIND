@@ -83,6 +83,7 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
   const isHost = room?.hostId === playerId;
   const deckCount = room?.deckCount ?? 1;
   const blindThreshold = room?.blindThreshold ?? 6;
+  const blindGetsCards = room?.blindGetsCards ?? false;
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-md px-4 py-8">
@@ -106,6 +107,11 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
           </span>
           <span className="rounded-full bg-black/30 px-3 py-1">
             {translate("lobbyBlindAt", { count: blindThreshold })}
+          </span>
+          <span className="rounded-full bg-black/30 px-3 py-1">
+            {translate("lobbyBlindCards", {
+              value: blindGetsCards ? translate("blindGetsCardsYes") : translate("blindGetsCardsNo"),
+            })}
           </span>
         </div>
       </section>

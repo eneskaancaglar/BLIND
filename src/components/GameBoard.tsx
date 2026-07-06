@@ -5,6 +5,7 @@ import { BidControls } from "@/components/BidControls";
 import { GameTable } from "@/components/GameTable";
 import { RoundResultOverlay } from "@/components/RoundResultOverlay";
 import { RoundTransitionOverlay } from "@/components/RoundTransitionOverlay";
+import { WinnerOverlay } from "@/components/WinnerOverlay";
 import { useLanguage } from "@/context/LanguageContext";
 import { useSound } from "@/context/SoundContext";
 import { isFirebaseConfigured } from "@/lib/firebase";
@@ -14,6 +15,7 @@ import {
   attachRoomSync,
   continueAfterReveal,
   getPlayerId,
+  leaveGame,
   maskPlayersForViewer,
   openChallenge,
   placeBid,
@@ -163,16 +165,17 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   }, [room?.status, room?.winnerId, room?.winnerName, playerId, play]);
 
   const me = players.find((player) => player.id === playerId);
+  const blindGetsCards = room?.blindGetsCards ?? false;
   const visiblePlayers = useMemo(() => {
     if (!room) return players;
-    return maskPlayersForViewer(players, playerId, room.phase, room.status);
-  }, [players, playerId, room]);
+    return maskPlayersForViewer(players, playerId, room.phase, room.status, blindGetsCards);
+  }, [players, playerId, room, blindGetsCards]);
 
   const opponents = visiblePlayers.filter((p) => p.id !== playerId);
   const activePlayers = getActivePlayers(players);
   const turnPlayerId = room?.turnOrder[room.currentTurnIndex] ?? undefined;
   const isMyTurn = turnPlayerId === playerId;
-  const isHost = room?.hostId === playerId;
+  const canContinue = Boolean(me && !me.isEliminated && room?.status !== "finished");
   const showAllCards = room?.phase === "revealed";
   const deckCount = room?.deckCount ?? 1;
 
@@ -184,7 +187,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const transitionRound = room?.roundNumber ?? 1;
 
   const showResultOverlay = Boolean(
-    room?.revealResult && room.phase === "revealed" && !showTransition
+    room?.revealResult && room.phase === "revealed" && !showTransition && room.status !== "finished"
   );
 
   async function handleBid(count: number, rank: Parameters<typeof placeBid>[4]) {
@@ -237,6 +240,15 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     }
   }
 
+  async function handleLeave() {
+    try {
+      await leaveGame(roomCode, playerId);
+    } catch {
+      // Still navigate home if leave fails.
+    }
+    onLeave();
+  }
+
   if (!room) {
     return (
       <main className="flex min-h-[100dvh] items-center justify-center bg-[#061208]">
@@ -247,11 +259,19 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
 
   return (
     <>
+      {room.status === "finished" && room.winnerName ? (
+        <WinnerOverlay
+          winnerName={room.winnerName}
+          isMe={room.winnerId === playerId}
+          onHome={handleLeave}
+        />
+      ) : null}
+
       {showResultOverlay && room.revealResult ? (
         <RoundResultOverlay
           result={room.revealResult}
           bidCount={room.currentBid?.count ?? 0}
-          isHost={isHost}
+          canContinue={canContinue}
           loading={loading}
           onContinue={handleContinue}
         />
@@ -272,14 +292,6 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         animateDeal={animateDeal}
         dealKey={`${room.roundNumber}-${room.phase}`}
       >
-        {room.status === "finished" && room.winnerName ? (
-          <section className="rounded-2xl border border-emerald-500/40 bg-emerald-950/60 p-4 text-center">
-            <h2 className="text-xl font-bold text-emerald-300">
-              {translate("winner", { name: room.winnerName })}
-            </h2>
-          </section>
-        ) : null}
-
         {room.phase === "bidding" && isMyTurn && me && !me.isEliminated ? (
           <BidControls
             currentBid={room.currentBid}
@@ -295,7 +307,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
 
         <button
           type="button"
-          onClick={onLeave}
+          onClick={handleLeave}
           className="w-full py-2 text-center text-xs text-neutral-500 underline"
         >
           {translate("home")}

@@ -42,6 +42,7 @@ export type Room = {
   deck: Card[];
   deckCount: 1 | 2;
   blindThreshold: 5 | 6 | 7;
+  blindGetsCards: boolean;
   winnerId: string | null;
   winnerName: string | null;
   lastLoserId: string | null;

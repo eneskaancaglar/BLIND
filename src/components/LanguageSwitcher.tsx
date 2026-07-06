@@ -5,9 +5,10 @@ import type { Language } from "@/lib/i18n";
 
 type LanguageSwitcherProps = {
   className?: string;
+  compact?: boolean;
 };
 
-export function LanguageSwitcher({ className = "" }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ className = "", compact = false }: LanguageSwitcherProps) {
   const { language, setLanguage, translate } = useLanguage();
 
   function select(lang: Language) {
@@ -15,15 +16,20 @@ export function LanguageSwitcher({ className = "" }: LanguageSwitcherProps) {
   }
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <span className="text-xs text-violet-200/60">{translate("language")}</span>
-      <div className="flex rounded-xl border border-white/10 bg-black/30 p-0.5">
+    <div className={`flex items-center ${compact ? "gap-1" : "gap-2"} ${className}`}>
+      <div
+        className={`flex rounded-xl border border-white/10 bg-black/30 ${
+          compact ? "p-0.5" : "p-0.5"
+        }`}
+      >
         {(["en", "tr"] as Language[]).map((lang) => (
           <button
             key={lang}
             type="button"
             onClick={() => select(lang)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+            className={`rounded-lg font-semibold transition ${
+              compact ? "px-2 py-1 text-[10px]" : "px-3 py-1.5 text-xs"
+            } ${
               language === lang
                 ? "bg-gradient-to-r from-fuchsia-500 to-violet-600 text-white"
                 : "text-violet-200/70 hover:text-white"

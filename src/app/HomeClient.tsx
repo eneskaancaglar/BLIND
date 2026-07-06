@@ -177,11 +177,6 @@ export default function HomeClient() {
       <main className="home-shell relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 py-6">
         <HomeFloatingCards />
 
-        <div className="relative z-10 mb-6 flex items-center justify-between">
-          <LanguageSwitcher />
-          <SoundToggle compact />
-        </div>
-
         <div className="relative z-10 mb-8 text-center">
           <h1 className="bg-gradient-to-r from-white via-fuchsia-100 to-cyan-200 bg-clip-text text-6xl font-black tracking-tight text-transparent drop-shadow-sm">
             BLIND
@@ -270,6 +265,40 @@ export default function HomeClient() {
                 ))}
               </div>
             </div>
+
+            <div>
+              <p className="mb-2 text-xs text-violet-200/60">{translate("blindGetsCards")}</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    play("click");
+                    setRoomSettings((s) => ({ ...s, blindGetsCards: false }));
+                  }}
+                  className={`rounded-xl py-2.5 text-sm font-semibold transition ${
+                    !roomSettings.blindGetsCards
+                      ? "bg-violet-600 text-white"
+                      : "bg-black/30 text-violet-200/80 hover:bg-black/50"
+                  }`}
+                >
+                  {translate("blindGetsCardsNo")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    play("click");
+                    setRoomSettings((s) => ({ ...s, blindGetsCards: true }));
+                  }}
+                  className={`rounded-xl py-2.5 text-sm font-semibold transition ${
+                    roomSettings.blindGetsCards
+                      ? "bg-violet-600 text-white"
+                      : "bg-black/30 text-violet-200/80 hover:bg-black/50"
+                  }`}
+                >
+                  {translate("blindGetsCardsYes")}
+                </button>
+              </div>
+            </div>
           </div>
 
           <button
@@ -317,6 +346,11 @@ export default function HomeClient() {
           >
             {translate("howToPlay")}
           </button>
+        </div>
+
+        <div className="relative z-10 mt-4 flex items-center justify-center gap-2 pb-1">
+          <LanguageSwitcher compact />
+          <SoundToggle compact />
         </div>
       </main>
     </>

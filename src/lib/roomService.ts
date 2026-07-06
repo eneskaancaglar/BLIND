@@ -20,6 +20,7 @@ import {
   createDeck,
   dealCards,
   generateRoomCode,
+  getActivePlayers,
   getWinner,
   nextTurnIndex,
   resolveChallenge,
@@ -213,6 +214,7 @@ export async function createRoom(
     deck: [],
     deckCount: settings.deckCount,
     blindThreshold: settings.blindThreshold,
+    blindGetsCards: settings.blindGetsCards,
     winnerId: null,
     winnerName: null,
     lastLoserId: null,
@@ -400,21 +402,24 @@ export async function openChallenge(
   });
 }
 
-export async function continueAfterReveal(roomCode: string, hostId: string): Promise<void> {
+export async function continueAfterReveal(roomCode: string, actorId: string): Promise<void> {
   const roomRef = doc(db, ROOMS, roomCode);
   const roomSnap = await getDoc(roomRef);
 
   if (!roomSnap.exists()) throw new Error("Oda bulunamadı.");
 
   const room = roomSnap.data() as Room;
-  if (room.hostId !== hostId) throw new Error("Sadece oda kurucusu devam ettirebilir.");
   if (room.phase !== "revealed" || !room.revealResult) {
     throw new Error("Gösterim aşaması tamamlanmadı.");
   }
 
-  const blindThreshold = room.blindThreshold ?? 6;
-
   const players = await fetchPlayers(roomCode);
+  const actor = players.find((player) => player.id === actorId);
+  if (!actor || actor.isEliminated) {
+    throw new Error("Devam etmek için oyunda olmalısınız.");
+  }
+
+  const blindThreshold = room.blindThreshold ?? 6;
   const updatedPlayers = players.map((player) => {
     const result = room.revealResult!;
 
@@ -479,6 +484,100 @@ export async function continueAfterReveal(roomCode: string, hostId: string): Pro
   );
 }
 
+export async function leaveGame(roomCode: string, playerId: string): Promise<void> {
+  const roomRef = doc(db, ROOMS, roomCode);
+  const roomSnap = await getDoc(roomRef);
+  if (!roomSnap.exists()) {
+    clearStoredRoomCode();
+    return;
+  }
+
+  const room = roomSnap.data() as Room;
+  if (room.status === "finished") {
+    clearStoredRoomCode();
+    return;
+  }
+
+  const players = await fetchPlayers(roomCode);
+  const me = players.find((player) => player.id === playerId);
+  if (!me) {
+    clearStoredRoomCode();
+    return;
+  }
+
+  await updateDoc(doc(db, ROOMS, roomCode, PLAYERS, playerId), {
+    isEliminated: true,
+    cardCount: 0,
+    cards: [],
+    isBlind: false,
+    isHost: false,
+  });
+
+  const updatedPlayers = players.map((player) =>
+    player.id === playerId
+      ? { ...player, isEliminated: true, cardCount: 0, cards: [], isBlind: false, isHost: false }
+      : player
+  );
+
+  const active = getActivePlayers(updatedPlayers);
+  const winner = getWinner(updatedPlayers);
+
+  if (winner || active.length <= 1) {
+    const w = winner ?? active[0];
+    if (w) {
+      await updateDoc(roomRef, {
+        status: "finished",
+        phase: "round_end",
+        winnerId: w.id,
+        winnerName: w.name,
+        revealResult: null,
+        ...(room.hostId === playerId ? { hostId: w.id } : {}),
+      });
+      await updateDoc(doc(db, ROOMS, roomCode, PLAYERS, w.id), { isHost: true });
+    }
+    clearStoredRoomCode();
+    return;
+  }
+
+  const roomUpdates: Partial<Room> = {};
+
+  if (room.hostId === playerId) {
+    const newHost = active[0];
+    if (newHost) {
+      roomUpdates.hostId = newHost.id;
+      await updateDoc(doc(db, ROOMS, roomCode, PLAYERS, newHost.id), { isHost: true });
+    }
+  }
+
+  if (room.status === "playing" && room.phase === "bidding") {
+    const newTurnOrder = buildTurnOrder(updatedPlayers);
+    const oldCurrentId = room.turnOrder[room.currentTurnIndex];
+    let newTurnIndex = 0;
+
+    if (oldCurrentId && oldCurrentId !== playerId) {
+      const idx = newTurnOrder.indexOf(oldCurrentId);
+      newTurnIndex = idx >= 0 ? idx : 0;
+    }
+
+    roomUpdates.turnOrder = newTurnOrder;
+    roomUpdates.currentTurnIndex = newTurnIndex;
+  }
+
+  if (Object.keys(roomUpdates).length > 0) {
+    await updateDoc(roomRef, roomUpdates);
+  }
+
+  if (room.phase === "revealed" && room.revealResult && active[0]) {
+    try {
+      await continueAfterReveal(roomCode, active[0].id);
+    } catch {
+      // Remaining players can continue manually.
+    }
+  }
+
+  clearStoredRoomCode();
+}
+
 export function subscribeToRoom(
   roomCode: string,
   onRoom: (room: Room | null) => void,
@@ -515,14 +614,15 @@ export function maskPlayersForViewer(
   players: Player[],
   viewerId: string,
   phase: Room["phase"],
-  status: Room["status"]
+  status: Room["status"],
+  blindGetsCards = false
 ): Player[] {
   const showAllCards = phase === "revealed" || (status === "finished" && phase === "round_end");
 
   return players.map((player) => {
     if (showAllCards) return player;
     if (player.id === viewerId) {
-      if (player.isBlind) {
+      if (player.isBlind && !blindGetsCards) {
         return {
           ...player,
           cards: [],

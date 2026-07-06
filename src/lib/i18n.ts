@@ -5,6 +5,7 @@ export type Language = "en" | "tr";
 export type RoomSettings = {
   deckCount: 1 | 2;
   blindThreshold: 5 | 6 | 7;
+  blindGetsCards: boolean;
 };
 
 const STORAGE_KEY = "blind_language";
@@ -14,6 +15,7 @@ export const DEFAULT_LANGUAGE: Language = "en";
 export const DEFAULT_ROOM_SETTINGS: RoomSettings = {
   deckCount: 1,
   blindThreshold: 6,
+  blindGetsCards: false,
 };
 
 export type Vars = Record<string, string | number>;
@@ -60,7 +62,12 @@ const en = {
   deckDouble: "2 decks",
   blindThreshold: "BLIND at",
   blindThresholdCards: "{count} cards",
+  blindGetsCards: "BLIND sees cards",
+  blindNoCards: "BLIND hidden",
+  blindGetsCardsYes: "Yes",
+  blindGetsCardsNo: "No (default)",
 
+  lobbyBlindCards: "BLIND cards: {value}",
   lobbyRoom: "Room",
   lobbyShare: "Share this code with other players",
   lobbyLink: "Link for phones",
@@ -103,6 +110,10 @@ const en = {
   roundTransitionTitle: "Next Round",
   roundTransitionSubtitle: "Round {round} — {name} starts",
   winner: "Winner: {name}",
+  gameOver: "Game Over",
+  youWon: "You won!",
+  backToHome: "Back to Home",
+  revealAnyoneWait: "Waiting to continue...",
 
   bidYourMove: "Your move",
   bidCount: "Count",
@@ -124,10 +135,11 @@ const en = {
   rule2: "On your turn: bid count + rank (e.g. 3 sixes). Rank order: 3 → Ace. 2s cannot be bid.",
   rule3: 'Say "Open" to reveal all cards. Count = bid rank + all 2s (wild).',
   rule4: "Count ≥ bid → opener loses. Count < bid → last bidder loses.",
-  rule5: "Loser gets +1 card next round. At the blind limit, losing again makes you BLIND (can't see cards).",
-  rule6: "If BLIND and you lose, you're out. Last player with cards wins.",
+  rule5: "Loser gets +1 card. At the blind limit they become BLIND. If the room hides BLIND cards, they bid without seeing them.",
+  rule6: "BLIND who loses is out. Last player with cards wins.",
   rule7: "BLIND rule: BLIND bids. If the next player raises, play continues normally.",
-  rule8: "If the next player Opens and the bid is correct: BLIND returns with 5 cards; opener gets +1 penalty (+1 card, BLIND if at limit).",
+  rule8: "If the next player Opens and the bid is correct: BLIND returns with 5 cards; opener gets +1 penalty.",
+  rule9: "Optional room rule: BLIND can see their cards — they keep their cards at the limit and bid normally; another loss eliminates them.",
   rulesTitle: "How to Play?",
 } as const;
 
@@ -173,6 +185,12 @@ const tr: Record<keyof typeof en, string> = {
   deckDouble: "2 deste",
   blindThreshold: "BLIND eşiği",
   blindThresholdCards: "{count} kart",
+  blindGetsCards: "BLIND kartları",
+  blindNoCards: "BLIND gizli",
+  blindGetsCardsYes: "Evet",
+  blindGetsCardsNo: "Hayır (varsayılan)",
+
+  lobbyBlindCards: "BLIND kart: {value}",
 
   lobbyRoom: "Oda",
   lobbyShare: "Bu kodu diğer oyuncularla paylaşın",
@@ -218,6 +236,10 @@ const tr: Record<keyof typeof en, string> = {
   roundTransitionTitle: "Sonraki El",
   roundTransitionSubtitle: "El {round} — {name} başlıyor",
   winner: "Kazanan: {name}",
+  gameOver: "Oyun Bitti",
+  youWon: "Kazandın!",
+  backToHome: "Ana Menüye Dön",
+  revealAnyoneWait: "Devam bekleniyor...",
 
   bidYourMove: "Hamlen",
   bidCount: "Adet",
@@ -239,10 +261,11 @@ const tr: Record<keyof typeof en, string> = {
   rule2: "Sıra sende: adet + rütbe iddia et (ör. 3 tane 6). Rütbe sırası: 3 → As. 2 iddia edilemez.",
   rule3: "İstersen Aç de — tüm kartlar açılır. Sayım = iddia edilen rütbe + tüm 2'ler (joker).",
   rule4: "Sayım ≥ iddia → açan kaybeder. Sayım < iddia → son iddia eden kaybeder.",
-  rule5: "Kaybeden sonraki elde +1 kart alır. BLIND eşiğinde tekrar kaybederse BLIND olur (kartlarını göremez).",
-  rule6: "BLIND iken kaybederse elenir. Kartı kalan son oyuncu kazanır.",
-  rule7: "BLIND kuralı: BLIND oyuncu iddia eder. Hemen sonraki oyuncu iddiayı yükseltip devam ederse oyun normal sürer.",
-  rule8: "BLIND'den hemen sonraki Aç derse ve iddia doğruysa: BLIND 5 kartla döner; açan +1 kart cezası alır.",
+  rule5: "Kaybeden +1 kart alır. BLIND eşiğinde BLIND olur. Oda kuralı gizliyse kartlarını göremez.",
+  rule6: "BLIND kaybederse elenir. Kartı kalan son oyuncu kazanır.",
+  rule7: "BLIND kuralı: BLIND iddia eder. Sonraki yükseltirse oyun normal sürer.",
+  rule8: "Sonraki Aç derse ve iddia doğruysa: BLIND 5 kartla döner; açan +1 kart cezası alır.",
+  rule9: "Oda kuralı: BLIND kartlarını görebilir — eşikte kartları kalır, normal iddia eder; tekrar kaybederse elenir.",
   rulesTitle: "Nasıl Oynanır?",
 };
 
@@ -297,5 +320,5 @@ export function formatRevealSummary(
 }
 
 export function getRuleKeys(): TranslationKey[] {
-  return ["rule1", "rule2", "rule3", "rule4", "rule5", "rule6", "rule7", "rule8"];
+  return ["rule1", "rule2", "rule3", "rule4", "rule5", "rule6", "rule7", "rule8", "rule9"];
 }

@@ -33,6 +33,8 @@ export function GameTable({
   children,
 }: GameTableProps) {
   const { translate } = useLanguage();
+  const blindGetsCards = room.blindGetsCards ?? false;
+  const seesOwnCards = Boolean(me && (showAllCards || !me.isBlind || blindGetsCards));
 
   const turnName =
     opponents.find((p) => p.id === turnPlayerId)?.name ??
@@ -148,7 +150,7 @@ export function GameTable({
           <p className="text-center text-sm text-white/50">{translate("playerNotFound")}</p>
         ) : me.isEliminated ? (
           <p className="text-center text-sm text-white/50">{translate("eliminated")}</p>
-        ) : showAllCards || (!me.isBlind && me.cards.length > 0) ? (
+        ) : seesOwnCards && me.cards.length > 0 ? (
           <CardFan
             cards={me.cards}
             size="xl"
@@ -157,7 +159,7 @@ export function GameTable({
             animateDeal={animateDeal}
             dealKey={dealKey}
           />
-        ) : me.isBlind ? (
+        ) : me.isBlind && !blindGetsCards ? (
           <>
             <CardFan
               count={me.cardCount}
