@@ -30,17 +30,17 @@ export function PlayerList({
             key={player.id}
             className={`rounded-2xl border px-4 py-3 ${
               isTurn
-                ? "border-green-500 bg-green-500/10"
-                : "border-neutral-700 bg-neutral-900"
+                ? "border-white/20 bg-white/10"
+                : "border-white/10 bg-black/22"
             }`}
           >
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="font-semibold">
+                <p className="font-semibold text-slate-100">
                   {player.name}
                   {isMe ? ` (${translate("you")})` : ""}
                 </p>
-                <p className="text-sm text-neutral-400">
+                <p className="text-sm text-slate-400">
                   {player.isEliminated
                     ? translate("eliminated")
                     : player.isBlind
@@ -50,17 +50,17 @@ export function PlayerList({
               </div>
               <div className="flex flex-wrap justify-end gap-1">
                 {player.isHost || player.id === hostId ? (
-                  <span className="rounded-full bg-neutral-700 px-2 py-1 text-xs">
+                  <span className="home-chip rounded-full px-2 py-1 text-xs">
                     {translate("host")}
                   </span>
                 ) : null}
                 {player.isBlind ? (
-                  <span className="rounded-full bg-amber-500/20 px-2 py-1 text-xs text-amber-300">
+                  <span className="home-chip rounded-full px-2 py-1 text-xs text-slate-200">
                     {translate("blind")}
                   </span>
                 ) : null}
                 {player.isEliminated ? (
-                  <span className="rounded-full bg-red-500/20 px-2 py-1 text-xs text-red-300">
+                  <span className="rounded-full border border-red-400/25 bg-red-950/30 px-2 py-1 text-xs text-red-200/90">
                     {translate("eliminated")}
                   </span>
                 ) : null}

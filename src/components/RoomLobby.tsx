@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { HomeFloatingCards } from "@/components/HomeFloatingCards";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { PlayerList } from "@/components/PlayerList";
+import { SoundToggle } from "@/components/SoundToggle";
 import { useLanguage } from "@/context/LanguageContext";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { t } from "@/lib/i18n";
@@ -92,86 +94,97 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
   const blindGetsCards = room?.blindGetsCards ?? false;
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-md px-4 py-8">
-      <div className="mb-4 flex justify-end">
-        <LanguageSwitcher />
+    <main className="home-shell relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-0 pt-10">
+      <HomeFloatingCards />
+
+      <div className="relative z-10 flex flex-1 flex-col gap-5">
+        <header className="home-brand-wrap">
+          <span className="home-brand-line" aria-hidden />
+          <h1 className="home-brand-title">BLIND</h1>
+          <p className="home-brand-tagline">{translate("homeTagline")}</p>
+          <span className="home-brand-line" aria-hidden />
+        </header>
+
+        <div className="home-panel space-y-3 rounded-3xl p-5 text-center">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
+            {translate("lobbyRoom")}
+          </p>
+          <p className="text-3xl font-light tracking-[0.35em] text-white">{roomCode}</p>
+          <p className="text-sm text-slate-400">{translate("lobbyShare")}</p>
+        </div>
+
+        <section className="home-panel-light space-y-3 rounded-2xl p-4">
+          <p className="text-sm font-medium text-slate-200/90">{translate("lobbySettings")}</p>
+          <div className="flex flex-wrap gap-2">
+            <span className="home-chip rounded-full px-3 py-1.5 text-xs font-semibold">
+              {translate("lobbyDeck", { count: deckCount })}
+            </span>
+            <span className="home-chip rounded-full px-3 py-1.5 text-xs font-semibold">
+              {translate("lobbyBlindAt", { count: blindThreshold })}
+            </span>
+            <span className="home-chip rounded-full px-3 py-1.5 text-xs font-semibold">
+              {translate("lobbyBlindCards", {
+                value: blindGetsCards ? translate("blindGetsCardsYes") : translate("blindGetsCardsNo"),
+              })}
+            </span>
+          </div>
+        </section>
+
+        <section className="home-panel space-y-3 rounded-3xl p-5">
+          <p className="text-sm font-medium text-slate-300">{translate("lobbyLink")}</p>
+          <p className="break-all text-xs text-slate-400">{shareLink}</p>
+          <button
+            type="button"
+            onClick={copyShareLink}
+            className="home-btn-join w-full rounded-xl py-3 text-base font-semibold"
+          >
+            {copied ? translate("lobbyCopied") : translate("lobbyCopy")}
+          </button>
+        </section>
+
+        <section className="home-panel space-y-4 rounded-3xl p-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-medium text-slate-300">{translate("lobbyPlayers")}</h2>
+            <span className="home-chip rounded-full px-3 py-1 text-xs font-semibold">
+              {translate("lobbyPlayerCount", { count: players.length })}
+            </span>
+          </div>
+          <PlayerList players={players} currentPlayerId={playerId} hostId={room?.hostId} />
+        </section>
+
+        {isHost ? (
+          <button
+            type="button"
+            disabled={loading || players.length < 2 || room?.status !== "waiting"}
+            onClick={handleStart}
+            className="home-btn-start w-full rounded-2xl py-3.5 text-base font-semibold disabled:opacity-50"
+          >
+            {loading ? translate("lobbyStarting") : translate("lobbyStart")}
+          </button>
+        ) : (
+          <div className="home-panel-light rounded-2xl px-4 py-4 text-center text-sm text-slate-400">
+            {translate("lobbyWaitHost")}
+          </div>
+        )}
+
+        {players.length < 2 ? (
+          <p className="text-center text-sm text-slate-400">{translate("lobbyMinPlayers")}</p>
+        ) : null}
+
+        {error ? (
+          <div className="rounded-2xl border border-red-400/25 bg-red-950/30 p-3 text-center text-sm text-red-200/90">
+            {error}
+          </div>
+        ) : null}
+
+        <footer className="home-footer-bar">
+          <button type="button" onClick={onLeave} className="home-footer-btn">
+            {translate("home")}
+          </button>
+          <LanguageSwitcher footer />
+          <SoundToggle footer />
+        </footer>
       </div>
-
-      <div className="mb-8 text-center">
-        <p className="text-sm uppercase tracking-[0.25em] text-neutral-500">
-          {translate("lobbyRoom")}
-        </p>
-        <h1 className="mt-2 text-4xl font-black tracking-[0.2em]">{roomCode}</h1>
-        <p className="mt-2 text-neutral-400">{translate("lobbyShare")}</p>
-      </div>
-
-      <section className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
-        <p className="mb-2 text-sm font-semibold text-amber-200">{translate("lobbySettings")}</p>
-        <div className="flex flex-wrap gap-2 text-sm text-amber-100/90">
-          <span className="rounded-full bg-black/30 px-3 py-1">
-            {translate("lobbyDeck", { count: deckCount })}
-          </span>
-          <span className="rounded-full bg-black/30 px-3 py-1">
-            {translate("lobbyBlindAt", { count: blindThreshold })}
-          </span>
-          <span className="rounded-full bg-black/30 px-3 py-1">
-            {translate("lobbyBlindCards", {
-              value: blindGetsCards ? translate("blindGetsCardsYes") : translate("blindGetsCardsNo"),
-            })}
-          </span>
-        </div>
-      </section>
-
-      <section className="mb-6 rounded-3xl border border-green-500/30 bg-green-500/10 p-4">
-        <p className="mb-2 text-sm font-semibold text-green-200">{translate("lobbyLink")}</p>
-        <p className="mb-3 break-all text-xs text-green-100/80">{shareLink}</p>
-        <button
-          type="button"
-          onClick={copyShareLink}
-          className="w-full rounded-2xl bg-green-600 px-4 py-3 text-base font-semibold text-white"
-        >
-          {copied ? translate("lobbyCopied") : translate("lobbyCopy")}
-        </button>
-      </section>
-
-      <section className="mb-6 rounded-3xl border border-neutral-800 bg-neutral-900/80 p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{translate("lobbyPlayers")}</h2>
-          <span className="rounded-full bg-neutral-800 px-3 py-1 text-sm">
-            {translate("lobbyPlayerCount", { count: players.length })}
-          </span>
-        </div>
-        <PlayerList players={players} currentPlayerId={playerId} hostId={room?.hostId} />
-      </section>
-
-      {isHost ? (
-        <button
-          type="button"
-          disabled={loading || players.length < 2 || room?.status !== "waiting"}
-          onClick={handleStart}
-          className="w-full rounded-2xl bg-green-600 px-4 py-4 text-lg font-semibold text-white transition hover:bg-green-500 disabled:opacity-50"
-        >
-          {loading ? translate("lobbyStarting") : translate("lobbyStart")}
-        </button>
-      ) : (
-        <div className="rounded-2xl border border-neutral-700 bg-neutral-900 px-4 py-4 text-center text-neutral-400">
-          {translate("lobbyWaitHost")}
-        </div>
-      )}
-
-      {players.length < 2 ? (
-        <p className="mt-3 text-center text-sm text-amber-300">{translate("lobbyMinPlayers")}</p>
-      ) : null}
-
-      {error ? <p className="mt-3 text-center text-sm text-red-400">{error}</p> : null}
-
-      <button
-        type="button"
-        onClick={onLeave}
-        className="mt-8 block w-full text-center text-sm text-neutral-500 underline"
-      >
-        {translate("home")}
-      </button>
     </main>
   );
 }

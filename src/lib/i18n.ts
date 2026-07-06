@@ -40,7 +40,7 @@ const en = {
   soundOff: "Sound off",
 
   homeSubtitle: "Create a room, share the code, play from your phone.",
-  homeTagline: "Bid boldly. Stay hidden. Win the last hand.",
+  homeTagline: "Every bid is a risk. Every reveal is a challenge.",
   howToPlay: "How to Play?",
   invitedToRoom: "You're invited to room {code}",
   firebaseMissing: "No Firebase connection — check .env.local",
@@ -50,7 +50,7 @@ const en = {
   createRoom: "Create Room",
   startRoom: "Start",
   roomCode: "Room Code",
-  roomCodePlaceholder: "ABJ3K",
+  roomCodePlaceholder: "e.g. ABJ3K",
   joinRoom: "Join Room",
   joinRoomInvite: "Join Room {code}",
   errNameRequired: "Enter your player name first.",
@@ -67,7 +67,7 @@ const en = {
   blindGetsCards: "BLIND gets cards",
   blindNoCards: "No cards — bid blind",
   blindGetsCardsYes: "Yes (can't see)",
-  blindGetsCardsNo: "No (default)",
+  blindGetsCardsNo: "No",
 
   lobbyBlindCards: "BLIND cards: {value}",
   lobbyRoom: "Room",
@@ -168,7 +168,7 @@ const tr: Record<keyof typeof en, string> = {
   soundOff: "Ses kapalı",
 
   homeSubtitle: "Oda kur, kodu paylaş, telefondan oyna.",
-  homeTagline: "Cesurca iddia et. Gizli kal. Son eli kazan.",
+  homeTagline: "Her iddia bir risk. Her Aç bir meydan okuma.",
   howToPlay: "Nasıl Oynanır?",
   invitedToRoom: "{code} odasına davet edildin",
   firebaseMissing: "Firebase bağlantısı yok — .env.local kontrol et",
@@ -178,7 +178,7 @@ const tr: Record<keyof typeof en, string> = {
   createRoom: "Oda Kur",
   startRoom: "Başlat",
   roomCode: "Oda Kodu",
-  roomCodePlaceholder: "ABJ3K",
+  roomCodePlaceholder: "Örn: ABJ3K",
   joinRoom: "Odaya Katıl",
   joinRoomInvite: "{code} Odasına Katıl",
   errNameRequired: "Önce oyuncu adını yazman lazım.",
@@ -195,7 +195,7 @@ const tr: Record<keyof typeof en, string> = {
   blindGetsCards: "BLIND'e kart ver",
   blindNoCards: "Kartsız — kör tahmin",
   blindGetsCardsYes: "Evet (görmez)",
-  blindGetsCardsNo: "Hayır (varsayılan)",
+  blindGetsCardsNo: "Hayır",
 
   lobbyBlindCards: "BLIND kart: {value}",
 
