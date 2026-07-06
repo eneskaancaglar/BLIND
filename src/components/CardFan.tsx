@@ -62,7 +62,7 @@ export function CardFan({
   const renderCount = animateDeal ? Math.min(visibleCount, total) : total;
 
   return (
-    <div className="relative inline-flex flex-col items-center">
+    <div className="relative flex w-full flex-col items-center">
       {showCountBadge && isBack ? (
         <div className="count-badge mb-1">{total}</div>
       ) : null}

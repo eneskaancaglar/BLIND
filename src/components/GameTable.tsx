@@ -173,16 +173,18 @@ export function GameTable({
         ) : me.isEliminated ? (
           <p className="text-center text-sm text-slate-500">{translate("eliminated")}</p>
         ) : seesOwnCards || (showAllCards && !me.isBlind) ? (
-          <CardFan
-            cards={me.cards}
-            size="xl"
-            spread="wide"
-            tilt="hand"
-            animateDeal={animateDeal}
-            dealKey={dealKey}
-          />
+          <div className="flex w-full justify-center">
+            <CardFan
+              cards={me.cards}
+              size="xl"
+              spread="wide"
+              tilt="hand"
+              animateDeal={animateDeal}
+              dealKey={dealKey}
+            />
+          </div>
         ) : me.isBlind && handCount > 0 ? (
-          <>
+          <div className="flex w-full flex-col items-center">
             <CardFan
               count={handCount}
               blind
@@ -193,18 +195,20 @@ export function GameTable({
               dealKey={dealKey}
             />
             <p className="mt-2 text-center text-xs text-slate-400">{translate("cantSeeCards")}</p>
-          </>
+          </div>
         ) : me.isBlind ? (
           <p className="text-center text-sm text-slate-400">{translate("blindNoCards")}</p>
         ) : (
-          <CardFan
-            cards={me.cards}
-            size="xl"
-            spread="wide"
-            tilt="hand"
-            animateDeal={animateDeal}
-            dealKey={dealKey}
-          />
+          <div className="flex w-full justify-center">
+            <CardFan
+              cards={me.cards}
+              size="xl"
+              spread="wide"
+              tilt="hand"
+              animateDeal={animateDeal}
+              dealKey={dealKey}
+            />
+          </div>
         )}
       </div>
     </div>

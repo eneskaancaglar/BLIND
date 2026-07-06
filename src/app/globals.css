@@ -189,6 +189,10 @@ button:disabled {
   backdrop-filter: blur(8px);
 }
 
+.card-fan-row {
+  margin-inline: auto;
+}
+
 .game-header-brand {
   font-size: 0.65rem;
   font-weight: 500;
