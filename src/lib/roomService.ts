@@ -15,7 +15,7 @@ import {
   writeBatch,
   Unsubscribe,
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { getDb } from "@/lib/firebase";
 import {
   applyRoundLoss,
   applyBlindRevival,
@@ -41,14 +41,14 @@ export type RoomSyncState = {
 };
 
 async function fetchRoomFromServer(roomCode: string): Promise<Room | null> {
-  const snapshot = await getDocFromServer(doc(db, ROOMS, roomCode));
+  const snapshot = await getDocFromServer(doc(getDb(), ROOMS, roomCode));
   if (!snapshot.exists()) return null;
   return snapshot.data() as Room;
 }
 
 async function fetchPlayersFromServer(roomCode: string): Promise<Player[]> {
   const snapshot = await getDocsFromServer(
-    query(collection(db, ROOMS, roomCode, PLAYERS), orderBy("joinedAt", "asc"))
+    query(collection(getDb(), ROOMS, roomCode, PLAYERS), orderBy("joinedAt", "asc"))
   );
   return snapshot.docs.map((d) => d.data() as Player);
 }
@@ -67,10 +67,10 @@ async function batchWritePlayersAndRoom(
   roomUpdate: Record<string, unknown>,
   players: Player[]
 ): Promise<void> {
-  const batch = writeBatch(db);
+  const batch = writeBatch(getDb());
 
   for (const player of players) {
-    batch.update(doc(db, ROOMS, roomCode, PLAYERS, player.id), {
+    batch.update(doc(getDb(), ROOMS, roomCode, PLAYERS, player.id), {
       cards: player.cards,
       cardCount: player.cardCount,
       isBlind: player.isBlind,
@@ -162,7 +162,7 @@ export function getStoredRoomCode(): string {
 
 export async function getRoomTargetPath(roomCode: string): Promise<string | null> {
   const normalizedCode = roomCode.trim().toUpperCase();
-  const roomSnap = await getDoc(doc(db, ROOMS, normalizedCode));
+  const roomSnap = await getDoc(doc(getDb(), ROOMS, normalizedCode));
   if (!roomSnap.exists()) return null;
 
   const room = roomSnap.data() as Room;
@@ -179,13 +179,13 @@ export function buildJoinLink(roomCode: string): string {
 
 async function fetchPlayers(roomCode: string): Promise<Player[]> {
   const snapshot = await getDocs(
-    query(collection(db, ROOMS, roomCode, PLAYERS), orderBy("joinedAt", "asc"))
+    query(collection(getDb(), ROOMS, roomCode, PLAYERS), orderBy("joinedAt", "asc"))
   );
   return snapshot.docs.map((d) => d.data() as Player);
 }
 
 export async function fetchRoomSnapshot(roomCode: string): Promise<Room | null> {
-  const snapshot = await getDoc(doc(db, ROOMS, roomCode));
+  const snapshot = await getDoc(doc(getDb(), ROOMS, roomCode));
   if (!snapshot.exists()) return null;
   return snapshot.data() as Room;
 }
@@ -279,7 +279,7 @@ export async function createRoom(
   let attempts = 0;
 
   while (attempts < 10) {
-    const roomRef = doc(db, ROOMS, roomCode);
+    const roomRef = doc(getDb(), ROOMS, roomCode);
     const existing = await getDoc(roomRef);
     if (!existing.exists()) break;
     roomCode = generateRoomCode();
@@ -319,8 +319,8 @@ export async function createRoom(
   };
 
   try {
-    await setDoc(doc(db, ROOMS, roomCode), room);
-    await setDoc(doc(db, ROOMS, roomCode, PLAYERS, playerId), player);
+    await setDoc(doc(getDb(), ROOMS, roomCode), room);
+    await setDoc(doc(getDb(), ROOMS, roomCode, PLAYERS, playerId), player);
   } catch (error) {
     throw new Error(toFriendlyError(error, "Oda kurulamadı."));
   }
@@ -334,7 +334,7 @@ export async function joinRoom(roomCode: string, playerName: string): Promise<vo
   const playerId = playerIdKey();
   setStoredPlayerName(playerName);
 
-  const roomRef = doc(db, ROOMS, normalizedCode);
+  const roomRef = doc(getDb(), ROOMS, normalizedCode);
   const roomSnap = await getDoc(roomRef);
 
   if (!roomSnap.exists()) {
@@ -342,7 +342,7 @@ export async function joinRoom(roomCode: string, playerName: string): Promise<vo
   }
 
   const room = roomSnap.data() as Room;
-  const playerRef = doc(db, ROOMS, normalizedCode, PLAYERS, playerId);
+  const playerRef = doc(getDb(), ROOMS, normalizedCode, PLAYERS, playerId);
   const playerSnap = await getDoc(playerRef);
 
   if (playerSnap.exists()) {
@@ -375,7 +375,7 @@ export async function joinRoom(roomCode: string, playerName: string): Promise<vo
 }
 
 export async function startGame(roomCode: string, hostId: string): Promise<void> {
-  const roomRef = doc(db, ROOMS, roomCode);
+  const roomRef = doc(getDb(), ROOMS, roomCode);
   const roomSnap = await getDoc(roomRef);
 
   if (!roomSnap.exists()) throw new Error("Oda bulunamadı.");
@@ -429,7 +429,7 @@ export async function placeBid(
   count: number,
   rank: Rank
 ): Promise<void> {
-  const roomRef = doc(db, ROOMS, roomCode);
+  const roomRef = doc(getDb(), ROOMS, roomCode);
   const roomSnap = await getDoc(roomRef);
   if (!roomSnap.exists()) throw new Error("Oda bulunamadı.");
 
@@ -453,7 +453,7 @@ export async function openChallenge(
   playerId: string,
   playerName: string
 ): Promise<void> {
-  const roomRef = doc(db, ROOMS, roomCode);
+  const roomRef = doc(getDb(), ROOMS, roomCode);
   const roomSnap = await getDoc(roomRef);
   if (!roomSnap.exists()) throw new Error("Oda bulunamadı.");
 
@@ -484,7 +484,7 @@ export async function openChallenge(
 }
 
 export async function continueAfterReveal(roomCode: string, actorId: string): Promise<void> {
-  const roomRef = doc(db, ROOMS, roomCode);
+  const roomRef = doc(getDb(), ROOMS, roomCode);
   const roomSnap = await getDoc(roomRef);
 
   if (!roomSnap.exists()) throw new Error("Oda bulunamadı.");
@@ -558,7 +558,7 @@ export async function continueAfterReveal(roomCode: string, actorId: string): Pr
 }
 
 export async function leaveGame(roomCode: string, playerId: string): Promise<void> {
-  const roomRef = doc(db, ROOMS, roomCode);
+  const roomRef = doc(getDb(), ROOMS, roomCode);
   const roomSnap = await getDoc(roomRef);
   if (!roomSnap.exists()) {
     clearStoredRoomCode();
@@ -578,7 +578,7 @@ export async function leaveGame(roomCode: string, playerId: string): Promise<voi
     return;
   }
 
-  await updateDoc(doc(db, ROOMS, roomCode, PLAYERS, playerId), {
+  await updateDoc(doc(getDb(), ROOMS, roomCode, PLAYERS, playerId), {
     isEliminated: true,
     cardCount: 0,
     cards: [],
@@ -606,7 +606,7 @@ export async function leaveGame(roomCode: string, playerId: string): Promise<voi
         revealResult: null,
         ...(room.hostId === playerId ? { hostId: w.id } : {}),
       });
-      await updateDoc(doc(db, ROOMS, roomCode, PLAYERS, w.id), { isHost: true });
+      await updateDoc(doc(getDb(), ROOMS, roomCode, PLAYERS, w.id), { isHost: true });
     }
     clearStoredRoomCode();
     return;
@@ -618,7 +618,7 @@ export async function leaveGame(roomCode: string, playerId: string): Promise<voi
     const newHost = active[0];
     if (newHost) {
       roomUpdates.hostId = newHost.id;
-      await updateDoc(doc(db, ROOMS, roomCode, PLAYERS, newHost.id), { isHost: true });
+      await updateDoc(doc(getDb(), ROOMS, roomCode, PLAYERS, newHost.id), { isHost: true });
     }
   }
 
@@ -656,7 +656,7 @@ export function subscribeToRoom(
   onRoom: (room: Room | null) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  const roomRef = doc(db, ROOMS, roomCode);
+  const roomRef = doc(getDb(), ROOMS, roomCode);
 
   return onSnapshot(
     roomRef,
@@ -688,7 +688,7 @@ export function subscribeToPlayers(
   onError?: (error: Error) => void
 ): Unsubscribe {
   const playersQuery = query(
-    collection(db, ROOMS, roomCode, PLAYERS),
+    collection(getDb(), ROOMS, roomCode, PLAYERS),
     orderBy("joinedAt", "asc")
   );
 

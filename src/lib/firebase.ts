@@ -1,5 +1,10 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { initializeFirestore, memoryLocalCache } from "firebase/firestore";
+import {
+  getFirestore,
+  initializeFirestore,
+  memoryLocalCache,
+  type Firestore,
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -24,11 +29,28 @@ function getFirebaseApp() {
 
 export const app = getFirebaseApp();
 
-export const db = initializeFirestore(app, {
-  experimentalAutoDetectLongPolling: true,
-  experimentalForceLongPolling: isMobileClient(),
-  localCache: memoryLocalCache(),
-});
+let dbInstance: Firestore | null = null;
+
+function createFirestore(): Firestore {
+  if (typeof window === "undefined") {
+    return getFirestore(app);
+  }
+
+  const mobile = isMobileClient();
+  return initializeFirestore(app, {
+    ...(mobile
+      ? { experimentalForceLongPolling: true }
+      : { experimentalAutoDetectLongPolling: true }),
+    localCache: memoryLocalCache(),
+  });
+}
+
+export function getDb(): Firestore {
+  if (!dbInstance) {
+    dbInstance = createFirestore();
+  }
+  return dbInstance;
+}
 
 export function isFirebaseConfigured(): boolean {
   return Boolean(
