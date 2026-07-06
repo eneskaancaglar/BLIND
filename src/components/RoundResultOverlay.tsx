@@ -9,7 +9,7 @@ import type { RevealResult } from "@/lib/types";
 type RoundResultOverlayProps = {
   result: RevealResult;
   bidCount: number;
-  canContinue: boolean;
+  isHost: boolean;
   loading: boolean;
   onContinue: () => void;
 };
@@ -17,7 +17,7 @@ type RoundResultOverlayProps = {
 export function RoundResultOverlay({
   result,
   bidCount,
-  canContinue,
+  isHost,
   loading,
   onContinue,
 }: RoundResultOverlayProps) {
@@ -67,7 +67,7 @@ export function RoundResultOverlay({
           </div>
         ) : null}
 
-        {canContinue ? (
+        {isHost ? (
           <button
             type="button"
             disabled={loading}
@@ -77,7 +77,7 @@ export function RoundResultOverlay({
             {loading ? translate("wait") : translate("revealNextRound")}
           </button>
         ) : (
-          <p className="text-center text-sm text-neutral-400">{translate("revealAnyoneWait")}</p>
+          <p className="text-center text-sm text-neutral-400">{translate("revealHostWait")}</p>
         )}
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { PlayingCard } from "@/components/PlayingCard";
 import type { Card, Suit } from "@/lib/types";
 
@@ -25,35 +25,27 @@ function randomCard(seed: number): Card {
   };
 }
 
-function buildFloaters(count: number, seed: number): Floater[] {
+function buildFloaters(count: number): Floater[] {
   return Array.from({ length: count }, (_, i) => ({
     id: i,
-    card: randomCard(i * 7 + 3 + seed),
-    left: 5 + ((i * 17 + seed) % 85),
-    top: 8 + ((i * 23 + seed) % 78),
-    delay: (i % 6) * 0.7,
-    duration: 9 + (i % 5) * 2,
-    rotation: -25 + (i % 7) * 8,
+    card: randomCard(i * 7 + 3),
+    left: 28 + ((i * 19 + 7) % 44),
+    top: 10 + ((i * 23 + 5) % 72),
+    delay: (i % 8) * 0.85,
+    duration: 11 + (i % 6) * 1.8,
+    rotation: -22 + (i % 9) * 6,
     drift: i % 2 === 0 ? 1 : -1,
   }));
 }
 
 export function HomeFloatingCards() {
-  const [tick, setTick] = useState(0);
-  const floaters = useMemo(() => buildFloaters(10, tick), [tick]);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setTick((t) => t + 1);
-    }, 12000);
-    return () => window.clearInterval(interval);
-  }, []);
+  const floaters = useMemo(() => buildFloaters(12), []);
 
   return (
     <div className="home-floating-cards pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
       {floaters.map((item) => (
         <div
-          key={`${item.id}-${tick}`}
+          key={item.id}
           className="home-floater absolute opacity-[0.22]"
           style={{
             left: `${item.left}%`,

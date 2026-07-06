@@ -114,6 +114,9 @@ const en = {
   youWon: "You won!",
   backToHome: "Back to Home",
   revealAnyoneWait: "Waiting to continue...",
+  leaveGameConfirm: "Are you sure you want to leave the game?",
+  leaveGameYes: "Leave",
+  leaveGameNo: "Stay",
 
   bidYourMove: "Your move",
   bidCount: "Count",
@@ -240,6 +243,9 @@ const tr: Record<keyof typeof en, string> = {
   youWon: "Kazandın!",
   backToHome: "Ana Menüye Dön",
   revealAnyoneWait: "Devam bekleniyor...",
+  leaveGameConfirm: "Oyundan ayrılmak istediğine emin misin?",
+  leaveGameYes: "Ayrıl",
+  leaveGameNo: "Kal",
 
   bidYourMove: "Hamlen",
   bidCount: "Adet",

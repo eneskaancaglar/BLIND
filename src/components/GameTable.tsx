@@ -19,6 +19,7 @@ type GameTableProps = {
   animateDeal?: boolean;
   dealKey?: string | number;
   children?: React.ReactNode;
+  onHomeClick?: () => void;
 };
 
 export function GameTable({
@@ -32,6 +33,7 @@ export function GameTable({
   animateDeal,
   dealKey,
   children,
+  onHomeClick,
 }: GameTableProps) {
   const { translate } = useLanguage();
   const blindGetsCards = room.blindGetsCards ?? false;
@@ -51,16 +53,25 @@ export function GameTable({
 
   return (
     <div className="game-shell flex min-h-[100dvh] flex-col">
-      <header className="flex items-center justify-between px-4 py-3">
-        <div>
+      <header className="flex items-center justify-between gap-2 px-4 py-3">
+        <div className="min-w-0 flex-1">
           <p className="bg-gradient-to-r from-fuchsia-300 to-cyan-300 bg-clip-text text-[10px] font-bold uppercase tracking-[0.3em] text-transparent">
             BLIND
           </p>
-          <p className="text-sm font-semibold text-white/90">
+          <p className="truncate text-sm font-semibold text-white/90">
             {translate("lobbyRoom")} {roomCode}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
+          {onHomeClick ? (
+            <button
+              type="button"
+              onClick={onHomeClick}
+              className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white/90 transition hover:bg-white/20"
+            >
+              {translate("home")}
+            </button>
+          ) : null}
           <SoundToggle compact />
           <div className="rounded-full bg-white/10 px-3 py-1 text-right text-xs text-cyan-100">
             <p>

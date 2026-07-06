@@ -10,6 +10,11 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+function isMobileClient(): boolean {
+  if (typeof window === "undefined") return false;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
 function getFirebaseApp() {
   if (getApps().length > 0) {
     return getApp();
@@ -21,6 +26,7 @@ export const app = getFirebaseApp();
 
 export const db = initializeFirestore(app, {
   experimentalAutoDetectLongPolling: true,
+  experimentalForceLongPolling: isMobileClient(),
   localCache: memoryLocalCache(),
 });
 

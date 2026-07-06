@@ -25,8 +25,12 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
   const [playerId, setPlayerId] = useState("");
   const [shareLink, setShareLink] = useState("");
   const [copied, setCopied] = useState(false);
-  const [room, setRoom] = useState<Room | null>(null);
-  const [players, setPlayers] = useState<Player[]>([]);
+  const [syncState, setSyncState] = useState<{ room: Room | null; players: Player[] }>({
+    room: null,
+    players: [],
+  });
+  const room = syncState.room;
+  const players = syncState.players;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,17 +43,16 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
     if (!roomCode || !isFirebaseConfigured()) return;
 
     const detach = attachRoomSync(roomCode, {
-      onRoom: (nextRoom) => {
+      onSync: ({ room: nextRoom, players: nextPlayers }) => {
         if (!nextRoom) {
           setError(t(language, "lobbyNotFound"));
           return;
         }
-        setRoom(nextRoom);
+        setSyncState({ room: nextRoom, players: nextPlayers });
         if (nextRoom.status === "playing" || nextRoom.status === "finished") {
           onGameStarted();
         }
       },
-      onPlayers: setPlayers,
       onError: (err) => setError(err.message),
     });
 

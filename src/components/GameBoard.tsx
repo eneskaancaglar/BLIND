@@ -19,6 +19,7 @@ import {
   maskPlayersForViewer,
   openChallenge,
   placeBid,
+  refreshRoomState,
 } from "@/lib/roomService";
 
 type GameBoardProps = {
@@ -32,12 +33,17 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const { translate } = useLanguage();
   const { play } = useSound();
   const [playerId, setPlayerId] = useState("");
-  const [room, setRoom] = useState<Room | null>(null);
-  const [players, setPlayers] = useState<Player[]>([]);
+  const [syncState, setSyncState] = useState<{ room: Room | null; players: Player[] }>({
+    room: null,
+    players: [],
+  });
+  const room = syncState.room;
+  const players = syncState.players;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showTransition, setShowTransition] = useState(false);
   const [animateDeal, setAnimateDeal] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   const prevPhaseRef = useRef<Room["phase"] | null>(null);
   const skipPhaseTransitionRef = useRef(false);
@@ -84,10 +90,14 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     if (!roomCode || !isFirebaseConfigured()) return;
 
     return attachRoomSync(roomCode, {
-      onRoom: setRoom,
-      onPlayers: setPlayers,
+      onSync: setSyncState,
       onError: (err) => setError(err.message),
     });
+  }, [roomCode]);
+
+  const applyFreshState = useCallback(async () => {
+    const fresh = await refreshRoomState(roomCode);
+    setSyncState(fresh);
   }, [roomCode]);
 
   useEffect(() => {
@@ -178,7 +188,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const activePlayers = getActivePlayers(players);
   const turnPlayerId = room?.turnOrder[room.currentTurnIndex] ?? undefined;
   const isMyTurn = turnPlayerId === playerId;
-  const canContinue = Boolean(me && !me.isEliminated && room?.status !== "finished");
+  const isHost = room?.hostId === playerId;
   const showAllCards = room?.phase === "revealed";
   const deckCount = room?.deckCount ?? 1;
 
@@ -200,6 +210,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
 
     try {
       await placeBid(roomCode, playerId, me.name, count, rank);
+      await applyFreshState();
     } catch (err) {
       setError(err instanceof Error ? err.message : translate("bidFail"));
     }
@@ -209,6 +220,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     if (!me) return;
     try {
       await openChallenge(roomCode, playerId, me.name);
+      await applyFreshState();
     } catch (err) {
       setError(err instanceof Error ? err.message : translate("bidOpenFail"));
     }
@@ -224,6 +236,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
 
     try {
       await continueAfterReveal(roomCode, playerId);
+      await applyFreshState();
     } catch (err) {
       endTransition();
       setError(err instanceof Error ? err.message : translate("errContinue"));
@@ -251,6 +264,38 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
 
   return (
     <>
+      {showLeaveConfirm ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+            onClick={() => setShowLeaveConfirm(false)}
+            aria-hidden
+          />
+          <div className="relative z-10 w-full max-w-sm rounded-3xl border border-white/15 bg-neutral-900/95 p-6 text-center shadow-2xl">
+            <p className="text-lg font-semibold text-white">{translate("leaveGameConfirm")}</p>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowLeaveConfirm(false)}
+                className="flex-1 rounded-2xl border border-white/15 bg-white/10 py-3 text-sm font-semibold text-white"
+              >
+                {translate("leaveGameNo")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLeaveConfirm(false);
+                  void handleLeave();
+                }}
+                className="flex-1 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 py-3 text-sm font-bold text-white"
+              >
+                {translate("leaveGameYes")}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {room.status === "finished" && room.winnerName ? (
         <WinnerOverlay
           winnerName={room.winnerName}
@@ -263,7 +308,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         <RoundResultOverlay
           result={room.revealResult}
           bidCount={room.currentBid?.count ?? 0}
-          canContinue={canContinue}
+          isHost={isHost}
           loading={loading}
           onContinue={handleContinue}
         />
@@ -283,6 +328,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         showAllCards={showAllCards}
         animateDeal={animateDeal}
         dealKey={`${room.roundNumber}-${room.phase}`}
+        onHomeClick={() => setShowLeaveConfirm(true)}
       >
         {room.phase === "bidding" && isMyTurn && me && !me.isEliminated ? (
           <BidControls
@@ -296,14 +342,6 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         ) : null}
 
         {error ? <p className="text-center text-sm text-red-400">{error}</p> : null}
-
-        <button
-          type="button"
-          onClick={handleLeave}
-          className="w-full py-2 text-center text-xs text-neutral-500 underline"
-        >
-          {translate("home")}
-        </button>
       </GameTable>
     </>
   );

@@ -299,11 +299,11 @@ button:disabled {
 @keyframes home-float {
   0%,
   100% {
-    transform: translateY(0) translateX(0) rotate(var(--rot, 0deg));
+    transform: translateX(-50%) translateY(0) rotate(var(--rot, 0deg));
   }
   50% {
-    transform: translateY(-20px) translateX(calc(var(--drift, 1) * 14px))
-      rotate(calc(var(--rot, 0deg) + 10deg));
+    transform: translateX(calc(-50% + var(--drift, 1) * 16px)) translateY(-22px)
+      rotate(calc(var(--rot, 0deg) + 9deg));
   }
 }
 
@@ -311,4 +311,5 @@ button:disabled {
   animation-name: home-float;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
+  will-change: transform;
 }

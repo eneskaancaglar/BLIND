@@ -4,7 +4,9 @@ import {
   collection,
   doc,
   getDoc,
+  getDocFromServer,
   getDocs,
+  getDocsFromServer,
   onSnapshot,
   orderBy,
   query,
@@ -31,8 +33,33 @@ import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "./i18n";
 
 const ROOMS = "rooms";
 const PLAYERS = "players";
-const SYNC_DEBOUNCE_MS = 40;
-const SYNC_POLL_MS = 1000;
+const SYNC_POLL_MS = 350;
+
+export type RoomSyncState = {
+  room: Room | null;
+  players: Player[];
+};
+
+async function fetchRoomFromServer(roomCode: string): Promise<Room | null> {
+  const snapshot = await getDocFromServer(doc(db, ROOMS, roomCode));
+  if (!snapshot.exists()) return null;
+  return snapshot.data() as Room;
+}
+
+async function fetchPlayersFromServer(roomCode: string): Promise<Player[]> {
+  const snapshot = await getDocsFromServer(
+    query(collection(db, ROOMS, roomCode, PLAYERS), orderBy("joinedAt", "asc"))
+  );
+  return snapshot.docs.map((d) => d.data() as Player);
+}
+
+export async function refreshRoomState(roomCode: string): Promise<RoomSyncState> {
+  const [room, players] = await Promise.all([
+    fetchRoomFromServer(roomCode),
+    fetchPlayersFromServer(roomCode),
+  ]);
+  return { room, players };
+}
 
 async function batchWritePlayersAndRoom(
   roomCode: string,
@@ -166,32 +193,16 @@ export async function fetchRoomSnapshot(roomCode: string): Promise<Room | null> 
 export function attachRoomSync(
   roomCode: string,
   handlers: {
-    onRoom: (room: Room | null) => void;
-    onPlayers: (players: Player[]) => void;
+    onSync: (state: RoomSyncState) => void;
     onError?: (error: Error) => void;
   }
 ): () => void {
   let latestRoom: Room | null | undefined;
   let latestPlayers: Player[] | undefined;
-  let flushTimer: number | null = null;
 
-  const flush = (immediate = false) => {
-    if (flushTimer !== null) {
-      window.clearTimeout(flushTimer);
-      flushTimer = null;
-    }
-
-    const run = () => {
-      if (latestRoom !== undefined) handlers.onRoom(latestRoom);
-      if (latestPlayers !== undefined) handlers.onPlayers(latestPlayers);
-    };
-
-    if (immediate) {
-      run();
-      return;
-    }
-
-    flushTimer = window.setTimeout(run, SYNC_DEBOUNCE_MS);
+  const emit = () => {
+    if (latestRoom === undefined || latestPlayers === undefined) return;
+    handlers.onSync({ room: latestRoom, players: latestPlayers });
   };
 
   const unsubs = [
@@ -199,7 +210,7 @@ export function attachRoomSync(
       roomCode,
       (room) => {
         latestRoom = room;
-        flush();
+        emit();
       },
       handlers.onError
     ),
@@ -207,7 +218,7 @@ export function attachRoomSync(
       roomCode,
       (players) => {
         latestPlayers = players;
-        flush();
+        emit();
       },
       handlers.onError
     ),
@@ -215,17 +226,16 @@ export function attachRoomSync(
 
   const pullLatest = async () => {
     try {
-      const [room, players] = await Promise.all([
-        fetchRoomSnapshot(roomCode),
-        fetchPlayers(roomCode),
-      ]);
-      latestRoom = room;
-      latestPlayers = players;
-      flush(true);
+      const state = await refreshRoomState(roomCode);
+      latestRoom = state.room;
+      latestPlayers = state.players;
+      handlers.onSync(state);
     } catch (error) {
       handlers.onError?.(new Error(toFriendlyError(error, "Senkron hatası")));
     }
   };
+
+  void pullLatest();
 
   const interval = window.setInterval(() => {
     void pullLatest();
@@ -241,15 +251,20 @@ export function attachRoomSync(
     void pullLatest();
   };
 
+  const onFocus = () => {
+    void pullLatest();
+  };
+
   document.addEventListener("visibilitychange", onVisible);
   window.addEventListener("online", onOnline);
+  window.addEventListener("focus", onFocus);
 
   return () => {
     unsubs.forEach((unsub) => unsub());
     window.clearInterval(interval);
-    if (flushTimer !== null) window.clearTimeout(flushTimer);
     document.removeEventListener("visibilitychange", onVisible);
     window.removeEventListener("online", onOnline);
+    window.removeEventListener("focus", onFocus);
   };
 }
 
@@ -484,6 +499,9 @@ export async function continueAfterReveal(roomCode: string, actorId: string): Pr
   if (!actor || actor.isEliminated) {
     throw new Error("Devam etmek için oyunda olmalısınız.");
   }
+  if (room.hostId !== actorId) {
+    throw new Error("Sadece oda kurucusu devam ettirebilir.");
+  }
 
   const blindThreshold = room.blindThreshold ?? 6;
   const blindGetsCards = room.blindGetsCards ?? false;
@@ -638,14 +656,27 @@ export function subscribeToRoom(
   onRoom: (room: Room | null) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
+  const roomRef = doc(db, ROOMS, roomCode);
+
   return onSnapshot(
-    doc(db, ROOMS, roomCode),
+    roomRef,
     (snapshot) => {
       if (!snapshot.exists()) {
         onRoom(null);
         return;
       }
+
       onRoom(snapshot.data() as Room);
+
+      if (snapshot.metadata.fromCache) {
+        void getDocFromServer(roomRef)
+          .then((serverSnap) => {
+            if (serverSnap.exists()) {
+              onRoom(serverSnap.data() as Room);
+            }
+          })
+          .catch(() => {});
+      }
     },
     (error) => onError?.(error)
   );
@@ -656,10 +687,24 @@ export function subscribeToPlayers(
   onPlayers: (players: Player[]) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
+  const playersQuery = query(
+    collection(db, ROOMS, roomCode, PLAYERS),
+    orderBy("joinedAt", "asc")
+  );
+
   return onSnapshot(
-    query(collection(db, ROOMS, roomCode, PLAYERS), orderBy("joinedAt", "asc")),
+    playersQuery,
     (snapshot) => {
-      onPlayers(snapshot.docs.map((d) => d.data() as Player));
+      const players = snapshot.docs.map((d) => d.data() as Player);
+      onPlayers(players);
+
+      if (snapshot.metadata.fromCache) {
+        void getDocsFromServer(playersQuery)
+          .then((serverSnap) => {
+            onPlayers(serverSnap.docs.map((d) => d.data() as Player));
+          })
+          .catch(() => {});
+      }
     },
     (error) => onError?.(error)
   );
