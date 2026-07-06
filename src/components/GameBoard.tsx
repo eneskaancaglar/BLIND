@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BidControls } from "@/components/BidControls";
 import { GameTable } from "@/components/GameTable";
+import { RoundResultOverlay } from "@/components/RoundResultOverlay";
+import { RoundTransitionOverlay } from "@/components/RoundTransitionOverlay";
+import { useLanguage } from "@/context/LanguageContext";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { getActivePlayers, nextTurnIndex } from "@/lib/gameLogic";
 import { Bid, Player, Room } from "@/lib/types";
@@ -20,12 +23,19 @@ type GameBoardProps = {
   onLeave: () => void;
 };
 
+const TRANSITION_MS = 2400;
+
 export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
+  const { translate } = useLanguage();
   const [playerId, setPlayerId] = useState("");
   const [room, setRoom] = useState<Room | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showTransition, setShowTransition] = useState(false);
+  const [manualTransition, setManualTransition] = useState(false);
+  const prevPhaseRef = useRef<Room["phase"] | null>(null);
+  const skipPhaseTransitionRef = useRef(false);
 
   useEffect(() => {
     setPlayerId(getPlayerId());
@@ -41,6 +51,25 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     });
   }, [roomCode]);
 
+  useEffect(() => {
+    if (!room) return;
+
+    const prev = prevPhaseRef.current;
+    if (prev === "revealed" && room.phase === "bidding") {
+      if (skipPhaseTransitionRef.current) {
+        skipPhaseTransitionRef.current = false;
+        prevPhaseRef.current = room.phase;
+        return;
+      }
+      setShowTransition(true);
+      const timer = window.setTimeout(() => setShowTransition(false), TRANSITION_MS);
+      prevPhaseRef.current = room.phase;
+      return () => window.clearTimeout(timer);
+    }
+
+    prevPhaseRef.current = room.phase;
+  }, [room?.phase]);
+
   const me = players.find((player) => player.id === playerId);
   const visiblePlayers = useMemo(() => {
     if (!room) return players;
@@ -53,6 +82,23 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const isMyTurn = turnPlayerId === playerId;
   const isHost = room?.hostId === playerId;
   const showAllCards = room?.phase === "revealed";
+  const deckCount = room?.deckCount ?? 1;
+
+  const starterName =
+    room?.revealResult?.loserName ??
+    (room?.turnOrder[0]
+      ? players.find((p) => p.id === room.turnOrder[0])?.name ?? "..."
+      : "...");
+
+  const transitionRound =
+    manualTransition && room
+      ? room.roundNumber + 1
+      : room?.roundNumber ?? 1;
+
+  const showResultOverlay =
+    Boolean(room?.revealResult && room.phase === "revealed" && !manualTransition && !showTransition);
+
+  const showTransitionOverlay = manualTransition || showTransition;
 
   async function handleBid(count: number, rank: Parameters<typeof placeBid>[4]) {
     if (!me || !room) return;
@@ -73,22 +119,34 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     try {
       await placeBid(roomCode, playerId, me.name, count, rank);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "İddia verilemedi.");
+      setError(err instanceof Error ? err.message : translate("bidFail"));
     }
   }
 
   async function handleOpen() {
     if (!me) return;
-    await openChallenge(roomCode, playerId, me.name);
+    try {
+      await openChallenge(roomCode, playerId, me.name);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : translate("bidOpenFail"));
+    }
   }
 
   async function handleContinue() {
+    if (!room?.revealResult) return;
+
     setLoading(true);
     setError("");
+    setManualTransition(true);
+    skipPhaseTransitionRef.current = true;
+
     try {
+      await new Promise((resolve) => window.setTimeout(resolve, TRANSITION_MS));
       await continueAfterReveal(roomCode, playerId);
+      setManualTransition(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Devam edilemedi.");
+      setManualTransition(false);
+      setError(err instanceof Error ? err.message : translate("errContinue"));
     } finally {
       setLoading(false);
     }
@@ -97,75 +155,65 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   if (!room) {
     return (
       <main className="flex min-h-[100dvh] items-center justify-center bg-[#061208]">
-        <p className="text-emerald-200/50">Masa kuruluyor...</p>
+        <p className="text-emerald-200/50">{translate("settingUp")}</p>
       </main>
     );
   }
 
   return (
-    <GameTable
-      room={room}
-      roomCode={roomCode}
-      me={me}
-      opponents={opponents}
-      playerId={playerId}
-      turnPlayerId={turnPlayerId}
-      showAllCards={showAllCards}
-    >
-      {room.status === "finished" && room.winnerName ? (
-        <section className="rounded-2xl border border-emerald-500/40 bg-emerald-950/60 p-4 text-center">
-          <h2 className="text-xl font-bold text-emerald-300">Kazanan: {room.winnerName}</h2>
-        </section>
-      ) : null}
-
-      {room.revealResult && room.phase === "revealed" ? (
-        <section className="rounded-2xl border border-red-500/30 bg-red-950/50 p-4 text-center text-sm">
-          <p className="text-neutral-200">{room.revealResult.reason}</p>
-          <p className="mt-2 text-lg font-bold text-white">
-            Sayım: {room.revealResult.actualCount}
-          </p>
-          <p className="mt-1 text-red-300">Kaybeden: {room.revealResult.loserName}</p>
-          {room.revealResult.blindRevivalName ? (
-            <p className="mt-3 rounded-xl bg-violet-500/20 px-3 py-2 text-violet-100">
-              {room.revealResult.blindRevivalName} 5 kartla oyuna dönüyor!
-              <br />
-              {room.revealResult.openerName} +1 kart cezası aldı.
-            </p>
-          ) : null}
-          {isHost ? (
-            <button
-              type="button"
-              disabled={loading}
-              onClick={handleContinue}
-              className="mt-3 w-full rounded-xl bg-emerald-600 py-3 font-bold text-white"
-            >
-              Sonraki El
-            </button>
-          ) : (
-            <p className="mt-2 text-xs text-neutral-400">Kurucu devam ettirecek...</p>
-          )}
-        </section>
-      ) : null}
-
-      {room.phase === "bidding" && isMyTurn && me && !me.isEliminated ? (
-        <BidControls
-          currentBid={room.currentBid}
-          activePlayerCount={activePlayers.length}
-          onBid={handleBid}
-          onOpen={handleOpen}
-          canOpen={Boolean(room.currentBid)}
+    <>
+      {showResultOverlay && room.revealResult ? (
+        <RoundResultOverlay
+          result={room.revealResult}
+          bidCount={room.currentBid?.count ?? 0}
+          isHost={isHost}
+          loading={loading}
+          onContinue={handleContinue}
         />
       ) : null}
 
-      {error ? <p className="text-center text-sm text-red-400">{error}</p> : null}
+      {showTransitionOverlay ? (
+        <RoundTransitionOverlay roundNumber={transitionRound} starterName={starterName} />
+      ) : null}
 
-      <button
-        type="button"
-        onClick={onLeave}
-        className="w-full py-2 text-center text-xs text-neutral-500 underline"
+      <GameTable
+        room={room}
+        roomCode={roomCode}
+        me={me}
+        opponents={opponents}
+        playerId={playerId}
+        turnPlayerId={turnPlayerId}
+        showAllCards={showAllCards}
       >
-        Ana sayfa
-      </button>
-    </GameTable>
+        {room.status === "finished" && room.winnerName ? (
+          <section className="rounded-2xl border border-emerald-500/40 bg-emerald-950/60 p-4 text-center">
+            <h2 className="text-xl font-bold text-emerald-300">
+              {translate("winner", { name: room.winnerName })}
+            </h2>
+          </section>
+        ) : null}
+
+        {room.phase === "bidding" && isMyTurn && me && !me.isEliminated ? (
+          <BidControls
+            currentBid={room.currentBid}
+            activePlayerCount={activePlayers.length}
+            deckCount={deckCount}
+            onBid={handleBid}
+            onOpen={handleOpen}
+            canOpen={Boolean(room.currentBid)}
+          />
+        ) : null}
+
+        {error ? <p className="text-center text-sm text-red-400">{error}</p> : null}
+
+        <button
+          type="button"
+          onClick={onLeave}
+          className="w-full py-2 text-center text-xs text-neutral-500 underline"
+        >
+          {translate("home")}
+        </button>
+      </GameTable>
+    </>
   );
 }

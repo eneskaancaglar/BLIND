@@ -40,6 +40,8 @@ export type Room = {
   currentBid: Bid | null;
   roundNumber: number;
   deck: Card[];
+  deckCount: 1 | 2;
+  blindThreshold: 5 | 6 | 7;
   winnerId: string | null;
   winnerName: string | null;
   lastLoserId: string | null;

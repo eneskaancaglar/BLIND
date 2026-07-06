@@ -25,6 +25,7 @@ import {
   resolveChallenge,
 } from "./gameLogic";
 import { Bid, Player, Rank, Room } from "./types";
+import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "./i18n";
 
 const ROOMS = "rooms";
 const PLAYERS = "players";
@@ -66,6 +67,40 @@ export function setStoredPlayerName(name: string): void {
 
 export function getPlayerId(): string {
   return playerIdKey();
+}
+
+export function clearStoredRoomCode(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("blind_room_code");
+}
+
+export type RestoredSession = {
+  code: string;
+  screen: "lobby" | "game";
+};
+
+export async function restoreSession(): Promise<RestoredSession | null> {
+  const code = getStoredRoomCode().trim().toUpperCase();
+  if (!code) return null;
+
+  const playerId = getPlayerId();
+  const room = await fetchRoomSnapshot(code);
+  if (!room) {
+    clearStoredRoomCode();
+    return null;
+  }
+
+  const players = await fetchPlayers(code);
+  const me = players.find((player) => player.id === playerId);
+  if (!me) {
+    clearStoredRoomCode();
+    return null;
+  }
+
+  const screen: RestoredSession["screen"] =
+    room.status === "waiting" ? "lobby" : "game";
+
+  return { code, screen };
 }
 
 export function getStoredRoomCode(): string {
@@ -148,7 +183,10 @@ export function attachRoomSync(
   };
 }
 
-export async function createRoom(playerName: string): Promise<string> {
+export async function createRoom(
+  playerName: string,
+  settings: RoomSettings = DEFAULT_ROOM_SETTINGS
+): Promise<string> {
   const playerId = playerIdKey();
   setStoredPlayerName(playerName);
 
@@ -173,6 +211,8 @@ export async function createRoom(playerName: string): Promise<string> {
     currentBid: null,
     roundNumber: 0,
     deck: [],
+    deckCount: settings.deckCount,
+    blindThreshold: settings.blindThreshold,
     winnerId: null,
     winnerName: null,
     lastLoserId: null,
@@ -216,32 +256,34 @@ export async function joinRoom(roomCode: string, playerName: string): Promise<vo
   }
 
   const room = roomSnap.data() as Room;
-  if (room.status !== "waiting") {
-    throw new Error("Oyun başlamış, katılamazsınız.");
-  }
-
   const playerRef = doc(db, ROOMS, normalizedCode, PLAYERS, playerId);
   const playerSnap = await getDoc(playerRef);
 
   if (playerSnap.exists()) {
     await updateDoc(playerRef, { name: playerName.trim() });
-  } else {
-    const player: Player = {
-      id: playerId,
-      name: playerName.trim(),
-      isHost: false,
-      cards: [],
-      cardCount: 1,
-      isBlind: false,
-      isEliminated: false,
-      joinedAt: Date.now(),
-    };
-
-    await setDoc(playerRef, player);
-    await updateDoc(roomRef, {
-      turnOrder: [...room.turnOrder, playerId],
-    });
+    localStorage.setItem("blind_room_code", normalizedCode);
+    return;
   }
+
+  if (room.status !== "waiting") {
+    throw new Error("Game already started — you cannot join.");
+  }
+
+  const player: Player = {
+    id: playerId,
+    name: playerName.trim(),
+    isHost: false,
+    cards: [],
+    cardCount: 1,
+    isBlind: false,
+    isEliminated: false,
+    joinedAt: Date.now(),
+  };
+
+  await setDoc(playerRef, player);
+  await updateDoc(roomRef, {
+    turnOrder: [...room.turnOrder, playerId],
+  });
 
   localStorage.setItem("blind_room_code", normalizedCode);
 }
@@ -261,7 +303,7 @@ export async function startGame(roomCode: string, hostId: string): Promise<void>
     throw new Error("En az 2 oyuncu gerekli.");
   }
 
-  let deck = createDeck();
+  let deck = createDeck(room.deckCount ?? 1);
   const preparedPlayers = players.map((player) => ({
     ...player,
     cardCount: player.isEliminated ? 0 : Math.max(player.cardCount, 1),
@@ -370,6 +412,8 @@ export async function continueAfterReveal(roomCode: string, hostId: string): Pro
     throw new Error("Gösterim aşaması tamamlanmadı.");
   }
 
+  const blindThreshold = room.blindThreshold ?? 6;
+
   const players = await fetchPlayers(roomCode);
   const updatedPlayers = players.map((player) => {
     const result = room.revealResult!;
@@ -379,7 +423,7 @@ export async function continueAfterReveal(roomCode: string, hostId: string): Pro
     }
 
     if (player.id === result.loserId) {
-      return applyRoundLoss(player);
+      return applyRoundLoss(player, blindThreshold);
     }
 
     return player;
@@ -407,7 +451,7 @@ export async function continueAfterReveal(roomCode: string, hostId: string): Pro
     return;
   }
 
-  let deck = room.deck.length > 0 ? [...room.deck] : createDeck();
+  let deck = room.deck.length > 0 ? [...room.deck] : createDeck(room.deckCount ?? 1);
   const dealt = dealCards(deck, updatedPlayers);
   deck = dealt.deck;
   const turnOrder = buildTurnOrder(dealt.players, room.revealResult.loserId);

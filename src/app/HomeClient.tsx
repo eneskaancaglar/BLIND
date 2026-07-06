@@ -4,14 +4,19 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { GameBoard } from "@/components/GameBoard";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { PlayingCard } from "@/components/PlayingCard";
 import { RoomLobby } from "@/components/RoomLobby";
+import { useLanguage } from "@/context/LanguageContext";
 import { isFirebaseConfigured } from "@/lib/firebase";
+import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "@/lib/i18n";
 import {
+  clearStoredRoomCode,
   createRoom,
   getRoomTargetPath,
   getStoredPlayerName,
   joinRoom,
+  restoreSession,
   setStoredPlayerName,
 } from "@/lib/roomService";
 
@@ -20,6 +25,7 @@ type Screen = "home" | "lobby" | "game";
 export default function HomeClient() {
   const searchParams = useSearchParams();
   const inviteCode = searchParams.get("room")?.toUpperCase() ?? "";
+  const { translate } = useLanguage();
 
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
@@ -30,6 +36,8 @@ export default function HomeClient() {
   const [activeRoomCode, setActiveRoomCode] = useState("");
   const [firebaseReady, setFirebaseReady] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [roomSettings, setRoomSettings] = useState<RoomSettings>(DEFAULT_ROOM_SETTINGS);
+  const [restoring, setRestoring] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -40,7 +48,27 @@ export default function HomeClient() {
     }
   }, [inviteCode]);
 
+  useEffect(() => {
+    if (!mounted || !firebaseReady || inviteCode) {
+      if (!inviteCode) setRestoring(false);
+      return;
+    }
+
+    void (async () => {
+      try {
+        const session = await restoreSession();
+        if (session) {
+          setActiveRoomCode(session.code);
+          setScreen(session.screen);
+        }
+      } finally {
+        setRestoring(false);
+      }
+    })();
+  }, [mounted, firebaseReady, inviteCode]);
+
   const goHome = useCallback(() => {
+    clearStoredRoomCode();
     setScreen("home");
     setActiveRoomCode("");
     setError("");
@@ -57,21 +85,21 @@ export default function HomeClient() {
 
   async function handleCreate() {
     if (!name.trim()) {
-      setError("Önce oyuncu adını yazman lazım.");
+      setError(translate("errNameRequired"));
       return;
     }
     if (!firebaseReady) {
-      setError("Firebase ayarları yüklenemedi.");
+      setError(translate("errFirebase"));
       return;
     }
 
     setLoading(true);
     setError("");
     try {
-      const code = await createRoom(name.trim());
+      const code = await createRoom(name.trim(), roomSettings);
       await enterRoom(code, "lobby");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Oda kurulamadı.");
+      setError(err instanceof Error ? err.message : translate("errCreateRoom"));
     } finally {
       setLoading(false);
     }
@@ -81,15 +109,15 @@ export default function HomeClient() {
     event?.preventDefault();
 
     if (!name.trim()) {
-      setError("Önce oyuncu adını yazman lazım.");
+      setError(translate("errNameRequired"));
       return;
     }
     if (!roomCode.trim()) {
-      setError("Oda kodunu yazman lazım.");
+      setError(translate("errCodeRequired"));
       return;
     }
     if (!firebaseReady) {
-      setError("Firebase ayarları yüklenemedi.");
+      setError(translate("errFirebase"));
       return;
     }
 
@@ -103,7 +131,7 @@ export default function HomeClient() {
       const startScreen: Screen = target?.includes("/game/") ? "game" : "lobby";
       await enterRoom(code, startScreen);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Odaya katılınamadı.");
+      setError(err instanceof Error ? err.message : translate("errJoinRoom"));
     } finally {
       setLoading(false);
     }
@@ -123,10 +151,10 @@ export default function HomeClient() {
     return <GameBoard roomCode={activeRoomCode} onLeave={goHome} />;
   }
 
-  if (!mounted) {
+  if (!mounted || restoring) {
     return (
       <main className="home-shell flex min-h-[100dvh] items-center justify-center px-4">
-        <p className="text-violet-200/60">Yükleniyor...</p>
+        <p className="text-violet-200/60">{translate("loading")}</p>
       </main>
     );
   }
@@ -136,7 +164,10 @@ export default function HomeClient() {
       <HowToPlayModal open={showRules} onClose={() => setShowRules(false)} />
 
       <main className="home-shell mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 py-8">
-        {/* Dekoratif kartlar */}
+        <div className="mb-4 flex justify-end">
+          <LanguageSwitcher />
+        </div>
+
         <div className="home-card-deco pointer-events-none relative mx-auto mb-6 h-24 w-full max-w-xs">
           <PlayingCard
             card={{ rank: "A", suit: "H" }}
@@ -163,14 +194,12 @@ export default function HomeClient() {
 
         <div className="mb-8 text-center">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.35em] text-fuchsia-300/80">
-            Kart Oyunu
+            {translate("cardGame")}
           </p>
           <h1 className="bg-gradient-to-r from-white via-fuchsia-100 to-cyan-200 bg-clip-text text-5xl font-black tracking-tight text-transparent">
             BLIND
           </h1>
-          <p className="mt-3 text-sm text-violet-200/70">
-            Oda kur, kodu paylaş, telefondan oyna.
-          </p>
+          <p className="mt-3 text-sm text-violet-200/70">{translate("homeSubtitle")}</p>
         </div>
 
         <button
@@ -178,22 +207,24 @@ export default function HomeClient() {
           onClick={() => setShowRules(true)}
           className="mb-5 w-full rounded-2xl border border-cyan-400/40 bg-cyan-500/10 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
         >
-          Nasıl Oynanır?
+          {translate("howToPlay")}
         </button>
 
         {inviteCode ? (
           <div className="mb-4 rounded-2xl border border-emerald-400/40 bg-emerald-500/15 p-4 text-center text-sm text-emerald-100">
-            <p className="font-semibold">{inviteCode} odasına davet edildin</p>
+            <p className="font-semibold">
+              {translate("invitedToRoom", { code: inviteCode })}
+            </p>
           </div>
         ) : null}
 
         {!firebaseReady ? (
           <div className="mb-4 rounded-2xl border border-amber-400/40 bg-amber-500/10 p-3 text-center text-sm text-amber-100">
-            Firebase bağlantısı yok — .env.local kontrol et
+            {translate("firebaseMissing")}
           </div>
         ) : (
           <div className="mb-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-2 text-center text-xs text-emerald-200">
-            Bağlantı hazır
+            {translate("firebaseReady")}
           </div>
         )}
 
@@ -205,17 +236,63 @@ export default function HomeClient() {
 
         <div className="home-panel space-y-5 rounded-3xl p-6 shadow-xl">
           <label className="block space-y-2">
-            <span className="text-sm text-violet-200/80">Oyuncu Adı</span>
+            <span className="text-sm text-violet-200/80">{translate("playerName")}</span>
             <input
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
                 if (error) setError("");
               }}
-              placeholder="Adınız"
+              placeholder={translate("playerNamePlaceholder")}
               className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 text-lg text-white outline-none focus:border-fuchsia-400/60"
             />
           </label>
+
+          <div className="space-y-3 rounded-2xl border border-white/10 bg-black/20 p-4">
+            <p className="text-sm font-semibold text-violet-200/90">{translate("lobbySettings")}</p>
+
+            <div>
+              <p className="mb-2 text-xs text-violet-200/60">{translate("deckCount")}</p>
+              <div className="grid grid-cols-2 gap-2">
+                {([1, 2] as const).map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    onClick={() => setRoomSettings((s) => ({ ...s, deckCount: count }))}
+                    className={`rounded-xl py-2.5 text-sm font-semibold transition ${
+                      roomSettings.deckCount === count
+                        ? "bg-fuchsia-600 text-white"
+                        : "bg-black/30 text-violet-200/80 hover:bg-black/50"
+                    }`}
+                  >
+                    {count === 1 ? translate("deckSingle") : translate("deckDouble")}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs text-violet-200/60">{translate("blindThreshold")}</p>
+              <div className="grid grid-cols-3 gap-2">
+                {([5, 6, 7] as const).map((threshold) => (
+                  <button
+                    key={threshold}
+                    type="button"
+                    onClick={() =>
+                      setRoomSettings((s) => ({ ...s, blindThreshold: threshold }))
+                    }
+                    className={`rounded-xl py-2.5 text-sm font-semibold transition ${
+                      roomSettings.blindThreshold === threshold
+                        ? "bg-amber-500 text-amber-950"
+                        : "bg-black/30 text-violet-200/80 hover:bg-black/50"
+                    }`}
+                  >
+                    {translate("blindThresholdCards", { count: threshold })}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
           <button
             type="button"
@@ -223,23 +300,23 @@ export default function HomeClient() {
             onClick={handleCreate}
             className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 to-violet-600 py-4 text-lg font-bold text-white shadow-lg shadow-fuchsia-900/30 disabled:opacity-50"
           >
-            {loading ? "Bekle..." : "Oda Kur"}
+            {loading ? translate("wait") : translate("createRoom")}
           </button>
 
           <div className="relative py-1 text-center">
             <span className="relative z-10 bg-transparent px-3 text-xs text-violet-300/50">
-              veya
+              {translate("or")}
             </span>
             <div className="absolute inset-x-0 top-1/2 border-t border-white/10" />
           </div>
 
           <form onSubmit={handleJoin} className="space-y-4">
             <label className="block space-y-2">
-              <span className="text-sm text-violet-200/80">Oda Kodu</span>
+              <span className="text-sm text-violet-200/80">{translate("roomCode")}</span>
               <input
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                placeholder="AB3K9"
+                placeholder={translate("roomCodePlaceholder")}
                 maxLength={6}
                 className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 text-center text-xl tracking-[0.3em] text-white outline-none focus:border-cyan-400/60"
               />
@@ -250,7 +327,11 @@ export default function HomeClient() {
               disabled={loading || !firebaseReady}
               className="w-full rounded-2xl border border-cyan-400/40 bg-cyan-500/15 py-4 text-lg font-bold text-cyan-50 disabled:opacity-50"
             >
-              {loading ? "Bekle..." : inviteCode ? `${inviteCode} Odasına Katıl` : "Odaya Katıl"}
+              {loading
+                ? translate("wait")
+                : inviteCode
+                  ? translate("joinRoomInvite", { code: inviteCode })
+                  : translate("joinRoom")}
             </button>
           </form>
         </div>

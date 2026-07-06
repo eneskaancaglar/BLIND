@@ -1,6 +1,7 @@
 "use client";
 
-import { Bid, Player, Room } from "@/lib/types";
+import { useLanguage } from "@/context/LanguageContext";
+import { Player, Room } from "@/lib/types";
 import { CardFan } from "./CardFan";
 import { OpponentSeat } from "./OpponentSeat";
 
@@ -25,9 +26,18 @@ export function GameTable({
   showAllCards,
   children,
 }: GameTableProps) {
+  const { translate } = useLanguage();
+
   const turnName =
     opponents.find((p) => p.id === turnPlayerId)?.name ??
     (turnPlayerId === playerId ? me?.name : undefined);
+
+  const phaseLabel =
+    room.status === "finished"
+      ? translate("statusFinished")
+      : room.phase === "revealed"
+        ? translate("statusRevealed")
+        : translate("statusBidding");
 
   return (
     <div className="game-shell flex min-h-[100dvh] flex-col">
@@ -36,17 +46,15 @@ export function GameTable({
           <p className="bg-gradient-to-r from-fuchsia-300 to-cyan-300 bg-clip-text text-[10px] font-bold uppercase tracking-[0.3em] text-transparent">
             BLIND
           </p>
-          <p className="text-sm font-semibold text-white/90">Oda {roomCode}</p>
+          <p className="text-sm font-semibold text-white/90">
+            {translate("lobbyRoom")} {roomCode}
+          </p>
         </div>
         <div className="rounded-full bg-white/10 px-3 py-1 text-right text-xs text-cyan-100">
-          <p>El {room.roundNumber}</p>
-          <p className="font-medium">
-            {room.status === "finished"
-              ? "Bitti"
-              : room.phase === "revealed"
-                ? "Açık"
-                : "İddia"}
+          <p>
+            {translate("round")} {room.roundNumber}
           </p>
+          <p className="font-medium">{phaseLabel}</p>
         </div>
       </header>
 
@@ -72,7 +80,7 @@ export function GameTable({
               {room.currentBid && room.phase === "bidding" ? (
                 <>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-200/80">
-                    Güncel iddia
+                    {translate("currentBid")}
                   </p>
                   <p className="mt-1 text-3xl font-black text-white drop-shadow">
                     {room.currentBid.count}× {room.currentBid.rank}
@@ -82,14 +90,14 @@ export function GameTable({
               ) : room.phase === "revealed" ? (
                 <>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-red-200/80">
-                    Kartlar açıldı
+                    {translate("cardsRevealed")}
                   </p>
-                  <p className="mt-1 text-xl font-bold text-white">Sayım yapılıyor</p>
+                  <p className="mt-1 text-xl font-bold text-white">{translate("counting")}</p>
                 </>
               ) : (
                 <>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-cyan-100/70">
-                    Sıra
+                    {translate("turn")}
                   </p>
                   <p className="mt-1 text-2xl font-bold text-white">{turnName ?? "..."}</p>
                 </>
@@ -105,12 +113,14 @@ export function GameTable({
         <div className="mb-3 flex items-center justify-between px-3">
           <div className="flex items-center gap-2">
             <p className="text-sm font-bold text-white">
-              {me?.name ?? "Sen"}
-              <span className="ml-2 text-xs font-normal text-cyan-200/60">Senin elin</span>
+              {me?.name ?? translate("you")}
+              <span className="ml-2 text-xs font-normal text-cyan-200/60">
+                {translate("yourHand")}
+              </span>
             </p>
             {me?.isBlind && !showAllCards ? (
               <span className="rounded-lg bg-amber-400 px-2 py-0.5 text-[10px] font-black text-amber-950">
-                BLIND
+                {translate("blind")}
               </span>
             ) : null}
           </div>
@@ -120,28 +130,20 @@ export function GameTable({
         </div>
 
         {!me ? (
-          <p className="text-center text-sm text-white/50">Oyuncu bulunamadı</p>
+          <p className="text-center text-sm text-white/50">{translate("playerNotFound")}</p>
         ) : me.isEliminated ? (
-          <p className="text-center text-sm text-white/50">Elendin</p>
+          <p className="text-center text-sm text-white/50">{translate("eliminated")}</p>
         ) : showAllCards || (!me.isBlind && me.cards.length > 0) ? (
           <CardFan cards={me.cards} size="xl" spread="wide" tilt="hand" />
         ) : me.isBlind ? (
           <>
             <CardFan count={me.cardCount} blind size="xl" spread="wide" tilt="hand" />
-            <p className="mt-2 text-center text-xs text-amber-200">Kartlarını göremezsin</p>
+            <p className="mt-2 text-center text-xs text-amber-200">{translate("cantSeeCards")}</p>
           </>
         ) : (
           <CardFan cards={me.cards} size="xl" spread="wide" tilt="hand" />
         )}
       </div>
     </div>
-  );
-}
-
-export function BidBanner({ bid }: { bid: Bid }) {
-  return (
-    <span className="font-bold text-cyan-200">
-      {bid.count}× {bid.rank}
-    </span>
   );
 }

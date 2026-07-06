@@ -10,13 +10,15 @@ import {
 
 const SUITS: Suit[] = ["H", "D", "C", "S"];
 
-export function createDeck(): Card[] {
+export function createDeck(deckCount: 1 | 2 = 1): Card[] {
   const deck: Card[] = [];
 
-  for (const suit of SUITS) {
-    deck.push({ rank: "2", suit });
-    for (const rank of RANKS) {
-      deck.push({ rank, suit });
+  for (let d = 0; d < deckCount; d += 1) {
+    for (const suit of SUITS) {
+      deck.push({ rank: "2", suit });
+      for (const rank of RANKS) {
+        deck.push({ rank, suit });
+      }
     }
   }
 
@@ -120,7 +122,7 @@ export function applyBlindRevival(player: Player): Player {
   };
 }
 
-export function applyRoundLoss(player: Player): Player {
+export function applyRoundLoss(player: Player, blindThreshold: number): Player {
   if (player.isBlind) {
     return {
       ...player,
@@ -130,10 +132,10 @@ export function applyRoundLoss(player: Player): Player {
     };
   }
 
-  if (player.cardCount >= 6) {
+  if (player.cardCount >= blindThreshold) {
     return {
       ...player,
-      cardCount: 6,
+      cardCount: blindThreshold,
       isBlind: true,
       cards: [],
     };
@@ -224,10 +226,11 @@ export function getMinimumBid(currentBid: Bid | null): { count: number; rank: Ra
 export function isValidBid(
   bid: Pick<Bid, "count" | "rank">,
   currentBid: Bid | null,
-  activePlayerCount: number
+  activePlayerCount: number,
+  deckCount: 1 | 2 = 1
 ): boolean {
   if (bid.count < 1) return false;
-  if (bid.count > activePlayerCount * 4) return false;
+  if (bid.count > activePlayerCount * 4 * deckCount) return false;
   if (!currentBid) return true;
   return isBidHigher(bid, currentBid);
 }

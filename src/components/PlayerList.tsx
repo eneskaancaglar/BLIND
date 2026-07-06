@@ -1,3 +1,6 @@
+"use client";
+
+import { useLanguage } from "@/context/LanguageContext";
 import { Player } from "@/lib/types";
 import { PlayingCard } from "./PlayingCard";
 
@@ -14,6 +17,8 @@ export function PlayerList({
   hostId,
   turnPlayerId,
 }: PlayerListProps) {
+  const { translate } = useLanguage();
+
   return (
     <ul className="space-y-3">
       {players.map((player) => {
@@ -33,28 +38,30 @@ export function PlayerList({
               <div>
                 <p className="font-semibold">
                   {player.name}
-                  {isMe ? " (Sen)" : ""}
+                  {isMe ? ` (${translate("you")})` : ""}
                 </p>
                 <p className="text-sm text-neutral-400">
                   {player.isEliminated
-                    ? "Elendi"
+                    ? translate("eliminated")
                     : player.isBlind
-                      ? "BLIND"
-                      : `${player.cardCount} kart`}
+                      ? translate("blind")
+                      : `${player.cardCount} ${translate("cards")}`}
                 </p>
               </div>
               <div className="flex flex-wrap justify-end gap-1">
                 {player.isHost || player.id === hostId ? (
-                  <span className="rounded-full bg-neutral-700 px-2 py-1 text-xs">Kurucu</span>
+                  <span className="rounded-full bg-neutral-700 px-2 py-1 text-xs">
+                    {translate("host")}
+                  </span>
                 ) : null}
                 {player.isBlind ? (
                   <span className="rounded-full bg-amber-500/20 px-2 py-1 text-xs text-amber-300">
-                    BLIND
+                    {translate("blind")}
                   </span>
                 ) : null}
                 {player.isEliminated ? (
                   <span className="rounded-full bg-red-500/20 px-2 py-1 text-xs text-red-300">
-                    Elendi
+                    {translate("eliminated")}
                   </span>
                 ) : null}
               </div>
@@ -73,20 +80,24 @@ type PlayerCardsProps = {
 };
 
 export function PlayerCardsRow({ player, isMe, showAll }: PlayerCardsProps) {
+  const { translate } = useLanguage();
+
   return (
     <div className="rounded-2xl border border-neutral-700 bg-neutral-900 p-4">
       <div className="mb-3 flex items-center justify-between">
         <p className="font-semibold">
           {player.name}
-          {isMe ? " (Sen)" : ""}
+          {isMe ? ` (${translate("you")})` : ""}
         </p>
         {!showAll && !player.isEliminated && (!isMe || player.isBlind) ? (
-          <span className="text-sm text-neutral-400">{player.cardCount} kart</span>
+          <span className="text-sm text-neutral-400">
+            {player.cardCount} {translate("cards")}
+          </span>
         ) : null}
       </div>
 
       {player.isEliminated ? (
-        <p className="text-sm text-neutral-500">Elendi</p>
+        <p className="text-sm text-neutral-500">{translate("eliminated")}</p>
       ) : showAll ? (
         <div className="flex flex-wrap gap-2">
           {player.cards.map((card, index) => (

@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import { Providers } from "@/components/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "BLIND",
-  description: "Mobil uyumlu BLIND kart oyunu",
+  description: "Mobile-friendly BLIND card game",
 };
 
 export const viewport: Viewport = {
@@ -19,12 +20,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
         className="min-h-screen bg-neutral-950 text-neutral-100 antialiased"
         suppressHydrationWarning
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

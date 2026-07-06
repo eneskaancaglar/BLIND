@@ -1,3 +1,6 @@
+"use client";
+
+import { useLanguage } from "@/context/LanguageContext";
 import { Player } from "@/lib/types";
 import { CardFan } from "./CardFan";
 
@@ -8,6 +11,8 @@ type OpponentSeatProps = {
 };
 
 export function OpponentSeat({ player, isTurn, showCards }: OpponentSeatProps) {
+  const { translate } = useLanguage();
+
   if (player.isEliminated) {
     return (
       <div className="flex flex-col items-center opacity-40">
@@ -15,7 +20,7 @@ export function OpponentSeat({ player, isTurn, showCards }: OpponentSeatProps) {
           {player.name}
         </p>
         <span className="rounded-full bg-black/30 px-2 py-0.5 text-[10px] text-white/40">
-          Elendi
+          {translate("eliminated")}
         </span>
       </div>
     );
@@ -35,7 +40,7 @@ export function OpponentSeat({ player, isTurn, showCards }: OpponentSeatProps) {
         </span>
         {player.isBlind && !showCards ? (
           <span className="rounded-md bg-amber-400 px-1.5 py-0.5 text-[9px] font-black text-amber-950">
-            BLIND
+            {translate("blind")}
           </span>
         ) : null}
       </div>

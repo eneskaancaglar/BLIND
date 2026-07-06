@@ -175,3 +175,67 @@ button:disabled {
   border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(12px);
 }
+
+/* Tur sonu animasyonları */
+@keyframes result-in {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes loser-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    transform: scale(1.04);
+    text-shadow: 0 0 40px rgba(239, 68, 68, 0.8);
+  }
+}
+
+@keyframes transition-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes transition-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.animate-result-in {
+  animation: result-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.loser-name {
+  animation: loser-pulse 1.6s ease-in-out infinite;
+}
+
+.animate-transition-in {
+  animation: transition-in 0.5s ease-out forwards;
+}
+
+.transition-progress {
+  animation: transition-progress 2.4s ease-in-out forwards;
+}
+
+.loser-spotlight {
+  animation: result-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
