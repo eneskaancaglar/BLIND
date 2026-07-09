@@ -50,8 +50,10 @@ export function GameTable({
   const blindMode = getBlindMode(room);
   const handCount = me ? getHandDisplayCount(me, blindMode) : 0;
   const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
-  const handSize = compactDock ? "sm" : "md";
-  const handSpread = compactDock ? "tight" : "normal";
+  const isBidding = compactDock && room.phase === "bidding";
+  const handSize = isBidding ? "xs" : compactDock ? "sm" : "md";
+  const handSpread = "tight";
+  const handMaxVisible = isBidding ? 5 : undefined;
 
   const turnName =
     opponents.find((p) => p.id === turnPlayerId)?.name ??
@@ -78,6 +80,7 @@ export function GameTable({
           size={handSize}
           spread={handSpread}
           tilt="hand"
+          maxVisible={handMaxVisible}
           animateDeal={animateDeal}
           dealKey={dealKey}
           highlightRank={highlightRank ?? undefined}
@@ -92,6 +95,7 @@ export function GameTable({
           size={handSize}
           spread={handSpread}
           tilt="hand"
+          maxVisible={handMaxVisible}
           animateDeal={animateDeal}
           dealKey={dealKey}
         />
@@ -104,6 +108,7 @@ export function GameTable({
           size={handSize}
           spread={handSpread}
           tilt="hand"
+          maxVisible={handMaxVisible}
           highlightRank={highlightRank ?? undefined}
         />
       );
@@ -123,6 +128,7 @@ export function GameTable({
         size={handSize}
         spread={handSpread}
         tilt="hand"
+        maxVisible={handMaxVisible}
         animateDeal={animateDeal}
         dealKey={dealKey}
         highlightRank={highlightRank ?? undefined}
@@ -130,13 +136,58 @@ export function GameTable({
     );
   }
 
+  function renderCenterPot() {
+    if (room.phase === "revealed" && revealResult) {
+      return (
+        <RevealPotSummary result={revealResult} bidCount={room.currentBid?.count ?? 0} />
+      );
+    }
+
+    if (isBidding) {
+      return (
+        <>
+          <p className="text-[8px] font-medium uppercase tracking-wider text-slate-400">
+            {translate("turn")}
+          </p>
+          <p className="mt-0.5 truncate text-sm font-medium text-white">{turnName ?? "..."}</p>
+        </>
+      );
+    }
+
+    if (room.currentBid && room.phase === "bidding") {
+      return (
+        <>
+          <p className="text-[9px] font-medium uppercase tracking-wider text-slate-400 sm:text-[10px]">
+            {translate("currentBid")}
+          </p>
+          <div className="mt-1">
+            <CurrentBidDisplay bid={room.currentBid} playerName={room.currentBid.playerName} compact />
+          </div>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <p className="text-[9px] font-medium uppercase tracking-wider text-slate-400">{phaseLabel}</p>
+        <p className="mt-0.5 truncate text-base font-medium text-white sm:text-lg">
+          {turnName ?? "..."}
+        </p>
+      </>
+    );
+  }
+
   return (
-    <div className="game-shell game-layout flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden">
-      <header className="game-header relative z-20 flex shrink-0 items-center justify-between gap-1.5 px-2 py-1.5 sm:px-4 sm:py-2">
+    <div
+      className={`game-shell game-layout flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden ${
+        isBidding ? "game-bidding" : ""
+      }`}
+    >
+      <header className="game-header relative z-20 flex shrink-0 items-center justify-between gap-1.5 px-2 py-1 sm:px-4 sm:py-1.5">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-medium text-slate-200 sm:text-sm">
+          <p className="truncate text-[11px] font-medium text-slate-200 sm:text-sm">
             {roomCode}
-            <span className="ml-2 text-slate-500">
+            <span className="ml-1.5 text-slate-500">
               {translate("round")} {room.roundNumber}
             </span>
           </p>
@@ -157,13 +208,13 @@ export function GameTable({
         </div>
       </header>
 
-      <div className="game-table-area relative mx-1.5 mb-1 flex min-h-0 shrink-0 flex-col overflow-hidden rounded-xl border border-white/10 sm:mx-2 sm:rounded-2xl">
+      <div className="game-table-area relative mx-1 mb-0.5 flex shrink-0 flex-col overflow-hidden rounded-xl border border-white/10 sm:mx-2 sm:mb-1 sm:rounded-2xl">
         <div className="table-felt absolute inset-0" />
         <div className="table-rim pointer-events-none absolute inset-0 rounded-xl sm:rounded-2xl" />
         <div className="table-glow pointer-events-none absolute inset-0" />
 
-        <div className="relative z-10 flex min-h-0 flex-1 flex-col p-1.5 sm:p-2">
-          <div className="opponents-table relative min-h-[4.5rem] flex-1 overflow-visible sm:min-h-[5.5rem]">
+        <div className="relative z-10 flex h-full min-h-0 flex-col p-1 sm:p-2">
+          <div className="opponents-table relative min-h-0 flex-1 overflow-visible">
             {opponents.map((player, index) => {
               const seat = getOpponentSeatPosition(index, opponents.length);
               return (
@@ -174,6 +225,7 @@ export function GameTable({
                     showCards={showAllCards}
                     blindMode={blindMode}
                     highlightRank={highlightRank ?? undefined}
+                    compact={isBidding}
                     animateDeal={animateDeal}
                     dealKey={dealKey}
                     messages={messages}
@@ -183,42 +235,28 @@ export function GameTable({
             })}
           </div>
 
-          <div className="mx-auto w-full max-w-[16rem] shrink-0 px-0.5">
-            <div className="center-pot center-pot-compact rounded-xl px-2 py-2 text-center sm:rounded-2xl sm:px-4 sm:py-3">
-              {room.phase === "revealed" && revealResult ? (
-                <RevealPotSummary
-                  result={revealResult}
-                  bidCount={room.currentBid?.count ?? 0}
-                />
-              ) : room.currentBid && room.phase === "bidding" ? (
-                <>
-                  <p className="text-[9px] font-medium uppercase tracking-wider text-slate-400 sm:text-[10px]">
-                    {translate("currentBid")}
-                  </p>
-                  <div className="mt-1">
-                    <CurrentBidDisplay
-                      bid={room.currentBid}
-                      playerName={room.currentBid.playerName}
-                      compact
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="text-[9px] font-medium uppercase tracking-wider text-slate-400">
-                    {phaseLabel}
-                  </p>
-                  <p className="mt-0.5 truncate text-base font-medium text-white sm:text-lg">
-                    {turnName ?? "..."}
-                  </p>
-                </>
-              )}
+          <div className="mx-auto w-full max-w-[14rem] shrink-0 px-0.5">
+            <div className="center-pot center-pot-compact rounded-lg px-2 py-1.5 text-center sm:rounded-2xl sm:px-4 sm:py-3">
+              {renderCenterPot()}
             </div>
           </div>
         </div>
       </div>
 
-      <div className={`game-dock game-dock-area ${compactDock ? "game-dock-compact" : ""} min-h-0 shrink px-1 pb-2 pt-1.5 sm:pb-3`}>
+      {isBidding && room.currentBid ? (
+        <div className="bid-strip shrink-0">
+          <p className="bid-strip-label">{translate("currentBid")}</p>
+          <CurrentBidDisplay
+            bid={room.currentBid}
+            playerName={room.currentBid.playerName}
+            strip
+          />
+        </div>
+      ) : null}
+
+      <div
+        className={`game-dock game-dock-area ${compactDock ? "game-dock-compact" : ""} min-h-0 shrink-0 px-1 pb-1.5 pt-1 sm:pb-3`}
+      >
         {!compactDock ? (
           <div className="mb-1 flex items-center justify-between px-1.5">
             <p className="truncate text-[11px] font-semibold text-slate-100">
@@ -230,9 +268,9 @@ export function GameTable({
           </div>
         ) : null}
 
-        <div className="flex w-full justify-center">{renderHand()}</div>
+        <div className="game-dock-hand flex w-full shrink-0 justify-center">{renderHand()}</div>
 
-        {children ? <div className="mt-1.5 shrink-0 px-0.5">{children}</div> : null}
+        {children ? <div className="game-dock-controls mt-1 shrink-0 px-0.5">{children}</div> : null}
       </div>
     </div>
   );

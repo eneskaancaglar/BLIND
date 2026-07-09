@@ -12,6 +12,7 @@ type OpponentSeatProps = {
   showCards: boolean;
   blindMode?: BlindMode;
   highlightRank?: Rank;
+  compact?: boolean;
   animateDeal?: boolean;
   dealKey?: string | number;
   messages?: ChatMessage[];
@@ -23,6 +24,7 @@ export function OpponentSeat({
   showCards,
   blindMode = "ORIGINAL_BLIND",
   highlightRank,
+  compact = false,
   animateDeal,
   dealKey,
   messages = [],
@@ -34,6 +36,7 @@ export function OpponentSeat({
       ? translate("blindHiddenCards")
       : translate("blindNoCards");
   const reaction = getRecentReaction(messages, player.id);
+  const maxVisible = compact ? 3 : undefined;
 
   if (player.isEliminated) {
     return (
@@ -46,12 +49,12 @@ export function OpponentSeat({
 
   return (
     <div
-      className={`opponent-seat relative flex w-full max-w-[5.5rem] flex-col items-center px-0.5 py-1 ${
-        isTurn ? "opponent-seat-turn" : ""
-      }`}
+      className={`opponent-seat relative flex w-full flex-col items-center px-0.5 ${
+        compact ? "max-w-[4.25rem] py-0.5" : "max-w-[5.5rem] py-1"
+      } ${isTurn ? "opponent-seat-turn" : ""}`}
     >
       {reaction ? (
-        <span key={reaction.id} className="seat-emoji-bubble absolute -top-4 z-20 text-lg" aria-hidden>
+        <span key={reaction.id} className="seat-emoji-bubble absolute -top-3 z-20 text-base" aria-hidden>
           {reaction.emoji}
         </span>
       ) : null}
@@ -59,7 +62,7 @@ export function OpponentSeat({
       <p className="opponent-name">{player.name}</p>
 
       {player.isBlind && !showCards ? (
-        <span className="mt-0.5 text-[9px] text-slate-400">{translate("blind")}</span>
+        <span className="mt-0.5 text-[8px] text-slate-400">{translate("blind")}</span>
       ) : null}
 
       {showCards && player.cards.length > 0 ? (
@@ -68,10 +71,11 @@ export function OpponentSeat({
           size="xs"
           spread="tight"
           tilt="table"
+          maxVisible={maxVisible}
           highlightRank={highlightRank}
         />
       ) : showCards && player.isBlind ? (
-        <span className="mt-0.5 text-[9px] text-slate-400">{blindStatusText}</span>
+        <span className="mt-0.5 text-[8px] text-slate-400">{blindStatusText}</span>
       ) : player.isBlind && displayCount > 0 ? (
         <CardFan
           count={displayCount}
@@ -79,11 +83,12 @@ export function OpponentSeat({
           size="xs"
           spread="tight"
           tilt="table"
+          maxVisible={maxVisible}
           animateDeal={animateDeal}
           dealKey={dealKey}
         />
       ) : player.isBlind ? (
-        <span className="mt-0.5 text-[9px] text-slate-400">{blindStatusText}</span>
+        <span className="mt-0.5 text-[8px] text-slate-400">{blindStatusText}</span>
       ) : displayCount > 0 ? (
         <CardFan
           count={displayCount}
@@ -91,6 +96,7 @@ export function OpponentSeat({
           size="xs"
           spread="tight"
           tilt="table"
+          maxVisible={maxVisible}
           animateDeal={animateDeal}
           dealKey={dealKey}
         />

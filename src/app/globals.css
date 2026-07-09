@@ -545,6 +545,14 @@ button:disabled {
 .game-layout .game-table-area {
   flex: 0 1 42dvh;
   max-height: 42dvh;
+  min-height: 28dvh;
+}
+
+.game-layout.game-bidding .game-table-area {
+  flex: 0 0 30dvh;
+  height: 30dvh;
+  min-height: 30dvh;
+  max-height: 30dvh;
 }
 
 .game-dock-area {
@@ -555,8 +563,90 @@ button:disabled {
   overflow: hidden;
 }
 
+.game-layout.game-bidding .game-dock-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.game-bidding .opponents-table {
+  min-height: 0;
+  padding: 0.2rem 0.15rem 0;
+}
+
+.game-bidding .opponent-slot {
+  max-width: 30vw;
+}
+
+.game-bidding .opponent-slot-top {
+  top: 24%;
+}
+
+.game-bidding .opponent-slot-top-left {
+  left: 28%;
+  top: 26%;
+}
+
+.game-bidding .opponent-slot-top-right {
+  left: 72%;
+  top: 26%;
+}
+
+.game-bidding .opponent-slot-left {
+  left: 18%;
+  top: 48%;
+}
+
+.game-bidding .opponent-slot-right {
+  left: 82%;
+  top: 48%;
+}
+
+.bid-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.94);
+  padding: 0.3rem 0.5rem;
+}
+
+.bid-strip-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.95);
+  white-space: nowrap;
+}
+
+.bid-display-count-strip {
+  font-size: 1.35rem;
+}
+
+.game-bidding .game-dock-hand {
+  max-height: 3.5rem;
+  overflow: hidden;
+}
+
+.game-bidding .game-dock-hand .card-fan-row {
+  min-height: 3.25rem !important;
+}
+
+.game-bidding .game-dock-controls {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.bid-panel-compact {
+  border-radius: 0.65rem;
+}
+
 .game-dock-compact .card-fan-row {
-  min-height: 4rem !important;
+  min-height: 3.25rem !important;
 }
 
 .center-pot-compact {
