@@ -22,6 +22,7 @@ type GameTableProps = {
   showAllCards: boolean;
   highlightRank?: Rank | null;
   revealResult?: RevealResult | null;
+  pendingGameWinnerName?: string | null;
   compactDock?: boolean;
   animateDeal?: boolean;
   dealKey?: string | number;
@@ -39,6 +40,7 @@ export function GameTable({
   showAllCards,
   highlightRank,
   revealResult,
+  pendingGameWinnerName,
   compactDock = false,
   animateDeal,
   dealKey,
@@ -139,7 +141,22 @@ export function GameTable({
   function renderCenterPot() {
     if (room.phase === "revealed" && revealResult) {
       return (
-        <RevealPotSummary result={revealResult} bidCount={room.currentBid?.count ?? 0} />
+        <RevealPotSummary
+          result={revealResult}
+          bidCount={room.currentBid?.count ?? 0}
+          gameWinnerName={pendingGameWinnerName}
+        />
+      );
+    }
+
+    if (room.status === "finished" && room.phase === "round_end" && room.winnerName) {
+      return (
+        <>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/90">
+            {translate("gameOver")}
+          </p>
+          <p className="mt-1 text-lg font-bold text-white">{room.winnerName}</p>
+        </>
       );
     }
 

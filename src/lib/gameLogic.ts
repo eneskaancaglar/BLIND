@@ -145,6 +145,31 @@ export function applyBlindRevival(player: Player, blindThreshold: number): Playe
   };
 }
 
+function clearHand(player: Player): Player {
+  return { ...player, cards: [] };
+}
+
+/** Penalty for the opener who lost a blind-revival challenge. */
+export function applyBlindRevivalOpenerPenalty(
+  player: Player,
+  blindThreshold: number,
+  blindMode: BlindMode,
+  activePlayersBeforeRound: number
+): Player {
+  if (player.isBlind) {
+    return applyRoundLoss(player, blindThreshold, blindMode);
+  }
+
+  if (activePlayersBeforeRound <= 2) {
+    if (player.cardCount >= blindThreshold) {
+      return clearHand(player);
+    }
+    return { ...player, cardCount: player.cardCount + 1, cards: [] };
+  }
+
+  return applyRoundLoss(player, blindThreshold, blindMode);
+}
+
 export function applyRoundLoss(
   player: Player,
   blindThreshold: number,
@@ -176,6 +201,32 @@ export function applyRoundLoss(
   };
 }
 
+function cardsNeededToDeal(
+  players: Player[],
+  blindMode: BlindMode,
+  blindThreshold: number
+): number {
+  const hiddenBlind = isHiddenCardsBlind(blindMode);
+  return players.reduce((total, player) => {
+    if (player.isEliminated) return total;
+    if (player.isBlind && !hiddenBlind) return total;
+    if (player.isBlind && hiddenBlind) return total + blindThreshold;
+    return total + player.cardCount;
+  }, 0);
+}
+
+function ensureDeckForDeal(
+  deck: Card[],
+  players: Player[],
+  blindMode: BlindMode,
+  blindThreshold: number,
+  deckCount: 1 | 2
+): Card[] {
+  const needed = cardsNeededToDeal(players, blindMode, blindThreshold);
+  if (deck.length >= needed) return deck;
+  return shuffle([...deck, ...createDeck(deckCount)]);
+}
+
 export function dealCards(
   deck: Card[],
   players: Player[],
@@ -205,11 +256,16 @@ export function dealCards(
     return {
       ...player,
       cards,
-      cardCount: player.isBlind && hiddenBlind ? blindThreshold : cards.length,
+      cardCount: player.isBlind && hiddenBlind ? blindThreshold : player.cardCount,
     };
   });
 
   return { deck: remainingDeck, players: updatedPlayers };
+}
+
+function isBlindRevivalStalemate(players: Player[]): boolean {
+  const active = getActivePlayers(players);
+  return active.length === 2 && active.every((player) => player.isBlind);
 }
 
 export function getHandDisplayCount(player: Player, blindMode: BlindMode): number {
@@ -250,6 +306,70 @@ export type RoundResolveResult = {
   currentBid: null;
 };
 
+export function applyRevealPenalties(
+  players: Player[],
+  revealResult: RevealResult,
+  room: Pick<Room, "blindThreshold" | "blindMode" | "blindGetsCards">
+): Player[] {
+  const blindMode = getBlindMode(room);
+  const blindThreshold = room.blindThreshold ?? 6;
+  const activeBeforeRound = getActivePlayers(players).length;
+  const isBlindRevival = Boolean(revealResult.blindRevivalId);
+
+  return players.map((player) => {
+    if (isBlindRevival && player.id === revealResult.blindRevivalId) {
+      return applyBlindRevival(player, blindThreshold);
+    }
+
+    if (player.id === revealResult.loserId) {
+      if (isBlindRevival) {
+        return applyBlindRevivalOpenerPenalty(
+          player,
+          blindThreshold,
+          blindMode,
+          activeBeforeRound
+        );
+      }
+      return applyRoundLoss(player, blindThreshold, blindMode);
+    }
+
+    return clearHand(player);
+  });
+}
+
+export function predictWinnerAfterReveal(
+  players: Player[],
+  revealResult: RevealResult,
+  room: Pick<Room, "blindThreshold" | "blindMode" | "blindGetsCards">
+): Player | null {
+  const updatedPlayers = applyRevealPenalties(players, revealResult, room);
+  if (revealResult.blindRevivalId && isBlindRevivalStalemate(updatedPlayers)) {
+    return null;
+  }
+  return getWinner(updatedPlayers);
+}
+
+export function predictGameEndsAfterReveal(
+  players: Player[],
+  revealResult: RevealResult,
+  room: Pick<Room, "blindThreshold" | "blindMode" | "blindGetsCards">
+): boolean {
+  const updatedPlayers = applyRevealPenalties(players, revealResult, room);
+  if (revealResult.blindRevivalId && isBlindRevivalStalemate(updatedPlayers)) {
+    return true;
+  }
+  return getWinner(updatedPlayers) !== null;
+}
+
+function preserveRevealedCards(players: Player[], updatedPlayers: Player[]): Player[] {
+  return updatedPlayers.map((player) => {
+    const revealed = players.find((source) => source.id === player.id);
+    return revealed?.cards.length
+      ? { ...player, cards: revealed.cards }
+      : { ...player, cards: [] };
+  });
+}
+
 export function resolveRoundAfterReveal(
   players: Player[],
   revealResult: RevealResult,
@@ -257,23 +377,28 @@ export function resolveRoundAfterReveal(
 ): RoundResolveResult {
   const blindMode = getBlindMode(room);
   const blindThreshold = room.blindThreshold ?? 6;
+  const updatedPlayers = applyRevealPenalties(players, revealResult, room);
 
-  const updatedPlayers = players.map((player) => {
-    if (revealResult.blindRevivalId && player.id === revealResult.blindRevivalId) {
-      return applyBlindRevival(player, blindThreshold);
-    }
-
-    if (player.id === revealResult.loserId) {
-      return applyRoundLoss(player, blindThreshold, blindMode);
-    }
-
-    return { ...player, cards: [] };
-  });
+  if (revealResult.blindRevivalId && isBlindRevivalStalemate(updatedPlayers)) {
+    return {
+      players: preserveRevealedCards(players, updatedPlayers),
+      status: "finished",
+      phase: "round_end",
+      roundNumber: room.roundNumber,
+      deck: [],
+      turnOrder: buildTurnOrder(updatedPlayers),
+      currentTurnIndex: 0,
+      winnerId: null,
+      winnerName: null,
+      revealResult: null,
+      currentBid: null,
+    };
+  }
 
   const winner = getWinner(updatedPlayers);
   if (winner) {
     return {
-      players: updatedPlayers.map((player) => ({ ...player, cards: [] })),
+      players: preserveRevealedCards(players, updatedPlayers),
       status: "finished",
       phase: "round_end",
       roundNumber: room.roundNumber,
@@ -288,6 +413,7 @@ export function resolveRoundAfterReveal(
   }
 
   let deck = room.deck.length > 0 ? [...room.deck] : createDeck(room.deckCount ?? 1);
+  deck = ensureDeckForDeal(deck, updatedPlayers, blindMode, blindThreshold, room.deckCount ?? 1);
   const dealt = dealCards(deck, updatedPlayers, blindMode, blindThreshold);
   deck = dealt.deck;
   const turnOrder = buildTurnOrder(dealt.players, revealResult.loserId);

@@ -6,9 +6,10 @@ import type { RevealResult } from "@/lib/types";
 type RevealPotSummaryProps = {
   result: RevealResult;
   bidCount: number;
+  gameWinnerName?: string | null;
 };
 
-export function RevealPotSummary({ result, bidCount }: RevealPotSummaryProps) {
+export function RevealPotSummary({ result, bidCount, gameWinnerName }: RevealPotSummaryProps) {
   const { translate } = useLanguage();
   const openerLoses = result.actualCount >= bidCount;
   const winnerName = openerLoses ? result.lastBidderName : result.openerName;
@@ -43,6 +44,11 @@ export function RevealPotSummary({ result, bidCount }: RevealPotSummaryProps) {
             blind: result.blindRevivalName,
             opener: result.openerName,
           })}
+        </p>
+      ) : null}
+      {gameWinnerName ? (
+        <p className="pt-1 text-sm font-semibold text-emerald-200">
+          {translate("gameOver")}: {gameWinnerName}
         </p>
       ) : null}
     </div>

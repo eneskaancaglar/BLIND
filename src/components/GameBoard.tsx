@@ -9,7 +9,7 @@ import { WinnerOverlay } from "@/components/WinnerOverlay";
 import { useLanguage } from "@/context/LanguageContext";
 import { useSound } from "@/context/SoundContext";
 import { isFirebaseConfigured } from "@/lib/firebase";
-import { getActivePlayers, getBlindMode, getHandDisplayCount } from "@/lib/gameLogic";
+import { getActivePlayers, getBlindMode, getHandDisplayCount, predictGameEndsAfterReveal, predictWinnerAfterReveal } from "@/lib/gameLogic";
 import { Player, Room } from "@/lib/types";
 import {
   attachRoomSync,
@@ -29,6 +29,7 @@ type GameBoardProps = {
 };
 
 const TRANSITION_MS = 2200;
+const GAME_END_TABLE_MS = 4500;
 
 export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const { translate } = useLanguage();
@@ -45,10 +46,13 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const [showTransition, setShowTransition] = useState(false);
   const [animateDeal, setAnimateDeal] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showWinnerOverlay, setShowWinnerOverlay] = useState(false);
+  const [gameEndViewStarted, setGameEndViewStarted] = useState<number | null>(null);
 
   const prevPhaseRef = useRef<Room["phase"] | null>(null);
   const skipPhaseTransitionRef = useRef(false);
   const prevRoundRef = useRef(0);
+  const gameEndFinalizedRef = useRef(false);
   const transitionTimerRef = useRef<number | null>(null);
   const revealSoundRef = useRef<string | null>(null);
   const transitionSoundRef = useRef(false);
@@ -180,12 +184,68 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   }, [showTransition, play]);
 
   useEffect(() => {
-    if (room?.status === "finished" && room.winnerName && !winSoundRef.current) {
+    if (room?.status === "finished" && room.winnerName && showWinnerOverlay && !winSoundRef.current) {
       winSoundRef.current = true;
       const iWon = room.winnerId === playerId;
       play(iWon ? "win" : "lose");
     }
-  }, [room?.status, room?.winnerId, room?.winnerName, playerId, play]);
+    if (!showWinnerOverlay) {
+      winSoundRef.current = false;
+    }
+  }, [room?.status, room?.winnerId, room?.winnerName, playerId, play, showWinnerOverlay]);
+
+  const pendingGameWinner = useMemo(() => {
+    if (!room?.revealResult || room.phase !== "revealed") return null;
+    return predictWinnerAfterReveal(players, room.revealResult, room);
+  }, [room, players]);
+
+  const isGameEndingReveal = useMemo(() => {
+    if (!room?.revealResult || room.phase !== "revealed") return false;
+    return predictGameEndsAfterReveal(players, room.revealResult, room);
+  }, [room, players]);
+
+  useEffect(() => {
+    if (isGameEndingReveal && !gameEndViewStarted) {
+      setGameEndViewStarted(Date.now());
+    }
+    if (!isGameEndingReveal && room?.phase !== "round_end") {
+      setGameEndViewStarted(null);
+      gameEndFinalizedRef.current = false;
+    }
+  }, [isGameEndingReveal, gameEndViewStarted, room?.phase]);
+
+  useEffect(() => {
+    if (
+      !isGameEndingReveal ||
+      room?.hostId !== playerId ||
+      !room?.revealResult ||
+      gameEndFinalizedRef.current
+    ) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      gameEndFinalizedRef.current = true;
+      void continueAfterReveal(roomCode, playerId)
+        .then(() => applyFreshState())
+        .catch((err) => setError(err instanceof Error ? err.message : translate("errContinue")));
+    }, GAME_END_TABLE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [isGameEndingReveal, room?.hostId, room?.revealResult, roomCode, playerId, applyFreshState, translate]);
+
+  useEffect(() => {
+    if (room?.status !== "finished" || !room.winnerName) {
+      setShowWinnerOverlay(false);
+      return;
+    }
+
+    const elapsed = gameEndViewStarted ? Date.now() - gameEndViewStarted : GAME_END_TABLE_MS;
+    const remaining = Math.max(0, GAME_END_TABLE_MS - elapsed);
+
+    const timer = window.setTimeout(() => setShowWinnerOverlay(true), remaining);
+    return () => window.clearTimeout(timer);
+  }, [room?.status, room?.winnerName, gameEndViewStarted]);
 
   const me = players.find((player) => player.id === playerId);
   const visiblePlayers = useMemo(() => {
@@ -198,7 +258,9 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const turnPlayerId = room?.turnOrder[room.currentTurnIndex] ?? undefined;
   const isMyTurn = turnPlayerId === playerId;
   const isHost = room?.hostId === playerId;
-  const showAllCards = room?.phase === "revealed";
+  const showAllCards =
+    room?.phase === "revealed" ||
+    (room?.status === "finished" && room?.phase === "round_end" && !showWinnerOverlay);
   const deckCount = room?.deckCount ?? 1;
   const highlightRank = showAllCards && room?.currentBid ? room.currentBid.rank : null;
   const showBidDock = Boolean(
@@ -216,7 +278,8 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     room?.revealResult &&
       room.phase === "revealed" &&
       !showTransition &&
-      room.status !== "finished"
+      room.status !== "finished" &&
+      !isGameEndingReveal
   );
 
   async function handleBid(count: number, rank: Parameters<typeof placeBid>[4]) {
@@ -312,7 +375,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         </div>
       ) : null}
 
-      {room.status === "finished" && room.winnerName ? (
+      {showWinnerOverlay && room.status === "finished" && room.winnerName ? (
         <WinnerOverlay
           winnerName={room.winnerName}
           isMe={room.winnerId === playerId}
@@ -344,6 +407,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         showAllCards={showAllCards}
         highlightRank={highlightRank}
         revealResult={room.revealResult}
+        pendingGameWinnerName={pendingGameWinner?.name ?? null}
         compactDock={showBidDock}
         animateDeal={animateDeal}
         dealKey={`${room.roundNumber}-${room.phase}`}
