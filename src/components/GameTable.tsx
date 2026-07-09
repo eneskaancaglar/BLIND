@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { getOpponentSeatPosition } from "@/lib/seatLayout";
-import { getHandDisplayCount } from "@/lib/gameLogic";
+import { getHandDisplayCount, getBlindMode } from "@/lib/gameLogic";
 import { ChatMessage, Player, Room } from "@/lib/types";
 import { CardFan } from "./CardFan";
 import { EmojiChat } from "./EmojiChat";
@@ -39,8 +39,8 @@ export function GameTable({
 }: GameTableProps) {
   const { translate } = useLanguage();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const blindGetsCards = room.blindGetsCards ?? false;
-  const handCount = me ? getHandDisplayCount(me, blindGetsCards) : 0;
+  const blindMode = getBlindMode(room);
+  const handCount = me ? getHandDisplayCount(me, blindMode) : 0;
   const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
 
   const turnName =
@@ -104,7 +104,7 @@ export function GameTable({
                     player={player}
                     isTurn={player.id === turnPlayerId}
                     showCards={showAllCards}
-                    blindGetsCards={blindGetsCards}
+                    blindMode={blindMode}
                     animateDeal={animateDeal}
                     dealKey={dealKey}
                     messages={messages}
@@ -197,7 +197,11 @@ export function GameTable({
             <p className="mt-2 text-center text-xs text-slate-400">{translate("cantSeeCards")}</p>
           </div>
         ) : me.isBlind ? (
-          <p className="text-center text-sm text-slate-400">{translate("blindNoCards")}</p>
+          <p className="text-center text-sm text-slate-400">
+            {blindMode === "HIDDEN_CARDS_BLIND"
+              ? translate("blindHiddenCards")
+              : translate("blindNoCards")}
+          </p>
         ) : (
           <div className="flex w-full justify-center">
             <CardFan

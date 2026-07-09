@@ -9,7 +9,7 @@ import { WinnerOverlay } from "@/components/WinnerOverlay";
 import { useLanguage } from "@/context/LanguageContext";
 import { useSound } from "@/context/SoundContext";
 import { isFirebaseConfigured } from "@/lib/firebase";
-import { getActivePlayers, getHandDisplayCount } from "@/lib/gameLogic";
+import { getActivePlayers, getBlindMode, getHandDisplayCount } from "@/lib/gameLogic";
 import { Player, Room } from "@/lib/types";
 import {
   attachRoomSync,
@@ -79,7 +79,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
 
   const roomPhase = room?.phase;
   const roomRoundNumber = room?.roundNumber ?? 0;
-  const blindGetsCards = room?.blindGetsCards ?? false;
+  const blindMode = room ? getBlindMode(room) : "ORIGINAL_BLIND";
 
   useEffect(() => {
     setPlayerId(getPlayerId());
@@ -139,7 +139,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     const me = players.find((p) => p.id === playerId);
     if (!me || me.isEliminated) return;
 
-    const handCount = getHandDisplayCount(me, blindGetsCards);
+    const handCount = getHandDisplayCount(me, blindMode);
     if (handCount === 0) return;
 
     const key = `${roomRoundNumber}-${handCount}`;
@@ -156,7 +156,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     }
 
     return () => timers.forEach((t) => window.clearTimeout(t));
-  }, [animateDeal, roomRoundNumber, players, playerId, play, blindGetsCards]);
+  }, [animateDeal, roomRoundNumber, players, playerId, play, blindMode]);
 
   useEffect(() => {
     if (room?.phase === "revealed" && room.revealResult) {

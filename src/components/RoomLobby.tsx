@@ -6,6 +6,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { PlayerList } from "@/components/PlayerList";
 import { SoundToggle } from "@/components/SoundToggle";
 import { useLanguage } from "@/context/LanguageContext";
+import { getBlindMode } from "@/lib/gameLogic";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { t } from "@/lib/i18n";
 import { Player, Room } from "@/lib/types";
@@ -91,7 +92,7 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
   const isHost = room?.hostId === playerId;
   const deckCount = room?.deckCount ?? 1;
   const blindThreshold = room?.blindThreshold ?? 6;
-  const blindGetsCards = room?.blindGetsCards ?? false;
+  const blindMode = room ? getBlindMode(room) : "ORIGINAL_BLIND";
 
   return (
     <main className="home-shell relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-0 pt-10">
@@ -123,9 +124,9 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
               {translate("lobbyBlindAt", { count: blindThreshold })}
             </span>
             <span className="home-chip rounded-full px-3 py-1.5 text-xs font-semibold">
-              {translate("lobbyBlindCards", {
-                value: blindGetsCards ? translate("blindGetsCardsYes") : translate("blindGetsCardsNo"),
-              })}
+              {blindMode === "HIDDEN_CARDS_BLIND"
+                ? translate("blindModeHidden")
+                : translate("blindModeOriginal")}
             </span>
           </div>
         </section>

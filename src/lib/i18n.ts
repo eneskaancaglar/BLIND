@@ -1,11 +1,11 @@
-import type { Rank, RevealResult } from "./types";
+import type { Rank, RevealResult, BlindMode } from "./types";
 
 export type Language = "en" | "tr";
 
 export type RoomSettings = {
   deckCount: 1 | 2;
   blindThreshold: 5 | 6 | 7;
-  blindGetsCards: boolean;
+  blindMode: BlindMode;
 };
 
 const STORAGE_KEY = "blind_language";
@@ -15,7 +15,7 @@ export const DEFAULT_LANGUAGE: Language = "en";
 export const DEFAULT_ROOM_SETTINGS: RoomSettings = {
   deckCount: 1,
   blindThreshold: 6,
-  blindGetsCards: false,
+  blindMode: "ORIGINAL_BLIND",
 };
 
 export type Vars = Record<string, string | number>;
@@ -64,8 +64,11 @@ const en = {
   deckDouble: "2 decks",
   blindThreshold: "BLIND at",
   blindThresholdCards: "{count} cards",
-  blindGetsCards: "BLIND gets cards",
-  blindNoCards: "No cards — bid blind",
+  blindGetsCards: "BLIND mode",
+  blindModeOriginal: "Classic — no cards",
+  blindModeHidden: "Hidden cards — can't see",
+  blindNoCards: "BLIND — no cards",
+  blindHiddenCards: "BLIND — cards hidden",
   blindGetsCardsYes: "Yes (can't see)",
   blindGetsCardsNo: "No",
 
@@ -147,8 +150,8 @@ const en = {
   rule5: "Loser gets +1 card. At the blind limit they become BLIND and can never see their cards.",
   rule6: "BLIND who loses is out. Last player with cards wins.",
   rule7: "BLIND rule: BLIND bids. If the next player raises, play continues normally.",
-  rule8: "If the next player Opens and the bid is correct: BLIND returns with 5 cards; opener gets +1 penalty.",
-  rule9: "Optional room rule: BLIND gets cards at the limit (e.g. 5) but still cannot see them — cards count in play. If off, BLIND has no cards and bids blind.",
+  rule8: "If BLIND bids and the next player Opens: correct bid revives BLIND at threshold cards; opener gets +1 penalty. Wrong bid eliminates BLIND.",
+  rule9: "BLIND mode: Classic = no cards while blind. Hidden cards = threshold cards dealt but blind player cannot see them.",
   rulesTitle: "How to Play?",
 } as const;
 
@@ -196,8 +199,11 @@ const tr: Record<keyof typeof en, string> = {
   deckDouble: "2 deste",
   blindThreshold: "BLIND eşiği",
   blindThresholdCards: "{count} kart",
-  blindGetsCards: "BLIND'e kart ver",
-  blindNoCards: "Kartsız — kör tahmin",
+  blindGetsCards: "BLIND modu",
+  blindModeOriginal: "Klasik — kartsız",
+  blindModeHidden: "Gizli kart — göremez",
+  blindNoCards: "BLIND — kart yok",
+  blindHiddenCards: "BLIND — kartların gizli",
   blindGetsCardsYes: "Evet (görmez)",
   blindGetsCardsNo: "Hayır",
 
@@ -282,8 +288,8 @@ const tr: Record<keyof typeof en, string> = {
   rule5: "Kaybeden +1 kart alır. BLIND eşiğinde BLIND olur ve kartlarını asla göremez.",
   rule6: "BLIND kaybederse elenir. Kartı kalan son oyuncu kazanır.",
   rule7: "BLIND kuralı: BLIND iddia eder. Sonraki yükseltirse oyun normal sürer.",
-  rule8: "Sonraki Aç derse ve iddia doğruysa: BLIND 5 kartla döner; açan +1 kart cezası alır.",
-  rule9: "Oda kuralı: BLIND sınırda kart alır (ör. 5) ama yine göremez — kartlar oyunda sayılır. Kapalıysa kartsız tahmin yapar.",
+  rule8: "BLIND iddia verip sonraki Aç derse: iddia doğruysa BLIND eşik kadar kartla döner, açan +1 ceza alır. Yanlışsa BLIND elenir.",
+  rule9: "BLIND modu: Klasik = kartsız BLIND. Gizli kart = eşik kadar kart verilir ama BLIND göremez.",
   rulesTitle: "Nasıl Oynanır?",
 };
 

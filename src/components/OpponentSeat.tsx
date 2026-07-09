@@ -2,7 +2,7 @@
 
 import { useLanguage } from "@/context/LanguageContext";
 import { getHandDisplayCount } from "@/lib/gameLogic";
-import { ChatMessage, Player } from "@/lib/types";
+import { BlindMode, ChatMessage, Player } from "@/lib/types";
 import { getRecentReaction } from "./EmojiChat";
 import { CardFan } from "./CardFan";
 
@@ -10,7 +10,7 @@ type OpponentSeatProps = {
   player: Player;
   isTurn: boolean;
   showCards: boolean;
-  blindGetsCards?: boolean;
+  blindMode?: BlindMode;
   animateDeal?: boolean;
   dealKey?: string | number;
   messages?: ChatMessage[];
@@ -20,13 +20,17 @@ export function OpponentSeat({
   player,
   isTurn,
   showCards,
-  blindGetsCards = false,
+  blindMode = "ORIGINAL_BLIND",
   animateDeal,
   dealKey,
   messages = [],
 }: OpponentSeatProps) {
   const { translate } = useLanguage();
-  const displayCount = getHandDisplayCount(player, blindGetsCards);
+  const displayCount = getHandDisplayCount(player, blindMode);
+  const blindStatusText =
+    blindMode === "HIDDEN_CARDS_BLIND"
+      ? translate("blindHiddenCards")
+      : translate("blindNoCards");
   const reaction = getRecentReaction(messages, player.id);
 
   if (player.isEliminated) {
@@ -72,11 +76,11 @@ export function OpponentSeat({
       {showCards && player.cards.length > 0 ? (
         <CardFan cards={player.cards} size="sm" spread="tight" tilt="table" />
       ) : showCards && player.isBlind ? (
-        <span className="text-[10px] font-medium text-slate-400">{translate("blindNoCards")}</span>
+        <span className="text-[10px] font-medium text-slate-400">{blindStatusText}</span>
       ) : player.isBlind && displayCount > 0 ? (
         <CardFan
           count={displayCount}
-          blind
+          faceDown
           size="sm"
           spread="tight"
           tilt="table"
@@ -85,7 +89,7 @@ export function OpponentSeat({
           dealKey={dealKey}
         />
       ) : player.isBlind ? (
-        <span className="text-[10px] font-medium text-slate-400">{translate("blindNoCards")}</span>
+        <span className="text-[10px] font-medium text-slate-400">{blindStatusText}</span>
       ) : (
         <CardFan
           count={displayCount}

@@ -12,6 +12,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  runTransaction,
   setDoc,
   updateDoc,
   writeBatch,
@@ -19,16 +20,17 @@ import {
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import {
-  applyRoundLoss,
-  applyBlindRevival,
+  blindModeToLegacyGetsCards,
   buildTurnOrder,
   createDeck,
   dealCards,
   generateRoomCode,
   getActivePlayers,
+  getBlindMode,
   getWinner,
   nextTurnIndex,
   resolveChallenge,
+  resolveRoundAfterReveal,
 } from "./gameLogic";
 import { Bid, ChatMessage, Player, Rank, Room } from "./types";
 import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "./i18n";
@@ -328,7 +330,8 @@ export async function createRoom(
     deck: [],
     deckCount: settings.deckCount,
     blindThreshold: settings.blindThreshold,
-    blindGetsCards: settings.blindGetsCards,
+    blindMode: settings.blindMode,
+    blindGetsCards: blindModeToLegacyGetsCards(settings.blindMode),
     winnerId: null,
     winnerName: null,
     lastLoserId: null,
@@ -421,14 +424,15 @@ export async function startGame(roomCode: string, hostId: string): Promise<void>
   }
 
   let deck = createDeck(room.deckCount ?? 1);
-  const blindGetsCards = room.blindGetsCards ?? false;
+  const blindMode = getBlindMode(room);
+  const blindThreshold = room.blindThreshold ?? 6;
   const preparedPlayers = players.map((player) => ({
     ...player,
     cardCount: player.isEliminated ? 0 : Math.max(player.cardCount, 1),
     cards: [] as Player["cards"],
   }));
 
-  const dealt = dealCards(deck, preparedPlayers, blindGetsCards);
+  const dealt = dealCards(deck, preparedPlayers, blindMode, blindThreshold);
   deck = dealt.deck;
   const turnOrder = buildTurnOrder(dealt.players);
 
@@ -498,12 +502,14 @@ export async function openChallenge(
   if (!room.currentBid) throw new Error("Açmak için önce bir iddia olmalı.");
 
   const players = await fetchPlayers(roomCode);
+  const blindThreshold = room.blindThreshold ?? 6;
   const revealResult = resolveChallenge(
     players,
     room.currentBid,
     playerId,
     playerName,
-    room.turnOrder
+    room.turnOrder,
+    blindThreshold
   );
 
   await updateDoc(roomRef, touchRoom({
@@ -511,81 +517,72 @@ export async function openChallenge(
     revealResult,
     lastLoserId: revealResult.loserId,
     lastLoserName: revealResult.loserName,
+    resolvedRoundNumber: null,
   }));
 }
 
 export async function continueAfterReveal(roomCode: string, actorId: string): Promise<void> {
   const roomRef = doc(getDb(), ROOMS, roomCode);
-  const roomSnap = await getDoc(roomRef);
-
-  if (!roomSnap.exists()) throw new Error("Oda bulunamadı.");
-
-  const room = roomSnap.data() as Room;
-  if (room.phase !== "revealed" || !room.revealResult) {
-    throw new Error("Gösterim aşaması tamamlanmadı.");
-  }
-
-  const players = await fetchPlayers(roomCode);
-  const actor = players.find((player) => player.id === actorId);
-  if (!actor || actor.isEliminated) {
-    throw new Error("Devam etmek için oyunda olmalısınız.");
-  }
-  if (room.hostId !== actorId) {
-    throw new Error("Sadece oda kurucusu devam ettirebilir.");
-  }
-
-  const blindThreshold = room.blindThreshold ?? 6;
-  const blindGetsCards = room.blindGetsCards ?? false;
-  const updatedPlayers = players.map((player) => {
-    const result = room.revealResult!;
-
-    if (result.blindRevivalId && player.id === result.blindRevivalId) {
-      return applyBlindRevival(player);
-    }
-
-    if (player.id === result.loserId) {
-      return applyRoundLoss(player, blindThreshold, blindGetsCards);
-    }
-
-    return player;
-  });
-
-  const winner = getWinner(updatedPlayers);
-  if (winner) {
-    await batchWritePlayersAndRoom(
-      roomCode,
-      roomRef,
-      {
-        status: "finished",
-        phase: "round_end",
-        winnerId: winner.id,
-        winnerName: winner.name,
-      },
-      updatedPlayers
-    );
-    return;
-  }
-
-  let deck = room.deck.length > 0 ? [...room.deck] : createDeck(room.deckCount ?? 1);
-  const dealt = dealCards(deck, updatedPlayers, blindGetsCards);
-  deck = dealt.deck;
-  const turnOrder = buildTurnOrder(dealt.players, room.revealResult.loserId);
-
-  await batchWritePlayersAndRoom(
-    roomCode,
-    roomRef,
-    {
-      status: "playing",
-      phase: "bidding",
-      roundNumber: room.roundNumber + 1,
-      deck,
-      currentBid: null,
-      turnOrder,
-      currentTurnIndex: 0,
-      revealResult: null,
-    },
-    dealt.players
+  const playersSnap = await getDocs(
+    query(collection(getDb(), ROOMS, roomCode, PLAYERS), orderBy("joinedAt", "asc"))
   );
+
+  await runTransaction(getDb(), async (transaction) => {
+    const roomSnap = await transaction.get(roomRef);
+    if (!roomSnap.exists()) throw new Error("Oda bulunamadı.");
+
+    const room = roomSnap.data() as Room;
+    if (room.phase !== "revealed" || !room.revealResult) {
+      throw new Error("Bu el zaten tamamlandı.");
+    }
+    if (room.hostId !== actorId) {
+      throw new Error("Sadece oda kurucusu devam ettirebilir.");
+    }
+    if (room.resolvedRoundNumber === room.roundNumber) {
+      throw new Error("Bu el zaten tamamlandı.");
+    }
+
+    const actorSnap = await transaction.get(doc(getDb(), ROOMS, roomCode, PLAYERS, actorId));
+    const actor = actorSnap.data() as Player | undefined;
+    if (!actor || actor.isEliminated) {
+      throw new Error("Devam etmek için oyunda olmalısınız.");
+    }
+
+    const players: Player[] = [];
+    for (const playerDoc of playersSnap.docs) {
+      const playerSnap = await transaction.get(playerDoc.ref);
+      if (playerSnap.exists()) {
+        players.push(playerSnap.data() as Player);
+      }
+    }
+
+    const resolved = resolveRoundAfterReveal(players, room.revealResult, room);
+
+    transaction.update(roomRef, touchRoom({
+      status: resolved.status,
+      phase: resolved.phase,
+      roundNumber: resolved.roundNumber,
+      deck: resolved.deck,
+      currentBid: resolved.currentBid,
+      turnOrder: resolved.turnOrder,
+      currentTurnIndex: resolved.currentTurnIndex,
+      revealResult: resolved.revealResult,
+      winnerId: resolved.winnerId,
+      winnerName: resolved.winnerName,
+      lastLoserId: room.revealResult.loserId,
+      lastLoserName: room.revealResult.loserName,
+      resolvedRoundNumber: room.roundNumber,
+    }));
+
+    for (const player of resolved.players) {
+      transaction.update(doc(getDb(), ROOMS, roomCode, PLAYERS, player.id), {
+        cards: player.cards,
+        cardCount: player.cardCount,
+        isBlind: player.isBlind,
+        isEliminated: player.isEliminated,
+      });
+    }
+  });
 }
 
 export async function leaveGame(roomCode: string, playerId: string): Promise<void> {

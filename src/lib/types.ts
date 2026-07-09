@@ -26,6 +26,8 @@ export type Bid = {
   playerName: string;
 };
 
+export type BlindMode = "ORIGINAL_BLIND" | "HIDDEN_CARDS_BLIND";
+
 export type RoomStatus = "waiting" | "playing" | "finished";
 
 export type GamePhase = "bidding" | "revealed" | "round_end";
@@ -42,7 +44,9 @@ export type Room = {
   deck: Card[];
   deckCount: 1 | 2;
   blindThreshold: 5 | 6 | 7;
+  /** @deprecated use blindMode — kept for older rooms */
   blindGetsCards: boolean;
+  blindMode?: BlindMode;
   winnerId: string | null;
   winnerName: string | null;
   lastLoserId: string | null;
@@ -50,6 +54,8 @@ export type Room = {
   revealResult: RevealResult | null;
   createdAt: number;
   syncVersion?: number;
+  /** Prevents resolving the same round twice */
+  resolvedRoundNumber?: number | null;
 };
 
 export type Player = {

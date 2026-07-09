@@ -1,10 +1,12 @@
 import {
   Bid,
+  BlindMode,
   Card,
   Player,
   RANKS,
   Rank,
   RevealResult,
+  Room,
   Suit,
 } from "./types";
 
@@ -43,11 +45,29 @@ export function generateRoomCode(): string {
   return code;
 }
 
+export function getBlindMode(room: Pick<Room, "blindMode" | "blindGetsCards">): BlindMode {
+  if (room.blindMode === "HIDDEN_CARDS_BLIND" || room.blindMode === "ORIGINAL_BLIND") {
+    return room.blindMode;
+  }
+  return room.blindGetsCards ? "HIDDEN_CARDS_BLIND" : "ORIGINAL_BLIND";
+}
+
+export function isHiddenCardsBlind(mode: BlindMode): boolean {
+  return mode === "HIDDEN_CARDS_BLIND";
+}
+
+export function blindModeToLegacyGetsCards(mode: BlindMode): boolean {
+  return mode === "HIDDEN_CARDS_BLIND";
+}
+
 export function rankIndex(rank: Rank): number {
   return RANKS.indexOf(rank);
 }
 
-export function isBidHigher(newBid: Pick<Bid, "count" | "rank">, current: Pick<Bid, "count" | "rank">): boolean {
+export function isBidHigher(
+  newBid: Pick<Bid, "count" | "rank">,
+  current: Pick<Bid, "count" | "rank">
+): boolean {
   if (newBid.count > current.count) return true;
   if (newBid.count < current.count) return false;
   return rankIndex(newBid.rank) > rankIndex(current.rank);
@@ -57,12 +77,21 @@ export function countMatchingCards(allCards: Card[], targetRank: Rank): number {
   return allCards.filter((card) => card.rank === targetRank || card.rank === "2").length;
 }
 
+function openerIsNextAfterBidder(turnOrder: string[], bidderId: string, openerId: string): boolean {
+  if (turnOrder.length === 0) return false;
+  const bidderIndex = turnOrder.indexOf(bidderId);
+  if (bidderIndex === -1) return false;
+  const nextIndex = (bidderIndex + 1) % turnOrder.length;
+  return turnOrder[nextIndex] === openerId;
+}
+
 export function resolveChallenge(
   players: Player[],
   currentBid: Bid,
   openerId: string,
   openerName: string,
-  turnOrder: string[] = []
+  turnOrder: string[] = [],
+  blindThreshold = 6
 ): RevealResult {
   const allCards = players.flatMap((player) => player.cards);
   const actualCount = countMatchingCards(allCards, currentBid.rank);
@@ -72,22 +101,14 @@ export function resolveChallenge(
   const loserId = openerLoses ? openerId : currentBid.playerId;
   const loserName = openerLoses ? openerName : currentBid.playerName;
 
-  const openerIsNextAfterBlind =
-    turnOrder.length > 0 &&
-    (() => {
-      const blindIndex = turnOrder.indexOf(currentBid.playerId);
-      if (blindIndex === -1) return false;
-      const nextIndex = (blindIndex + 1) % turnOrder.length;
-      return turnOrder[nextIndex] === openerId;
-    })();
+  const blindImmediateOpen =
+    Boolean(lastBidder?.isBlind) &&
+    openerIsNextAfterBidder(turnOrder, currentBid.playerId, openerId) &&
+    !lastBidder?.isEliminated;
 
-  // BLIND iddia etti, hemen sonraki oyuncu Aç dedi ve iddia doğru çıktı
   const blindRevival =
-    lastBidder?.isBlind &&
-    openerLoses &&
-    openerIsNextAfterBlind &&
-    !lastBidder.isEliminated
-      ? { id: lastBidder.id, name: lastBidder.name }
+    blindImmediateOpen && openerLoses
+      ? { id: lastBidder!.id, name: lastBidder!.name }
       : null;
 
   let reason = openerLoses
@@ -95,7 +116,9 @@ export function resolveChallenge(
     : `Sayım (${actualCount}) < iddia (${currentBid.count}). Son iddia eden kaybetti (+1 kart).`;
 
   if (blindRevival) {
-    reason += ` BLIND iddiası doğruydu — ${blindRevival.name} 5 kartla oyuna döner, ${openerName} ceza kartı alır.`;
+    reason += ` BLIND iddiası doğruydu — ${blindRevival.name} ${blindThreshold} kartla oyuna döner, ${openerName} ceza kartı alır.`;
+  } else if (blindImmediateOpen && !openerLoses) {
+    reason += ` BLIND iddiası yanlıştı — ${currentBid.playerName} elendi.`;
   }
 
   return {
@@ -112,10 +135,10 @@ export function resolveChallenge(
   };
 }
 
-export function applyBlindRevival(player: Player): Player {
+export function applyBlindRevival(player: Player, blindThreshold: number): Player {
   return {
     ...player,
-    cardCount: 5,
+    cardCount: blindThreshold,
     isBlind: false,
     isEliminated: false,
     cards: [],
@@ -125,12 +148,13 @@ export function applyBlindRevival(player: Player): Player {
 export function applyRoundLoss(
   player: Player,
   blindThreshold: number,
-  blindGetsCards = false
+  blindMode: BlindMode
 ): Player {
   if (player.isBlind) {
     return {
       ...player,
       cardCount: 0,
+      isBlind: false,
       isEliminated: true,
       cards: [],
     };
@@ -139,7 +163,7 @@ export function applyRoundLoss(
   if (player.cardCount >= blindThreshold) {
     return {
       ...player,
-      cardCount: blindGetsCards ? blindThreshold : 0,
+      cardCount: isHiddenCardsBlind(blindMode) ? blindThreshold : 0,
       isBlind: true,
       cards: [],
     };
@@ -155,33 +179,44 @@ export function applyRoundLoss(
 export function dealCards(
   deck: Card[],
   players: Player[],
-  blindGetsCards = false
+  blindMode: BlindMode,
+  blindThreshold: number
 ): { deck: Card[]; players: Player[] } {
+  const hiddenBlind = isHiddenCardsBlind(blindMode);
   const remainingDeck = [...deck];
+
   const updatedPlayers = players.map((player) => {
     if (player.isEliminated) {
       return { ...player, cards: [], cardCount: 0 };
     }
 
-    if (player.isBlind && !blindGetsCards) {
+    if (player.isBlind && !hiddenBlind) {
       return { ...player, cards: [], cardCount: 0 };
     }
 
+    const cardsToDeal = player.isBlind && hiddenBlind ? blindThreshold : player.cardCount;
     const cards: Card[] = [];
-    for (let i = 0; i < player.cardCount; i += 1) {
+
+    for (let i = 0; i < cardsToDeal; i += 1) {
       const card = remainingDeck.pop();
       if (card) cards.push(card);
     }
 
-    return { ...player, cards, cardCount: cards.length };
+    return {
+      ...player,
+      cards,
+      cardCount: player.isBlind && hiddenBlind ? blindThreshold : cards.length,
+    };
   });
 
   return { deck: remainingDeck, players: updatedPlayers };
 }
 
-export function getHandDisplayCount(player: Player, blindGetsCards = false): number {
+export function getHandDisplayCount(player: Player, blindMode: BlindMode): number {
+  if (player.isEliminated) return 0;
+
   if (player.isBlind) {
-    return blindGetsCards ? player.cardCount : 0;
+    return isHiddenCardsBlind(blindMode) ? player.cardCount : 0;
   }
 
   if (player.cards.length > 0) {
@@ -192,15 +227,84 @@ export function getHandDisplayCount(player: Player, blindGetsCards = false): num
 }
 
 export function getActivePlayers(players: Player[]): Player[] {
-  return players.filter(
-    (player) => !player.isEliminated && (player.cardCount > 0 || player.isBlind)
-  );
+  return players.filter((player) => !player.isEliminated && (player.cardCount > 0 || player.isBlind));
 }
 
 export function getWinner(players: Player[]): Player | null {
   const active = getActivePlayers(players);
   if (active.length === 1) return active[0];
   return null;
+}
+
+export type RoundResolveResult = {
+  players: Player[];
+  status: Room["status"];
+  phase: Room["phase"];
+  roundNumber: number;
+  deck: Card[];
+  turnOrder: string[];
+  currentTurnIndex: number;
+  winnerId: string | null;
+  winnerName: string | null;
+  revealResult: RevealResult | null;
+  currentBid: null;
+};
+
+export function resolveRoundAfterReveal(
+  players: Player[],
+  revealResult: RevealResult,
+  room: Pick<Room, "blindThreshold" | "blindMode" | "blindGetsCards" | "deckCount" | "roundNumber" | "deck">
+): RoundResolveResult {
+  const blindMode = getBlindMode(room);
+  const blindThreshold = room.blindThreshold ?? 6;
+
+  const updatedPlayers = players.map((player) => {
+    if (revealResult.blindRevivalId && player.id === revealResult.blindRevivalId) {
+      return applyBlindRevival(player, blindThreshold);
+    }
+
+    if (player.id === revealResult.loserId) {
+      return applyRoundLoss(player, blindThreshold, blindMode);
+    }
+
+    return { ...player, cards: [] };
+  });
+
+  const winner = getWinner(updatedPlayers);
+  if (winner) {
+    return {
+      players: updatedPlayers.map((player) => ({ ...player, cards: [] })),
+      status: "finished",
+      phase: "round_end",
+      roundNumber: room.roundNumber,
+      deck: [],
+      turnOrder: buildTurnOrder(updatedPlayers),
+      currentTurnIndex: 0,
+      winnerId: winner.id,
+      winnerName: winner.name,
+      revealResult: null,
+      currentBid: null,
+    };
+  }
+
+  let deck = room.deck.length > 0 ? [...room.deck] : createDeck(room.deckCount ?? 1);
+  const dealt = dealCards(deck, updatedPlayers, blindMode, blindThreshold);
+  deck = dealt.deck;
+  const turnOrder = buildTurnOrder(dealt.players, revealResult.loserId);
+
+  return {
+    players: dealt.players,
+    status: "playing",
+    phase: "bidding",
+    roundNumber: room.roundNumber + 1,
+    deck,
+    turnOrder,
+    currentTurnIndex: 0,
+    winnerId: null,
+    winnerName: null,
+    revealResult: null,
+    currentBid: null,
+  };
 }
 
 export function nextTurnIndex(turnOrder: string[], currentIndex: number): number {

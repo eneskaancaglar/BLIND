@@ -84,30 +84,30 @@ function RoomSettingsPanel({
 
       <div>
         <p className="mb-2 text-xs text-slate-400">{translate("blindGetsCards")}</p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <button
             type="button"
             onClick={() => {
               play("click");
-              setRoomSettings((s) => ({ ...s, blindGetsCards: false }));
+              setRoomSettings((s) => ({ ...s, blindMode: "ORIGINAL_BLIND" }));
             }}
             className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
-              !roomSettings.blindGetsCards ? "home-chip-active" : ""
+              roomSettings.blindMode === "ORIGINAL_BLIND" ? "home-chip-active" : ""
             }`}
           >
-            {translate("blindGetsCardsNo")}
+            {translate("blindModeOriginal")}
           </button>
           <button
             type="button"
             onClick={() => {
               play("click");
-              setRoomSettings((s) => ({ ...s, blindGetsCards: true }));
+              setRoomSettings((s) => ({ ...s, blindMode: "HIDDEN_CARDS_BLIND" }));
             }}
             className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
-              roomSettings.blindGetsCards ? "home-chip-active" : ""
+              roomSettings.blindMode === "HIDDEN_CARDS_BLIND" ? "home-chip-active" : ""
             }`}
           >
-            {translate("blindGetsCardsYes")}
+            {translate("blindModeHidden")}
           </button>
         </div>
       </div>
