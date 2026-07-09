@@ -626,6 +626,13 @@ button:disabled {
   font-size: 1.35rem;
 }
 
+.bid-display-rank-mobile {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  letter-spacing: 0.04em;
+}
+
 .game-bidding .game-dock-hand {
   max-height: 3.5rem;
   overflow: hidden;
