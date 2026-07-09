@@ -15,6 +15,9 @@ export function RevealPotSummary({ result, bidCount }: RevealPotSummaryProps) {
 
   return (
     <div className="reveal-pot-summary space-y-1.5">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/90">
+        {translate("roundResultTitle")}
+      </p>
       <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
         {translate("cardsRevealed")}
       </p>

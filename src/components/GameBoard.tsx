@@ -17,6 +17,7 @@ import {
   getPlayerId,
   leaveGame,
   maskPlayersForViewer,
+  mergeRoomSyncState,
   openChallenge,
   placeBid,
   refreshRoomState,
@@ -44,7 +45,6 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const [showTransition, setShowTransition] = useState(false);
   const [animateDeal, setAnimateDeal] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
-  const [revealHighlightDone, setRevealHighlightDone] = useState(false);
 
   const prevPhaseRef = useRef<Room["phase"] | null>(null);
   const skipPhaseTransitionRef = useRef(false);
@@ -92,10 +92,10 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
 
     return attachRoomSync(roomCode, {
       onSync: (state) => {
-        setSyncState({
-          room: state.room,
+        setSyncState((prev) => ({
+          room: mergeRoomSyncState(prev.room, state.room),
           players: state.players.map((player) => ({ ...player })),
-        });
+        }));
       },
       onError: (err) => setError(err.message),
     });
@@ -187,20 +187,6 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     }
   }, [room?.status, room?.winnerId, room?.winnerName, playerId, play]);
 
-  useEffect(() => {
-    const revealKey =
-      room?.phase === "revealed" && room.revealResult
-        ? `${room.roundNumber}-${room.revealResult.loserId}-${room.revealResult.actualCount}`
-        : null;
-
-    if (revealKey) {
-      setRevealHighlightDone(false);
-      const timer = window.setTimeout(() => setRevealHighlightDone(true), 1000);
-      return () => window.clearTimeout(timer);
-    }
-    setRevealHighlightDone(false);
-  }, [room?.phase, room?.roundNumber, room?.revealResult?.loserId, room?.revealResult?.actualCount]);
-
   const me = players.find((player) => player.id === playerId);
   const visiblePlayers = useMemo(() => {
     if (!room) return players;
@@ -229,7 +215,6 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const showResultOverlay = Boolean(
     room?.revealResult &&
       room.phase === "revealed" &&
-      revealHighlightDone &&
       !showTransition &&
       room.status !== "finished"
   );

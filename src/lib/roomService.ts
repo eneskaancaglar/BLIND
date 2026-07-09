@@ -55,6 +55,20 @@ export type RoomSyncState = {
   players: Player[];
 };
 
+export function mergeRoomSyncState(prev: Room | null, next: Room | null): Room | null {
+  if (!next) return null;
+  if (
+    next.phase === "revealed" &&
+    !next.revealResult &&
+    prev?.phase === "revealed" &&
+    prev.revealResult &&
+    prev.roundNumber === next.roundNumber
+  ) {
+    return { ...next, revealResult: prev.revealResult };
+  }
+  return next;
+}
+
 async function fetchRoomFromServer(roomCode: string): Promise<Room | null> {
   const snapshot = await getDocFromServer(doc(getDb(), ROOMS, roomCode));
   if (!snapshot.exists()) return null;
