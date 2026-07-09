@@ -12,6 +12,7 @@ type OpponentSeatProps = {
   showCards: boolean;
   blindMode?: BlindMode;
   highlightRank?: Rank;
+  minimal?: boolean;
   animateDeal?: boolean;
   dealKey?: string | number;
   messages?: ChatMessage[];
@@ -23,6 +24,7 @@ export function OpponentSeat({
   showCards,
   blindMode = "ORIGINAL_BLIND",
   highlightRank,
+  minimal = false,
   animateDeal,
   dealKey,
   messages = [],
@@ -38,70 +40,63 @@ export function OpponentSeat({
   if (player.isEliminated) {
     return (
       <div className="flex flex-col items-center opacity-40">
-        <p className="mb-1 max-w-[9rem] truncate text-center text-[11px] font-medium text-slate-300">
-          {player.name}
-        </p>
-        <span className="game-chip px-2 py-0.5 text-[10px]">
-          {translate("eliminated")}
-        </span>
+        <p className="opponent-name">{player.name}</p>
+        <span className="opponent-count-pill mt-0.5 opacity-60">{translate("eliminated")}</span>
       </div>
     );
   }
 
   return (
     <div
-      className={`opponent-seat relative flex w-full flex-col items-center px-1 py-2 transition sm:px-2 sm:py-3 ${
+      className={`opponent-seat relative flex w-full max-w-[5.5rem] flex-col items-center px-0.5 py-1 ${
         isTurn ? "opponent-seat-turn" : ""
       }`}
     >
       {reaction ? (
-        <span
-          key={reaction.id}
-          className="seat-emoji-bubble absolute -top-5 z-20 text-xl"
-          aria-hidden
-        >
+        <span key={reaction.id} className="seat-emoji-bubble absolute -top-4 z-20 text-lg" aria-hidden>
           {reaction.emoji}
         </span>
       ) : null}
 
-      <p className="mb-1.5 max-w-full truncate text-center text-[11px] font-semibold leading-tight text-slate-100 sm:text-xs">
-        {player.name}
-      </p>
+      <p className="opponent-name">{player.name}</p>
 
       {player.isBlind && !showCards ? (
-        <span className="game-chip mb-1.5 px-1.5 py-0.5 text-[9px] font-semibold">
-          {translate("blind")}
-        </span>
+        <span className="opponent-count-pill mt-0.5 text-[9px]">{translate("blind")}</span>
       ) : null}
 
       {showCards && player.cards.length > 0 ? (
         <CardFan
           cards={player.cards}
-          size="sm"
+          size="xs"
           spread="tight"
           tilt="table"
           highlightRank={highlightRank}
         />
       ) : showCards && player.isBlind ? (
-        <span className="text-[10px] font-medium text-slate-400">{blindStatusText}</span>
+        <span className="mt-0.5 text-[9px] text-slate-400">{blindStatusText}</span>
+      ) : minimal && displayCount > 0 ? (
+        <span className="opponent-count-pill mt-1">{displayCount}</span>
+      ) : minimal && player.isBlind ? (
+        <span className="mt-0.5 text-[9px] text-slate-400">0</span>
       ) : player.isBlind && displayCount > 0 ? (
         <CardFan
           count={displayCount}
           faceDown
-          size="sm"
+          size="xs"
           spread="tight"
           tilt="table"
-          showCountBadge
           animateDeal={animateDeal}
           dealKey={dealKey}
         />
       ) : player.isBlind ? (
-        <span className="text-[10px] font-medium text-slate-400">{blindStatusText}</span>
+        <span className="mt-0.5 text-[9px] text-slate-400">{blindStatusText}</span>
+      ) : minimal ? (
+        <span className="opponent-count-pill mt-1">{displayCount}</span>
       ) : (
         <CardFan
           count={displayCount}
           faceDown
-          size="sm"
+          size="xs"
           spread="tight"
           tilt="table"
           showCountBadge

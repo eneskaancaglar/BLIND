@@ -12,12 +12,20 @@ const SIZE_CLASSES: Record<CardSize, string> = {
   xl: "h-[7.75rem] w-[5.5rem] text-lg sm:h-[10.25rem] sm:w-[6rem] sm:text-xl",
 };
 
-const CENTER_SUIT: Record<CardSize, string> = {
-  xs: "text-lg",
-  sm: "text-2xl",
-  md: "text-3xl",
-  lg: "text-4xl",
-  xl: "text-5xl sm:text-6xl",
+const RANK_FONT: Record<CardSize, string> = {
+  xs: "text-[12px]",
+  sm: "text-[15px]",
+  md: "text-[17px]",
+  lg: "text-[20px]",
+  xl: "text-[22px]",
+};
+
+const SUIT_CORNER: Record<CardSize, string> = {
+  xs: "text-[10px]",
+  sm: "text-xs",
+  md: "text-sm",
+  lg: "text-base",
+  xl: "text-lg",
 };
 
 type PlayingCardProps = {
@@ -75,23 +83,23 @@ function CardFace({ card, size }: { card: Card; size: CardSize }) {
       <div className="card-face-shine pointer-events-none absolute inset-0" />
 
       <div
-        className={`absolute left-1 top-1 flex flex-col items-center leading-none ${inkClass}`}
+        className={`card-corner absolute left-1 top-1 flex flex-col items-center leading-none ${inkClass}`}
       >
-        <span className="font-semibold tracking-tight">{card.rank}</span>
-        <span className="text-[0.85em] font-medium">{suit}</span>
+        <span className={`card-rank font-bold ${RANK_FONT[size]}`}>{card.rank}</span>
+        <span className={`font-semibold ${SUIT_CORNER[size]}`}>{suit}</span>
       </div>
 
       <div
-        className={`absolute inset-0 flex items-center justify-center ${CENTER_SUIT[size]} ${inkClass}`}
+        className={`absolute inset-0 flex items-center justify-center text-2xl font-semibold sm:text-3xl ${inkClass} ${size === "xs" ? "text-xl" : ""} ${size === "lg" || size === "xl" ? "text-4xl sm:text-5xl" : ""}`}
       >
-        <span className="font-medium">{suit}</span>
+        <span>{suit}</span>
       </div>
 
       <div
-        className={`absolute bottom-1 right-1 flex rotate-180 flex-col items-center leading-none ${inkClass}`}
+        className={`card-corner absolute bottom-1 right-1 flex rotate-180 flex-col items-center leading-none ${inkClass}`}
       >
-        <span className="font-semibold tracking-tight">{card.rank}</span>
-        <span className="text-[0.85em] font-medium">{suit}</span>
+        <span className={`card-rank font-bold ${RANK_FONT[size]}`}>{card.rank}</span>
+        <span className={`font-semibold ${SUIT_CORNER[size]}`}>{suit}</span>
       </div>
 
       {card.rank === "2" ? (

@@ -14,32 +14,21 @@ type CurrentBidDisplayProps = {
 };
 
 export function CurrentBidDisplay({ bid, playerName, compact = false }: CurrentBidDisplayProps) {
-  const displayCount = Math.min(bid.count, compact ? 4 : 5);
-  const cardSize = compact ? "xs" : "sm";
-
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="flex items-end justify-center">
-        {Array.from({ length: displayCount }).map((_, index) => (
-          <div
-            key={`bid-card-${index}`}
-            style={{ marginLeft: index === 0 ? 0 : compact ? -14 : -18, zIndex: index }}
-          >
-            <PlayingCard
-              card={{ rank: bid.rank, suit: demoSuit() }}
-              size={cardSize}
-              tilt="flat"
-            />
-          </div>
-        ))}
-        {bid.count > displayCount ? (
-          <span className="ml-2 text-lg font-semibold text-white">×{bid.count}</span>
-        ) : (
-          <span className="ml-2 text-sm font-medium text-slate-400">×{bid.count}</span>
-        )}
+    <div className="bid-display flex flex-col items-center gap-1">
+      <div className="bid-display-row flex items-center justify-center gap-2 sm:gap-3">
+        <PlayingCard
+          card={{ rank: bid.rank, suit: demoSuit() }}
+          size={compact ? "sm" : "md"}
+          tilt="flat"
+        />
+        <div className="bid-display-meta flex flex-col items-start leading-none">
+          <span className="bid-display-count">×{bid.count}</span>
+          <span className="bid-display-rank">{bid.rank}</span>
+        </div>
       </div>
       {playerName ? (
-        <p className="max-w-[10rem] truncate text-xs text-slate-400">{playerName}</p>
+        <p className="max-w-[11rem] truncate text-[11px] text-slate-400">{playerName}</p>
       ) : null}
     </div>
   );

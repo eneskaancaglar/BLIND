@@ -512,27 +512,27 @@ button:disabled {
 
 .opponent-slot-top {
   left: 50%;
-  top: 22%;
+  top: 28%;
 }
 
 .opponent-slot-top-left {
-  left: 28%;
-  top: 24%;
+  left: 30%;
+  top: 30%;
 }
 
 .opponent-slot-top-right {
-  left: 72%;
-  top: 24%;
+  left: 70%;
+  top: 30%;
 }
 
 .opponent-slot-left {
-  left: 18%;
-  top: 48%;
+  left: 22%;
+  top: 52%;
 }
 
 .opponent-slot-right {
-  left: 82%;
-  top: 48%;
+  left: 78%;
+  top: 52%;
 }
 
 .game-dock {
@@ -542,8 +542,80 @@ button:disabled {
   backdrop-filter: blur(10px);
 }
 
+.game-layout .game-table-area {
+  flex: 0 1 42dvh;
+  max-height: 42dvh;
+}
+
+.game-dock-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .game-dock-compact .card-fan-row {
-  min-height: 5.5rem !important;
+  min-height: 4rem !important;
+}
+
+.center-pot-compact {
+  padding: 0.4rem 0.5rem;
+}
+
+.bid-display-count {
+  font-size: clamp(1.5rem, 6vw, 1.85rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.bid-display-rank {
+  margin-top: 0.15rem;
+  font-size: clamp(1.25rem, 5vw, 1.5rem);
+  font-weight: 700;
+  font-family: Georgia, "Times New Roman", serif;
+  color: #f1f5f9;
+  letter-spacing: 0.06em;
+}
+
+.opponent-name {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #f1f5f9;
+}
+
+.opponent-count-pill {
+  display: inline-flex;
+  min-width: 1.35rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(15, 23, 42, 0.82);
+  padding: 0.1rem 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #e2e8f0;
+}
+
+.card-rank {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: 0.02em;
+}
+
+.reveal-pot-summary {
+  line-height: 1.35;
 }
 
 .card-bid-highlight > .card-tilt-hand,

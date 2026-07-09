@@ -188,13 +188,18 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   }, [room?.status, room?.winnerId, room?.winnerName, playerId, play]);
 
   useEffect(() => {
-    if (room?.phase === "revealed" && room.revealResult) {
+    const revealKey =
+      room?.phase === "revealed" && room.revealResult
+        ? `${room.roundNumber}-${room.revealResult.loserId}-${room.revealResult.actualCount}`
+        : null;
+
+    if (revealKey) {
       setRevealHighlightDone(false);
-      const timer = window.setTimeout(() => setRevealHighlightDone(true), 2600);
+      const timer = window.setTimeout(() => setRevealHighlightDone(true), 1000);
       return () => window.clearTimeout(timer);
     }
     setRevealHighlightDone(false);
-  }, [room?.phase, room?.revealResult, room?.roundNumber]);
+  }, [room?.phase, room?.roundNumber, room?.revealResult?.loserId, room?.revealResult?.actualCount]);
 
   const me = players.find((player) => player.id === playerId);
   const visiblePlayers = useMemo(() => {
@@ -353,6 +358,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         turnPlayerId={turnPlayerId}
         showAllCards={showAllCards}
         highlightRank={highlightRank}
+        revealResult={room.revealResult}
         compactDock={showBidDock}
         animateDeal={animateDeal}
         dealKey={`${room.roundNumber}-${room.phase}`}
