@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card as CardType } from "@/lib/types";
+import { Card as CardType, Rank } from "@/lib/types";
 import { PlayingCard, CardSize } from "./PlayingCard";
 
 type CardFanProps = {
@@ -16,6 +16,7 @@ type CardFanProps = {
   showCountBadge?: boolean;
   animateDeal?: boolean;
   dealKey?: string | number;
+  highlightRank?: Rank;
 };
 
 export function CardFan({
@@ -30,6 +31,7 @@ export function CardFan({
   showCountBadge = false,
   animateDeal = false,
   dealKey,
+  highlightRank,
 }: CardFanProps) {
   const total = count ?? cards.length;
   const [visibleCount, setVisibleCount] = useState(animateDeal ? 0 : total);
@@ -97,6 +99,7 @@ export function CardFan({
                 faceDown={faceDown}
                 size={size}
                 tilt={tilt}
+                highlightRank={highlightRank}
                 style={{
                   transform: `rotate(${rotate}deg) translateY(${lift}px)`,
                 }}

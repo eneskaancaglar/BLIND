@@ -105,6 +105,7 @@ const en = {
 
   revealCount: "Count",
   revealLoser: "Loser",
+  revealWinner: "Wins round",
   revealNextRound: "Next Round",
   revealHostWait: "Host will continue...",
   revealOpenerWins: "Count ({actual}) ≥ bid ({bid}). Opener loses (+1 card).",
@@ -241,6 +242,7 @@ const tr: Record<keyof typeof en, string> = {
 
   revealCount: "Sayım",
   revealLoser: "Kaybeden",
+  revealWinner: "Kazanan",
   revealNextRound: "Sonraki El",
   revealHostWait: "Kurucu devam ettirecek...",
   revealOpenerWins:

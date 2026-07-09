@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
-import { Card, SUIT_SYMBOLS } from "@/lib/types";
+import { cardMatchesBid } from "@/lib/gameLogic";
+import { Card, Rank, SUIT_SYMBOLS } from "@/lib/types";
 
 export type CardSize = "xs" | "sm" | "md" | "lg" | "xl";
 
@@ -26,6 +27,8 @@ type PlayingCardProps = {
   size?: CardSize;
   faceDown?: boolean;
   tilt?: "hand" | "table" | "flat";
+  highlight?: boolean;
+  highlightRank?: Rank;
   className?: string;
   style?: CSSProperties;
 };
@@ -111,14 +114,21 @@ export function PlayingCard({
   size = "md",
   faceDown,
   tilt = "hand",
+  highlight = false,
+  highlightRank,
   className = "",
   style,
 }: PlayingCardProps) {
   const showBack = hidden || blind || faceDown || !card;
   const tableBack = Boolean(faceDown && !blind);
+  const isHighlighted =
+    highlight || Boolean(card && highlightRank && cardMatchesBid(card, highlightRank));
 
   return (
-    <div className={`card-scene ${className}`} style={style}>
+    <div
+      className={`card-scene ${isHighlighted ? "card-bid-highlight" : ""} ${className}`}
+      style={style}
+    >
       <div className={TILT_CLASS[tilt]}>
         {showBack ? (
           <CardBack size={size} blind={blind} tableBack={tableBack} />

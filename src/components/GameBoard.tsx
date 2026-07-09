@@ -44,6 +44,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const [showTransition, setShowTransition] = useState(false);
   const [animateDeal, setAnimateDeal] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [revealHighlightDone, setRevealHighlightDone] = useState(false);
 
   const prevPhaseRef = useRef<Room["phase"] | null>(null);
   const skipPhaseTransitionRef = useRef(false);
@@ -186,6 +187,15 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     }
   }, [room?.status, room?.winnerId, room?.winnerName, playerId, play]);
 
+  useEffect(() => {
+    if (room?.phase === "revealed" && room.revealResult) {
+      setRevealHighlightDone(false);
+      const timer = window.setTimeout(() => setRevealHighlightDone(true), 2600);
+      return () => window.clearTimeout(timer);
+    }
+    setRevealHighlightDone(false);
+  }, [room?.phase, room?.revealResult, room?.roundNumber]);
+
   const me = players.find((player) => player.id === playerId);
   const visiblePlayers = useMemo(() => {
     if (!room) return players;
@@ -199,6 +209,10 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const isHost = room?.hostId === playerId;
   const showAllCards = room?.phase === "revealed";
   const deckCount = room?.deckCount ?? 1;
+  const highlightRank = showAllCards && room?.currentBid ? room.currentBid.rank : null;
+  const showBidDock = Boolean(
+    room?.phase === "bidding" && isMyTurn && me && !me.isEliminated
+  );
 
   const starterName =
     room?.phase === "bidding"
@@ -208,7 +222,11 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const transitionRound = room?.roundNumber ?? 1;
 
   const showResultOverlay = Boolean(
-    room?.revealResult && room.phase === "revealed" && !showTransition && room.status !== "finished"
+    room?.revealResult &&
+      room.phase === "revealed" &&
+      revealHighlightDone &&
+      !showTransition &&
+      room.status !== "finished"
   );
 
   async function handleBid(count: number, rank: Parameters<typeof placeBid>[4]) {
@@ -334,22 +352,25 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         playerId={playerId}
         turnPlayerId={turnPlayerId}
         showAllCards={showAllCards}
+        highlightRank={highlightRank}
+        compactDock={showBidDock}
         animateDeal={animateDeal}
         dealKey={`${room.roundNumber}-${room.phase}`}
         onHomeClick={() => setShowLeaveConfirm(true)}
       >
-        {room.phase === "bidding" && isMyTurn && me && !me.isEliminated ? (
+        {showBidDock ? (
           <BidControls
             currentBid={room.currentBid}
             activePlayerCount={activePlayers.length}
             deckCount={deckCount}
+            compact
             onBid={handleBid}
             onOpen={handleOpen}
             canOpen={Boolean(room.currentBid)}
           />
         ) : null}
 
-        {error ? <p className="text-center text-sm text-red-400">{error}</p> : null}
+        {error ? <p className="text-center text-xs text-red-300/90">{error}</p> : null}
       </GameTable>
     </>
   );

@@ -325,7 +325,13 @@ export function buildTurnOrder(players: Player[], startWithId?: string | null): 
   return [...activeIds.slice(startIndex), ...activeIds.slice(0, startIndex)];
 }
 
+export function cardMatchesBid(card: Card, bidRank: Rank): boolean {
+  return card.rank === bidRank || card.rank === "2";
+}
+
 export function cardToLabel(card: Card): string {
+  return `${card.rank}${card.suit}`;
+}
   return `${card.rank}${card.suit}`;
 }
 

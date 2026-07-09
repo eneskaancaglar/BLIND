@@ -382,14 +382,22 @@ button:disabled {
   transition: background 0.15s, border-color 0.15s;
 }
 
-.home-chip:hover {
+.home-chip:hover:not(.home-chip-active) {
   background: rgba(0, 0, 0, 0.38);
 }
 
-.home-chip-active {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.22);
-  color: #f8fafc;
+.home-chip-active,
+.home-chip.home-chip-active {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.42);
+  color: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.home-chip.home-chip-active:hover {
+  background: rgba(255, 255, 255, 0.24);
 }
 
 .home-footer-bar {
@@ -490,37 +498,100 @@ button:disabled {
 .opponents-table {
   position: relative;
   width: 100%;
-  min-height: 10.5rem;
+  min-height: 6.5rem;
+  overflow: visible;
+  padding: 0.75rem 0.5rem 0.25rem;
 }
 
 .opponent-slot {
   position: absolute;
   transform: translate(-50%, -50%);
+  z-index: 2;
+  max-width: 42vw;
 }
 
 .opponent-slot-top {
   left: 50%;
-  top: 16%;
+  top: 22%;
 }
 
 .opponent-slot-top-left {
-  left: 24%;
-  top: 20%;
+  left: 28%;
+  top: 24%;
 }
 
 .opponent-slot-top-right {
-  left: 76%;
-  top: 20%;
+  left: 72%;
+  top: 24%;
 }
 
 .opponent-slot-left {
-  left: 14%;
-  top: 44%;
+  left: 18%;
+  top: 48%;
 }
 
 .opponent-slot-right {
-  left: 86%;
-  top: 44%;
+  left: 82%;
+  top: 48%;
+}
+
+.game-dock {
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+}
+
+.game-dock-compact .card-fan-row {
+  min-height: 5.5rem !important;
+}
+
+.card-bid-highlight > .card-tilt-hand,
+.card-bid-highlight > .card-tilt-table,
+.card-bid-highlight > .card-tilt-flat {
+  filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.75));
+}
+
+.card-bid-highlight .card-body {
+  box-shadow:
+    0 0 0 2px rgba(251, 191, 36, 0.95),
+    0 0 16px rgba(251, 191, 36, 0.55),
+    0 0 28px rgba(251, 191, 36, 0.25);
+  animation: card-gold-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes card-gold-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px rgba(251, 191, 36, 0.85),
+      0 0 14px rgba(251, 191, 36, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(252, 211, 77, 1),
+      0 0 22px rgba(251, 191, 36, 0.75),
+      0 0 36px rgba(251, 191, 36, 0.35);
+  }
+}
+
+.round-overlay-result .round-overlay-backdrop {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0%,
+    rgba(0, 0, 0, 0.55) 45%,
+    rgba(0, 0, 0, 0.92) 100%
+  );
+}
+
+.round-result-panel {
+  background: rgba(15, 23, 42, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.55);
+}
+
+.loser-spotlight {
+  background: linear-gradient(180deg, rgba(127, 29, 29, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
 }
 
 /* Kart dağıtma */

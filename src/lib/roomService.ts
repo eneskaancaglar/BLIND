@@ -38,8 +38,8 @@ import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "./i18n";
 const ROOMS = "rooms";
 const PLAYERS = "players";
 const MESSAGES = "messages";
-const MOBILE_POLL_MS = 220;
-const DESKTOP_POLL_MS = 600;
+const MOBILE_POLL_MS = 100;
+const DESKTOP_POLL_MS = 400;
 
 function isMobileBrowser(): boolean {
   if (typeof window === "undefined") return false;
@@ -261,20 +261,10 @@ export function attachRoomSync(
   void pullLatest();
   schedulePoll();
 
-  const unsubs = mobile
-    ? []
-    : [
-        subscribeToRoom(
-          roomCode,
-          () => kick(),
-          handlers.onError
-        ),
-        subscribeToPlayers(
-          roomCode,
-          () => kick(),
-          handlers.onError
-        ),
-      ];
+  const unsubs = [
+    subscribeToRoom(roomCode, () => kick(), handlers.onError),
+    subscribeToPlayers(roomCode, () => kick(), handlers.onError),
+  ];
 
   const onVisible = () => {
     if (document.visibilityState === "visible") kick();
@@ -713,12 +703,7 @@ export function maskPlayersForViewer(
   const showAllCards = phase === "revealed" || (status === "finished" && phase === "round_end");
 
   return players.map((player) => {
-    const hideOwnBlindHand = player.id === viewerId && player.isBlind;
-
     if (showAllCards) {
-      if (hideOwnBlindHand) {
-        return { ...player, cards: [] };
-      }
       return player;
     }
 
