@@ -30,7 +30,7 @@ type GameBoardProps = {
 };
 
 const TRANSITION_MS = 2200;
-const GAME_END_TABLE_MS = 4500;
+const GAME_END_TABLE_MS = 5000;
 
 export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const { translate } = useLanguage();
@@ -209,11 +209,18 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     if (isGameEndingReveal && !gameEndViewStarted) {
       setGameEndViewStarted(Date.now());
     }
+    if (
+      room?.status === "finished" &&
+      room.phase === "round_end" &&
+      !gameEndViewStarted
+    ) {
+      setGameEndViewStarted(Date.now());
+    }
     if (!isGameEndingReveal && room?.phase !== "round_end") {
       setGameEndViewStarted(null);
       gameEndFinalizedRef.current = false;
     }
-  }, [isGameEndingReveal, gameEndViewStarted, room?.phase]);
+  }, [isGameEndingReveal, gameEndViewStarted, room?.phase, room?.status]);
 
   useEffect(() => {
     if (
@@ -236,7 +243,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   }, [isGameEndingReveal, room?.hostId, room?.revealResult, roomCode, playerId, applyFreshState, translate]);
 
   useEffect(() => {
-    if (room?.status !== "finished" || (!room.winnerName && room.phase !== "round_end")) {
+    if (room?.status !== "finished" || room.phase !== "round_end") {
       setShowWinnerOverlay(false);
       return;
     }
@@ -246,7 +253,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
 
     const timer = window.setTimeout(() => setShowWinnerOverlay(true), remaining);
     return () => window.clearTimeout(timer);
-  }, [room?.status, room?.winnerName, gameEndViewStarted]);
+  }, [room?.status, room?.phase, room?.winnerName, gameEndViewStarted]);
 
   const me = players.find((player) => player.id === playerId);
   const visiblePlayers = useMemo(() => {

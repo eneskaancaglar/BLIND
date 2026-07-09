@@ -107,8 +107,16 @@ export function CardFan({
     fitAll && fanWidth
       ? computeFitOverlap(CARD_WIDTH_PX[size], displayTotal, fanWidth, baseOverlap)
       : baseOverlap;
+  const cardWidth = CARD_WIDTH_PX[size];
+  const step = displayTotal <= 1 ? cardWidth : cardWidth - overlap;
+  const estimatedWidth =
+    displayTotal <= 1 ? cardWidth : cardWidth + (displayTotal - 1) * step;
+  const fitScale =
+    fitAll && fanWidth && estimatedWidth > fanWidth ? (fanWidth / estimatedWidth) * 0.96 : 1;
+  const fanLift =
+    fitAll && displayTotal > 3 ? 0 : spread === "wide" ? 3 : spread === "tight" ? 1 : 2;
   const maxRotate =
-    fitAll && displayTotal > 4 ? 3 : spread === "wide" ? 14 : spread === "tight" ? 5 : 10;
+    fitAll && displayTotal > 4 ? 2 : spread === "wide" ? 14 : spread === "tight" ? 5 : 10;
 
   const visibleCards = maxVisible ? cards.slice(0, maxVisible) : cards;
   const items = hidden || blind || faceDown
@@ -137,12 +145,16 @@ export function CardFan({
 
       <div
         className="card-fan-row flex items-end justify-center"
-        style={{ minHeight: rowMinHeight }}
+        style={{
+          minHeight: rowMinHeight,
+          transform: fitScale < 1 ? `scale(${fitScale})` : undefined,
+          transformOrigin: "bottom center",
+        }}
       >
         {items.slice(0, renderCount).map((item, i) => {
           const center = (displayTotal - 1) / 2;
           const rotate = (i - center) * (maxRotate / Math.max(center, 1));
-          const lift = Math.abs(i - center) * (spread === "wide" ? 3 : spread === "tight" ? 1 : 2);
+          const lift = Math.abs(i - center) * fanLift;
 
           return (
             <div
