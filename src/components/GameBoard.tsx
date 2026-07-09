@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BidControls } from "@/components/BidControls";
 import { GameTable } from "@/components/GameTable";
+import { DrawOverlay } from "@/components/DrawOverlay";
 import { RoundResultOverlay } from "@/components/RoundResultOverlay";
 import { RoundTransitionOverlay } from "@/components/RoundTransitionOverlay";
 import { WinnerOverlay } from "@/components/WinnerOverlay";
@@ -235,7 +236,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   }, [isGameEndingReveal, room?.hostId, room?.revealResult, roomCode, playerId, applyFreshState, translate]);
 
   useEffect(() => {
-    if (room?.status !== "finished" || !room.winnerName) {
+    if (room?.status !== "finished" || (!room.winnerName && room.phase !== "round_end")) {
       setShowWinnerOverlay(false);
       return;
     }
@@ -381,6 +382,10 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
           isMe={room.winnerId === playerId}
           onHome={handleLeave}
         />
+      ) : null}
+
+      {showWinnerOverlay && room.status === "finished" && !room.winnerName ? (
+        <DrawOverlay onHome={handleLeave} />
       ) : null}
 
       {showResultOverlay && room.revealResult ? (

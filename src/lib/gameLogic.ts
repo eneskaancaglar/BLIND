@@ -268,6 +268,18 @@ function isBlindRevivalStalemate(players: Player[]): boolean {
   return active.length === 2 && active.every((player) => player.isBlind);
 }
 
+function isBlindRevivalTwoPlayerDraw(
+  players: Player[],
+  revealResult: RevealResult,
+  blindThreshold: number
+): boolean {
+  if (!revealResult.blindRevivalId) return false;
+  if (getActivePlayers(players).length > 2) return false;
+
+  const opener = players.find((player) => player.id === revealResult.loserId);
+  return Boolean(opener && !opener.isBlind && opener.cardCount >= blindThreshold);
+}
+
 export function getHandDisplayCount(player: Player, blindMode: BlindMode): number {
   if (player.isEliminated) return 0;
 
@@ -275,11 +287,7 @@ export function getHandDisplayCount(player: Player, blindMode: BlindMode): numbe
     return isHiddenCardsBlind(blindMode) ? player.cardCount : 0;
   }
 
-  if (player.cards.length > 0) {
-    return player.cards.length;
-  }
-
-  return player.cardCount;
+  return Math.max(player.cardCount, player.cards.length);
 }
 
 export function getActivePlayers(players: Player[]): Player[] {
@@ -333,8 +341,28 @@ export function applyRevealPenalties(
       return applyRoundLoss(player, blindThreshold, blindMode);
     }
 
-    return clearHand(player);
+    return { ...player, cards: [], cardCount: player.cardCount };
   });
+}
+
+function finishAsDraw(
+  players: Player[],
+  updatedPlayers: Player[],
+  room: Pick<Room, "roundNumber">
+): RoundResolveResult {
+  return {
+    players: preserveRevealedCards(players, updatedPlayers),
+    status: "finished",
+    phase: "round_end",
+    roundNumber: room.roundNumber,
+    deck: [],
+    turnOrder: buildTurnOrder(updatedPlayers),
+    currentTurnIndex: 0,
+    winnerId: null,
+    winnerName: null,
+    revealResult: null,
+    currentBid: null,
+  };
 }
 
 export function predictWinnerAfterReveal(
@@ -342,6 +370,11 @@ export function predictWinnerAfterReveal(
   revealResult: RevealResult,
   room: Pick<Room, "blindThreshold" | "blindMode" | "blindGetsCards">
 ): Player | null {
+  const blindThreshold = room.blindThreshold ?? 6;
+  if (isBlindRevivalTwoPlayerDraw(players, revealResult, blindThreshold)) {
+    return null;
+  }
+
   const updatedPlayers = applyRevealPenalties(players, revealResult, room);
   if (revealResult.blindRevivalId && isBlindRevivalStalemate(updatedPlayers)) {
     return null;
@@ -354,6 +387,11 @@ export function predictGameEndsAfterReveal(
   revealResult: RevealResult,
   room: Pick<Room, "blindThreshold" | "blindMode" | "blindGetsCards">
 ): boolean {
+  const blindThreshold = room.blindThreshold ?? 6;
+  if (isBlindRevivalTwoPlayerDraw(players, revealResult, blindThreshold)) {
+    return true;
+  }
+
   const updatedPlayers = applyRevealPenalties(players, revealResult, room);
   if (revealResult.blindRevivalId && isBlindRevivalStalemate(updatedPlayers)) {
     return true;
@@ -379,20 +417,12 @@ export function resolveRoundAfterReveal(
   const blindThreshold = room.blindThreshold ?? 6;
   const updatedPlayers = applyRevealPenalties(players, revealResult, room);
 
+  if (isBlindRevivalTwoPlayerDraw(players, revealResult, blindThreshold)) {
+    return finishAsDraw(players, updatedPlayers, room);
+  }
+
   if (revealResult.blindRevivalId && isBlindRevivalStalemate(updatedPlayers)) {
-    return {
-      players: preserveRevealedCards(players, updatedPlayers),
-      status: "finished",
-      phase: "round_end",
-      roundNumber: room.roundNumber,
-      deck: [],
-      turnOrder: buildTurnOrder(updatedPlayers),
-      currentTurnIndex: 0,
-      winnerId: null,
-      winnerName: null,
-      revealResult: null,
-      currentBid: null,
-    };
+    return finishAsDraw(players, updatedPlayers, room);
   }
 
   const winner = getWinner(updatedPlayers);

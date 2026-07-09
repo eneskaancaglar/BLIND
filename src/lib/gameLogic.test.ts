@@ -6,7 +6,7 @@ import {
   resolveChallenge,
   resolveRoundAfterReveal,
 } from "./gameLogic";
-import type { Bid, Player, RevealResult, Room } from "./types";
+import type { Bid, Player, Room } from "./types";
 
 function player(
   id: string,
@@ -17,7 +17,7 @@ function player(
     id,
     name: id,
     isHost: false,
-    cards: Array.from({ length: cardCount }, (_, i) => ({ rank: "3", suit: "H" })),
+    cards: Array.from({ length: cardCount }, () => ({ rank: "3", suit: "H" })),
     cardCount,
     isBlind: false,
     isEliminated: false,
@@ -71,7 +71,7 @@ describe("blind revival round resolution", () => {
     expect(third?.isBlind).toBe(false);
   });
 
-  it("does not drop opener cardCount to blind when two players remain", () => {
+  it("ends in draw when two players remain and opener is already at blind threshold", () => {
     const players = [
       player("a", 6),
       player("b", 0, { isBlind: true, cards: [] }),
@@ -80,13 +80,11 @@ describe("blind revival round resolution", () => {
     const reveal = resolveChallenge(players, bid, "a", "a", ["b", "a"], 6);
 
     const resolved = resolveRoundAfterReveal(players, reveal, room({ deck: createDeck(1) }));
-    const opener = resolved.players.find((p) => p.id === "a");
-    const revived = resolved.players.find((p) => p.id === "b");
 
-    expect(opener?.cardCount).toBe(6);
-    expect(opener?.isBlind).toBe(false);
-    expect(revived?.cardCount).toBe(6);
-    expect(revived?.isBlind).toBe(false);
+    expect(resolved.status).toBe("finished");
+    expect(resolved.winnerId).toBeNull();
+    expect(resolved.players.find((p) => p.id === "a")?.cardCount).toBe(6);
+    expect(resolved.players.find((p) => p.id === "b")?.cardCount).toBe(6);
   });
 
   it("applies +1 penalty to opener when two players remain and below threshold", () => {
@@ -102,6 +100,25 @@ describe("blind revival round resolution", () => {
 
     expect(dealt.find((p) => p.id === "b")?.cardCount).toBe(4);
     expect(dealt.find((p) => p.id === "b")?.cards.length).toBe(0);
+  });
+
+  it("keeps third player cardCount in hidden-cards blind revival", () => {
+    const players = [
+      player("a", 4),
+      player("b", 0, { isBlind: true, cards: [] }),
+      player("c", 5),
+    ];
+    const bid: Bid = { count: 1, rank: "3", playerId: "b", playerName: "b" };
+    const reveal = resolveChallenge(players, bid, "a", "a", ["b", "a", "c"], 6);
+    const resolved = resolveRoundAfterReveal(
+      players,
+      reveal,
+      room({ deck: [], blindMode: "HIDDEN_CARDS_BLIND", blindGetsCards: true })
+    );
+    const third = resolved.players.find((p) => p.id === "c");
+
+    expect(third?.cardCount).toBe(5);
+    expect(third?.cards.length).toBe(5);
   });
 
   it("refills deck during round resolve so observers keep their cardCount", () => {
