@@ -174,7 +174,6 @@ export function GameTable({
                     showCards={showAllCards}
                     blindMode={blindMode}
                     highlightRank={highlightRank ?? undefined}
-                    minimal={!showAllCards}
                     animateDeal={animateDeal}
                     dealKey={dealKey}
                     messages={messages}

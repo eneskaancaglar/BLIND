@@ -1,20 +1,17 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { GameBoard } from "@/components/GameBoard";
+import { FormEvent, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { HomeFloatingCards } from "@/components/HomeFloatingCards";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SoundToggle } from "@/components/SoundToggle";
-import { RoomLobby } from "@/components/RoomLobby";
 import { useLanguage } from "@/context/LanguageContext";
 import { useSound } from "@/context/SoundContext";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "@/lib/i18n";
 import { resumeAudio } from "@/lib/sounds";
 import {
-  clearStoredRoomCode,
   createRoom,
   getRoomTargetPath,
   getStoredPlayerName,
@@ -22,8 +19,6 @@ import {
   restoreSession,
   setStoredPlayerName,
 } from "@/lib/roomService";
-
-type Screen = "home" | "lobby" | "game";
 
 function RoomSettingsPanel({
   roomSettings,
@@ -116,6 +111,7 @@ function RoomSettingsPanel({
 }
 
 export default function HomeClient() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const inviteCode = searchParams.get("room")?.toUpperCase() ?? "";
   const { translate } = useLanguage();
@@ -126,8 +122,6 @@ export default function HomeClient() {
   const [roomCode, setRoomCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [screen, setScreen] = useState<Screen>("home");
-  const [activeRoomCode, setActiveRoomCode] = useState("");
   const [firebaseReady, setFirebaseReady] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [showCreateSetup, setShowCreateSetup] = useState(false);
@@ -155,26 +149,17 @@ export default function HomeClient() {
       try {
         const session = await restoreSession();
         if (session) {
-          setActiveRoomCode(session.code);
-          setScreen(session.screen);
+          const path =
+            session.screen === "game"
+              ? `/game/${session.code}`
+              : `/room/${session.code}`;
+          router.replace(path);
         }
       } finally {
         setRestoring(false);
       }
     })();
-  }, [mounted, firebaseReady, inviteCode]);
-
-  const goHome = useCallback(() => {
-    clearStoredRoomCode();
-    setScreen("home");
-    setActiveRoomCode("");
-    setShowCreateSetup(false);
-    setError("");
-  }, []);
-
-  const goGame = useCallback(() => {
-    setScreen("game");
-  }, []);
+  }, [mounted, firebaseReady, inviteCode, router]);
 
   function clickButton(action: () => void) {
     resumeAudio();
@@ -182,9 +167,10 @@ export default function HomeClient() {
     action();
   }
 
-  async function enterRoom(code: string, startScreen: Screen) {
-    setActiveRoomCode(code);
-    setScreen(startScreen);
+  async function navigateToRoom(code: string) {
+    const normalized = code.trim().toUpperCase();
+    const target = await getRoomTargetPath(normalized);
+    router.replace(target ?? `/room/${normalized}`);
   }
 
   async function handleCreate() {
@@ -201,7 +187,7 @@ export default function HomeClient() {
     setError("");
     try {
       const code = await createRoom(name.trim(), roomSettings);
-      await enterRoom(code, "lobby");
+      await navigateToRoom(code);
     } catch (err) {
       setError(err instanceof Error ? err.message : translate("errCreateRoom"));
     } finally {
@@ -231,28 +217,12 @@ export default function HomeClient() {
       setStoredPlayerName(name.trim());
       const code = roomCode.trim().toUpperCase();
       await joinRoom(code, name.trim());
-      const target = await getRoomTargetPath(code);
-      const startScreen: Screen = target?.includes("/game/") ? "game" : "lobby";
-      await enterRoom(code, startScreen);
+      await navigateToRoom(code);
     } catch (err) {
       setError(err instanceof Error ? err.message : translate("errJoinRoom"));
     } finally {
       setLoading(false);
     }
-  }
-
-  if (screen === "lobby" && activeRoomCode) {
-    return (
-      <RoomLobby
-        roomCode={activeRoomCode}
-        onGameStarted={goGame}
-        onLeave={goHome}
-      />
-    );
-  }
-
-  if (screen === "game" && activeRoomCode) {
-    return <GameBoard roomCode={activeRoomCode} onLeave={goHome} />;
   }
 
   if (!mounted || restoring) {

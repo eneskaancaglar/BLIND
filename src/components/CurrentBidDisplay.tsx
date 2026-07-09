@@ -24,7 +24,6 @@ export function CurrentBidDisplay({ bid, playerName, compact = false }: CurrentB
         />
         <div className="bid-display-meta flex flex-col items-start leading-none">
           <span className="bid-display-count">×{bid.count}</span>
-          <span className="bid-display-rank">{bid.rank}</span>
         </div>
       </div>
       {playerName ? (

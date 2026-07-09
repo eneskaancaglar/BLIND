@@ -146,23 +146,74 @@ export type RestoredSession = {
   screen: "lobby" | "game";
 };
 
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function fetchPlayerDoc(roomCode: string, playerId: string): Promise<Player | null> {
+  const ref = doc(getDb(), ROOMS, roomCode, PLAYERS, playerId);
+  try {
+    const snap = await getDocFromServer(ref);
+    if (snap.exists()) return snap.data() as Player;
+  } catch {
+    const snap = await getDoc(ref);
+    if (snap.exists()) return snap.data() as Player;
+  }
+  return null;
+}
+
+async function fetchRoomWithRetry(roomCode: string, attempts = 3): Promise<Room | null> {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const room = await fetchRoomFromServer(roomCode);
+      if (room) return room;
+    } catch {
+      const room = await fetchRoomSnapshot(roomCode);
+      if (room) return room;
+    }
+    if (attempt < attempts - 1) await delay(300);
+  }
+  return null;
+}
+
+export async function verifyRoomMembership(roomCode: string): Promise<{
+  room: Room | null;
+  player: Player | null;
+}> {
+  const code = roomCode.trim().toUpperCase();
+  const playerId = getPlayerId();
+  if (!code || !playerId) return { room: null, player: null };
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const room = await fetchRoomWithRetry(code, 2);
+    if (!room) {
+      if (attempt < 2) await delay(300);
+      continue;
+    }
+
+    const player = await fetchPlayerDoc(code, playerId);
+    if (player) {
+      localStorage.setItem("blind_room_code", code);
+      return { room, player };
+    }
+
+    if (attempt < 2) await delay(300);
+  }
+
+  const room = await fetchRoomWithRetry(code, 1);
+  return { room, player: null };
+}
+
 export async function restoreSession(): Promise<RestoredSession | null> {
   const code = getStoredRoomCode().trim().toUpperCase();
   if (!code) return null;
 
-  const playerId = getPlayerId();
-  const room = await fetchRoomSnapshot(code);
+  const { room, player } = await verifyRoomMembership(code);
   if (!room) {
     clearStoredRoomCode();
     return null;
   }
-
-  const players = await fetchPlayers(code);
-  const me = players.find((player) => player.id === playerId);
-  if (!me) {
-    clearStoredRoomCode();
-    return null;
-  }
+  if (!player) return null;
 
   const screen: RestoredSession["screen"] =
     room.status === "waiting" ? "lobby" : "game";

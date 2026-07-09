@@ -572,15 +572,6 @@ button:disabled {
   letter-spacing: -0.02em;
 }
 
-.bid-display-rank {
-  margin-top: 0.15rem;
-  font-size: clamp(1.25rem, 5vw, 1.5rem);
-  font-weight: 700;
-  font-family: Georgia, "Times New Roman", serif;
-  color: #f1f5f9;
-  letter-spacing: 0.06em;
-}
-
 .opponent-name {
   display: block;
   max-width: 100%;
@@ -592,26 +583,6 @@ button:disabled {
   font-weight: 600;
   line-height: 1.2;
   color: #f1f5f9;
-}
-
-.opponent-count-pill {
-  display: inline-flex;
-  min-width: 1.35rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.35rem;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(15, 23, 42, 0.82);
-  padding: 0.1rem 0.4rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: #e2e8f0;
-}
-
-.card-rank {
-  font-family: Georgia, "Times New Roman", serif;
-  letter-spacing: 0.02em;
 }
 
 .reveal-pot-summary {

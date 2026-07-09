@@ -12,7 +12,6 @@ type OpponentSeatProps = {
   showCards: boolean;
   blindMode?: BlindMode;
   highlightRank?: Rank;
-  minimal?: boolean;
   animateDeal?: boolean;
   dealKey?: string | number;
   messages?: ChatMessage[];
@@ -24,7 +23,6 @@ export function OpponentSeat({
   showCards,
   blindMode = "ORIGINAL_BLIND",
   highlightRank,
-  minimal = false,
   animateDeal,
   dealKey,
   messages = [],
@@ -41,7 +39,7 @@ export function OpponentSeat({
     return (
       <div className="flex flex-col items-center opacity-40">
         <p className="opponent-name">{player.name}</p>
-        <span className="opponent-count-pill mt-0.5 opacity-60">{translate("eliminated")}</span>
+        <span className="mt-0.5 text-[9px] text-slate-400">{translate("eliminated")}</span>
       </div>
     );
   }
@@ -61,7 +59,7 @@ export function OpponentSeat({
       <p className="opponent-name">{player.name}</p>
 
       {player.isBlind && !showCards ? (
-        <span className="opponent-count-pill mt-0.5 text-[9px]">{translate("blind")}</span>
+        <span className="mt-0.5 text-[9px] text-slate-400">{translate("blind")}</span>
       ) : null}
 
       {showCards && player.cards.length > 0 ? (
@@ -74,10 +72,6 @@ export function OpponentSeat({
         />
       ) : showCards && player.isBlind ? (
         <span className="mt-0.5 text-[9px] text-slate-400">{blindStatusText}</span>
-      ) : minimal && displayCount > 0 ? (
-        <span className="opponent-count-pill mt-1">{displayCount}</span>
-      ) : minimal && player.isBlind ? (
-        <span className="mt-0.5 text-[9px] text-slate-400">0</span>
       ) : player.isBlind && displayCount > 0 ? (
         <CardFan
           count={displayCount}
@@ -90,20 +84,17 @@ export function OpponentSeat({
         />
       ) : player.isBlind ? (
         <span className="mt-0.5 text-[9px] text-slate-400">{blindStatusText}</span>
-      ) : minimal ? (
-        <span className="opponent-count-pill mt-1">{displayCount}</span>
-      ) : (
+      ) : displayCount > 0 ? (
         <CardFan
           count={displayCount}
           faceDown
           size="xs"
           spread="tight"
           tilt="table"
-          showCountBadge
           animateDeal={animateDeal}
           dealKey={dealKey}
         />
-      )}
+      ) : null}
     </div>
   );
 }
