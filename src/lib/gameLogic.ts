@@ -332,8 +332,6 @@ export function cardMatchesBid(card: Card, bidRank: Rank): boolean {
 export function cardToLabel(card: Card): string {
   return `${card.rank}${card.suit}`;
 }
-  return `${card.rank}${card.suit}`;
-}
 
 export function formatBid(bid: Bid): string {
   return `${bid.count} tane ${bid.rank === "J" || bid.rank === "Q" || bid.rank === "K" || bid.rank === "A" ? bid.rank : bid.rank}`;
