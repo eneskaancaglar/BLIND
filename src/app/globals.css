@@ -443,21 +443,12 @@ button:disabled {
 }
 
 .home-creator-line {
-  line-height: 1.4;
-}
-
-.home-creator-by {
-  font-size: 0.62rem;
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  color: rgba(148, 163, 184, 0.55);
-}
-
-.home-creator-name {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 300;
   letter-spacing: 0.38em;
-  color: rgba(248, 250, 252, 0.48);
+  text-indent: 0.38em;
+  line-height: 1.4;
+  color: rgba(248, 250, 252, 0.45);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 

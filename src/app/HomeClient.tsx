@@ -351,10 +351,7 @@ export default function HomeClient() {
         </div>
 
         <div className="home-creator-credit relative z-10 mt-6 text-center">
-          <p className="home-creator-line">
-            <span className="home-creator-by">{translate("createdBy")}</span>{" "}
-            <span className="home-creator-name">ENKA</span>
-          </p>
+          <p className="home-creator-line">{translate("createdBy")}</p>
         </div>
 
         <footer className="home-footer-bar relative z-10">
