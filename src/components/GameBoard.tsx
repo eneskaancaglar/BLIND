@@ -225,9 +225,9 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   useEffect(() => {
     if (
       !isGameEndingReveal ||
-      room?.hostId !== playerId ||
       !room?.revealResult ||
-      gameEndFinalizedRef.current
+      gameEndFinalizedRef.current ||
+      me?.isEliminated
     ) {
       return;
     }
@@ -236,14 +236,25 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
       gameEndFinalizedRef.current = true;
       void continueAfterReveal(roomCode, playerId)
         .then(() => applyFreshState())
-        .catch((err) => setError(err instanceof Error ? err.message : translate("errContinue")));
+        .catch((err) => {
+          gameEndFinalizedRef.current = false;
+          setError(err instanceof Error ? err.message : translate("errContinue"));
+        });
     }, GAME_END_TABLE_MS);
 
     return () => window.clearTimeout(timer);
-  }, [isGameEndingReveal, room?.hostId, room?.revealResult, roomCode, playerId, applyFreshState, translate]);
+  }, [
+    isGameEndingReveal,
+    room?.revealResult,
+    roomCode,
+    playerId,
+    me?.isEliminated,
+    applyFreshState,
+    translate,
+  ]);
 
   useEffect(() => {
-    if (room?.status !== "finished" || room.phase !== "round_end") {
+    if (room?.status !== "finished") {
       setShowWinnerOverlay(false);
       return;
     }
@@ -252,8 +263,13 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     const remaining = Math.max(0, GAME_END_TABLE_MS - elapsed);
 
     const timer = window.setTimeout(() => setShowWinnerOverlay(true), remaining);
-    return () => window.clearTimeout(timer);
-  }, [room?.status, room?.phase, room?.winnerName, gameEndViewStarted]);
+    const safety = window.setTimeout(() => setShowWinnerOverlay(true), remaining + 1500);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.clearTimeout(safety);
+    };
+  }, [room?.status, gameEndViewStarted]);
 
   const me = players.find((player) => player.id === playerId);
   const visiblePlayers = useMemo(() => {
@@ -268,7 +284,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const isHost = room?.hostId === playerId;
   const showAllCards =
     room?.phase === "revealed" ||
-    (room?.status === "finished" && room?.phase === "round_end" && !showWinnerOverlay);
+    (room?.status === "finished" && !showWinnerOverlay);
   const deckCount = room?.deckCount ?? 1;
   const highlightRank = showAllCards && room?.currentBid ? room.currentBid.rank : null;
   const showBidDock = Boolean(
@@ -383,7 +399,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         </div>
       ) : null}
 
-      {showWinnerOverlay && room.status === "finished" && room.winnerName ? (
+      {room.status === "finished" && showWinnerOverlay && room.winnerName ? (
         <WinnerOverlay
           winnerName={room.winnerName}
           isMe={room.winnerId === playerId}
@@ -391,7 +407,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         />
       ) : null}
 
-      {showWinnerOverlay && room.status === "finished" && !room.winnerName ? (
+      {room.status === "finished" && showWinnerOverlay && !room.winnerName ? (
         <DrawOverlay onHome={handleLeave} />
       ) : null}
 

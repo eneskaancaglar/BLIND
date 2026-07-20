@@ -350,6 +350,11 @@ export default function HomeClient() {
           </div>
         </div>
 
+        <div className="home-creator-credit relative z-10 mt-6 text-center">
+          <p className="home-creator-label">{translate("gameCreator")}</p>
+          <p className="home-creator-name">ENKA</p>
+        </div>
+
         <footer className="home-footer-bar relative z-10">
           <button
             type="button"

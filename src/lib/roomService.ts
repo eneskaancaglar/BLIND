@@ -31,6 +31,7 @@ import {
   nextTurnIndex,
   resolveChallenge,
   resolveRoundAfterReveal,
+  predictGameEndsAfterReveal,
 } from "./gameLogic";
 import { Bid, ChatMessage, Player, Rank, Room } from "./types";
 import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "./i18n";
@@ -591,7 +592,10 @@ export async function continueAfterReveal(roomCode: string, actorId: string): Pr
       throw new Error("Bu el zaten tamamlandı.");
     }
     if (room.hostId !== actorId) {
-      throw new Error("Sadece oda kurucusu devam ettirebilir.");
+      const wouldEndGame = predictGameEndsAfterReveal(players, room.revealResult, room);
+      if (!wouldEndGame) {
+        throw new Error("Sadece oda kurucusu devam ettirebilir.");
+      }
     }
     if (room.resolvedRoundNumber === room.roundNumber) {
       throw new Error("Bu el zaten tamamlandı.");
@@ -765,7 +769,7 @@ export function maskPlayersForViewer(
   phase: Room["phase"],
   status: Room["status"]
 ): Player[] {
-  const showAllCards = phase === "revealed" || (status === "finished" && phase === "round_end");
+  const showAllCards = phase === "revealed" || status === "finished";
 
   return players.map((player) => {
     if (showAllCards) {

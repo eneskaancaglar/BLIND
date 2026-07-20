@@ -438,6 +438,30 @@ button:disabled {
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.home-creator-credit {
+  padding-bottom: 0.25rem;
+}
+
+.home-creator-label {
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.55);
+}
+
+.home-creator-name {
+  margin-top: 0.2rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.82rem;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  text-transform: lowercase;
+  color: rgba(226, 232, 240, 0.42);
+}
+
 .home-footer-btn {
   display: flex;
   min-height: 2.5rem;

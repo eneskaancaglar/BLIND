@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { BodyPortal } from "./BodyPortal";
 
@@ -11,10 +12,17 @@ type WinnerOverlayProps = {
 
 export function WinnerOverlay({ winnerName, isMe, onHome }: WinnerOverlayProps) {
   const { translate } = useLanguage();
+  const [leaving, setLeaving] = useState(false);
+
+  function handleHome() {
+    if (leaving) return;
+    setLeaving(true);
+    onHome();
+  }
 
   return (
     <BodyPortal>
-      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      <div className="pointer-events-auto fixed inset-0 z-[200] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/92 backdrop-blur-md" />
         <div className="winner-overlay-panel relative z-10 w-full max-w-sm animate-result-in rounded-3xl border border-emerald-400/35 p-8 text-center shadow-2xl shadow-emerald-900/50">
           <div className="winner-overlay-glow pointer-events-none absolute inset-0 rounded-3xl" aria-hidden />
@@ -42,8 +50,9 @@ export function WinnerOverlay({ winnerName, isMe, onHome }: WinnerOverlayProps) 
 
           <button
             type="button"
-            onClick={onHome}
-            className="relative mt-8 w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 py-4 text-lg font-bold text-white shadow-lg transition hover:brightness-110"
+            disabled={leaving}
+            onClick={handleHome}
+            className="relative mt-8 w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 py-4 text-lg font-bold text-white shadow-lg transition hover:brightness-110 disabled:opacity-70"
           >
             {translate("backToHome")}
           </button>
