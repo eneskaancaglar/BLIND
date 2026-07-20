@@ -591,12 +591,6 @@ export async function continueAfterReveal(roomCode: string, actorId: string): Pr
     if (room.phase !== "revealed" || !room.revealResult) {
       throw new Error("Bu el zaten tamamlandı.");
     }
-    if (room.hostId !== actorId) {
-      const wouldEndGame = predictGameEndsAfterReveal(players, room.revealResult, room);
-      if (!wouldEndGame) {
-        throw new Error("Sadece oda kurucusu devam ettirebilir.");
-      }
-    }
     if (room.resolvedRoundNumber === room.roundNumber) {
       throw new Error("Bu el zaten tamamlandı.");
     }
@@ -612,6 +606,13 @@ export async function continueAfterReveal(roomCode: string, actorId: string): Pr
       const playerSnap = await transaction.get(playerDoc.ref);
       if (playerSnap.exists()) {
         players.push(playerSnap.data() as Player);
+      }
+    }
+
+    if (room.hostId !== actorId) {
+      const wouldEndGame = predictGameEndsAfterReveal(players, room.revealResult, room);
+      if (!wouldEndGame) {
+        throw new Error("Sadece oda kurucusu devam ettirebilir.");
       }
     }
 
