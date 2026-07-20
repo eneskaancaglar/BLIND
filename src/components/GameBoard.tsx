@@ -205,6 +205,8 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     return predictGameEndsAfterReveal(players, room.revealResult, room);
   }, [room, players]);
 
+  const me = players.find((player) => player.id === playerId);
+
   useEffect(() => {
     if (isGameEndingReveal && !gameEndViewStarted) {
       setGameEndViewStarted(Date.now());
@@ -271,7 +273,6 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     };
   }, [room?.status, gameEndViewStarted]);
 
-  const me = players.find((player) => player.id === playerId);
   const visiblePlayers = useMemo(() => {
     if (!room) return players;
     return maskPlayersForViewer(players, playerId, room.phase, room.status);
