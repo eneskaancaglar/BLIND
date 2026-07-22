@@ -22,7 +22,6 @@ type GameTableProps = {
   showAllCards: boolean;
   highlightRank?: Rank | null;
   revealResult?: RevealResult | null;
-  pendingGameWinnerName?: string | null;
   compactDock?: boolean;
   animateDeal?: boolean;
   dealKey?: string | number;
@@ -40,7 +39,6 @@ export function GameTable({
   showAllCards,
   highlightRank,
   revealResult,
-  pendingGameWinnerName,
   compactDock = false,
   animateDeal,
   dealKey,
@@ -144,7 +142,6 @@ export function GameTable({
         <RevealPotSummary
           result={revealResult}
           bidCount={room.currentBid?.count ?? 0}
-          gameWinnerName={pendingGameWinnerName}
         />
       );
     }

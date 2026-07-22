@@ -31,7 +31,13 @@ type GameBoardProps = {
 };
 
 const TRANSITION_MS = 2200;
-const GAME_END_FINALIZE_MS = 500;
+const GAME_END_CARD_VIEW_MS = 2500;
+
+type GameEndDisplay = {
+  winnerId: string | null;
+  winnerName: string | null;
+  isDraw: boolean;
+};
 
 export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const { translate } = useLanguage();
@@ -47,7 +53,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const [showTransition, setShowTransition] = useState(false);
   const [animateDeal, setAnimateDeal] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
-  const [showWinnerOverlay, setShowWinnerOverlay] = useState(false);
+  const [gameEndDisplay, setGameEndDisplay] = useState<GameEndDisplay | null>(null);
 
   const prevPhaseRef = useRef<Room["phase"] | null>(null);
   const skipPhaseTransitionRef = useRef(false);
@@ -105,12 +111,13 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     });
   }, [roomCode]);
 
-  const applyFreshState = useCallback(async () => {
-    const fresh = await refreshRoomState(roomCode, { preferCache: true });
+  const applyFreshState = useCallback(async (preferCache = true) => {
+    const fresh = await refreshRoomState(roomCode, { preferCache });
     setSyncState({
       room: fresh.room,
       players: fresh.players.map((player) => ({ ...player })),
     });
+    return fresh;
   }, [roomCode]);
 
   useEffect(() => {
@@ -184,20 +191,23 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   }, [showTransition, play]);
 
   useEffect(() => {
-    if (room?.status === "finished" && room.winnerName && showWinnerOverlay && !winSoundRef.current) {
-      winSoundRef.current = true;
-      const iWon = room.winnerId === playerId;
-      play(iWon ? "win" : "lose");
-    }
-    if (!showWinnerOverlay) {
-      winSoundRef.current = false;
-    }
-  }, [room?.status, room?.winnerId, room?.winnerName, playerId, play, showWinnerOverlay]);
+    if (!gameEndDisplay?.winnerName && !gameEndDisplay?.isDraw) return;
+    if (winSoundRef.current) return;
+    winSoundRef.current = true;
+    const iWon = gameEndDisplay.winnerId === playerId;
+    play(gameEndDisplay.isDraw ? "transition" : iWon ? "win" : "lose");
+  }, [gameEndDisplay, playerId, play]);
 
-  const pendingGameWinner = useMemo(() => {
-    if (!room?.revealResult || room.phase !== "revealed") return null;
-    return predictWinnerAfterReveal(players, room.revealResult, room);
-  }, [room, players]);
+  useEffect(() => {
+    if (room?.status !== "finished") return;
+    setGameEndDisplay((current) =>
+      current ?? {
+        winnerId: room.winnerId,
+        winnerName: room.winnerName,
+        isDraw: !room.winnerName,
+      }
+    );
+  }, [room?.status, room?.winnerId, room?.winnerName]);
 
   const isGameEndingReveal = useMemo(() => {
     if (!room?.revealResult || room.phase !== "revealed") return false;
@@ -207,10 +217,27 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const me = players.find((player) => player.id === playerId);
 
   useEffect(() => {
-    if (!isGameEndingReveal && room?.phase !== "revealed") {
-      gameEndFinalizedRef.current = false;
+    if (!isGameEndingReveal || !room?.revealResult || gameEndDisplay) {
+      return;
     }
-  }, [isGameEndingReveal, room?.phase]);
+
+    let cancelled = false;
+
+    const overlayTimer = window.setTimeout(() => {
+      if (cancelled) return;
+      const winner = predictWinnerAfterReveal(players, room.revealResult!, room);
+      setGameEndDisplay({
+        winnerId: winner?.id ?? null,
+        winnerName: winner?.name ?? null,
+        isDraw: !winner,
+      });
+    }, GAME_END_CARD_VIEW_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(overlayTimer);
+    };
+  }, [isGameEndingReveal, room, players, gameEndDisplay]);
 
   useEffect(() => {
     if (
@@ -225,12 +252,12 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     const timer = window.setTimeout(() => {
       gameEndFinalizedRef.current = true;
       void continueAfterReveal(roomCode, playerId)
-        .then(() => applyFreshState())
+        .then(() => applyFreshState(false))
         .catch((err) => {
           gameEndFinalizedRef.current = false;
           setError(err instanceof Error ? err.message : translate("errContinue"));
         });
-    }, GAME_END_FINALIZE_MS);
+    }, GAME_END_CARD_VIEW_MS);
 
     return () => window.clearTimeout(timer);
   }, [
@@ -243,14 +270,6 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     translate,
   ]);
 
-  useEffect(() => {
-    if (room?.status !== "finished") {
-      setShowWinnerOverlay(false);
-      return;
-    }
-    setShowWinnerOverlay(true);
-  }, [room?.status]);
-
   const visiblePlayers = useMemo(() => {
     if (!room) return players;
     return maskPlayersForViewer(players, playerId, room.phase, room.status);
@@ -261,9 +280,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const turnPlayerId = room?.turnOrder[room.currentTurnIndex] ?? undefined;
   const isMyTurn = turnPlayerId === playerId;
   const isHost = room?.hostId === playerId;
-  const showAllCards =
-    room?.phase === "revealed" ||
-    (room?.status === "finished" && !showWinnerOverlay);
+  const showAllCards = room?.phase === "revealed" && !gameEndDisplay;
   const deckCount = room?.deckCount ?? 1;
   const highlightRank = showAllCards && room?.currentBid ? room.currentBid.rank : null;
   const showBidDock = Boolean(
@@ -318,7 +335,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
 
     try {
       await continueAfterReveal(roomCode, playerId);
-      await applyFreshState();
+      await applyFreshState(false);
     } catch (err) {
       endTransition();
       setError(err instanceof Error ? err.message : translate("errContinue"));
@@ -378,17 +395,15 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         </div>
       ) : null}
 
-      {room.status === "finished" && showWinnerOverlay && room.winnerName ? (
+      {gameEndDisplay && !gameEndDisplay.isDraw && gameEndDisplay.winnerName ? (
         <WinnerOverlay
-          winnerName={room.winnerName}
-          isMe={room.winnerId === playerId}
+          winnerName={gameEndDisplay.winnerName}
+          isMe={gameEndDisplay.winnerId === playerId}
           onHome={handleLeave}
         />
       ) : null}
 
-      {room.status === "finished" && showWinnerOverlay && !room.winnerName ? (
-        <DrawOverlay onHome={handleLeave} />
-      ) : null}
+      {gameEndDisplay?.isDraw ? <DrawOverlay onHome={handleLeave} /> : null}
 
       {showResultOverlay && room.revealResult ? (
         <RoundResultOverlay
@@ -414,7 +429,6 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         showAllCards={showAllCards}
         highlightRank={highlightRank}
         revealResult={room.revealResult}
-        pendingGameWinnerName={pendingGameWinner?.name ?? null}
         compactDock={showBidDock}
         animateDeal={animateDeal}
         dealKey={`${room.roundNumber}-${room.phase}`}

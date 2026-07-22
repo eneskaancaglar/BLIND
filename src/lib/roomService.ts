@@ -59,6 +59,9 @@ export type RoomSyncState = {
 
 export function mergeRoomSyncState(prev: Room | null, next: Room | null): Room | null {
   if (!next) return null;
+  if (prev?.status === "finished" && next.status !== "finished") {
+    return prev;
+  }
   if (
     next.phase === "revealed" &&
     !next.revealResult &&

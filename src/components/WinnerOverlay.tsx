@@ -22,29 +22,31 @@ export function WinnerOverlay({ winnerName, isMe, onHome }: WinnerOverlayProps) 
 
   return (
     <BodyPortal>
-      <div className="pointer-events-auto fixed inset-0 z-[200] flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-black/92 backdrop-blur-md" />
-        <div className="winner-overlay-panel relative z-10 w-full max-w-sm animate-result-in rounded-3xl border border-emerald-400/35 p-8 text-center shadow-2xl shadow-emerald-900/50">
-          <div className="winner-overlay-glow pointer-events-none absolute inset-0 rounded-3xl" aria-hidden />
+      <div className="round-overlay round-overlay-transition pointer-events-auto fixed inset-0 z-[200] flex items-center justify-center p-4">
+        <div className="round-transition-backdrop absolute inset-0 bg-gradient-to-b from-emerald-950/95 via-black/90 to-black/95" />
 
-          <p className="relative mb-2 text-xs font-bold uppercase tracking-[0.35em] text-emerald-300/85">
+        <div className="relative z-10 w-full max-w-sm px-4 text-center animate-transition-in">
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.35em] text-emerald-300/85">
             {translate("gameOver")}
           </p>
 
           {isMe ? (
             <>
-              <p className="relative text-4xl" aria-hidden>
+              <div className="mx-auto mb-5 inline-flex h-20 w-20 items-center justify-center rounded-full border-2 border-emerald-400/50 bg-emerald-500/20 text-4xl">
                 🏆
-              </p>
-              <h2 className="relative mt-2 text-3xl font-black text-white">{translate("youWon")}</h2>
-              <p className="relative mt-2 text-sm text-emerald-100/75">{translate("gameYouWonSubtitle")}</p>
+              </div>
+              <h2 className="text-3xl font-black text-white">{translate("youWon")}</h2>
+              <p className="mt-3 text-lg text-emerald-100/80">{translate("gameYouWonSubtitle")}</p>
             </>
           ) : (
             <>
-              <h2 className="relative text-2xl font-black leading-tight text-white sm:text-3xl">
+              <div className="mx-auto mb-5 inline-flex h-20 w-20 items-center justify-center rounded-full border-2 border-emerald-400/50 bg-emerald-500/20">
+                <span className="text-2xl font-black text-emerald-200">★</span>
+              </div>
+              <h2 className="text-2xl font-black leading-tight text-white sm:text-3xl">
                 {translate("gameWonBy", { name: winnerName })}
               </h2>
-              <p className="relative mt-4 text-4xl font-black text-emerald-300">{winnerName}</p>
+              <p className="mt-4 text-3xl font-black text-emerald-300">{winnerName}</p>
             </>
           )}
 
@@ -52,7 +54,7 @@ export function WinnerOverlay({ winnerName, isMe, onHome }: WinnerOverlayProps) 
             type="button"
             disabled={leaving}
             onClick={handleHome}
-            className="relative mt-8 w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 py-4 text-lg font-bold text-white shadow-lg transition hover:brightness-110 disabled:opacity-70"
+            className="home-btn-start mt-8 w-full rounded-2xl py-4 text-lg font-bold disabled:opacity-70"
           >
             {translate("backToHome")}
           </button>
