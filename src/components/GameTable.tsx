@@ -61,10 +61,11 @@ export function GameTable({
   }, [room.roundNumber, room.phase]);
   const handCount = me ? getHandDisplayCount(me, blindMode) : 0;
   const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
-  const isBidding = compactDock && room.phase === "bidding";
-  const handSize = isBidding ? "xs" : compactDock ? "sm" : "md";
+  const isBiddingPhase = room.phase === "bidding";
+  const showCompactDock = compactDock && isBiddingPhase;
+  const handSize = isBiddingPhase ? "xs" : compactDock ? "sm" : "md";
   const handSpread = "tight";
-  const handMaxVisible = isBidding ? 5 : undefined;
+  const handMaxVisible = isBiddingPhase ? 5 : undefined;
 
   const turnName =
     opponents.find((p) => p.id === turnPlayerId)?.name ??
@@ -157,7 +158,18 @@ export function GameTable({
       );
     }
 
-    if (isBidding) {
+    if (isBiddingPhase && !room.currentBid) {
+      return (
+        <>
+          <p className="text-[8px] font-medium uppercase tracking-wider text-slate-400">
+            {translate("turn")}
+          </p>
+          <p className="mt-0.5 truncate text-sm font-medium text-white">{turnName ?? "..."}</p>
+        </>
+      );
+    }
+
+    if (showCompactDock) {
       return (
         <>
           <p className="text-[8px] font-medium uppercase tracking-wider text-slate-400">
@@ -194,7 +206,7 @@ export function GameTable({
   return (
     <div
       className={`game-shell game-layout flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden ${
-        isBidding ? "game-bidding" : ""
+        isBiddingPhase ? "game-bidding" : ""
       }`}
     >
       <header className="game-header relative z-20 flex shrink-0 items-center justify-between gap-1.5 px-2 py-1 sm:px-4 sm:py-1.5">
@@ -255,7 +267,7 @@ export function GameTable({
                     showCards={showAllCards}
                     blindMode={blindMode}
                     highlightRank={highlightRank ?? undefined}
-                    compact={isBidding}
+                    compact={isBiddingPhase}
                     animateDeal={animateDeal}
                     dealKey={dealKey}
                     messages={messages}
@@ -280,7 +292,7 @@ export function GameTable({
         roundNumber={room.roundNumber}
       />
 
-      {isBidding && room.currentBid ? (
+      {isBiddingPhase && room.currentBid ? (
         <div className="bid-strip shrink-0">
           <p className="bid-strip-label">{translate("currentBid")}</p>
           <CurrentBidDisplay
@@ -292,9 +304,9 @@ export function GameTable({
       ) : null}
 
       <div
-        className={`game-dock game-dock-area ${compactDock ? "game-dock-compact" : ""} min-h-0 shrink-0 px-1 pb-1.5 pt-1 sm:pb-3`}
+        className={`game-dock game-dock-area ${isBiddingPhase ? "game-dock-compact" : compactDock ? "game-dock-compact" : ""} min-h-0 shrink-0 px-1 pb-1.5 pt-1 sm:pb-3`}
       >
-        {!compactDock ? (
+        {!isBiddingPhase && !compactDock ? (
           <div className="mb-1 flex items-center justify-between px-1.5">
             <p className="flex min-w-0 items-center gap-1 truncate text-[11px] font-semibold text-slate-100">
               {me?.isBot ? <BotBadge size="sm" /> : null}
