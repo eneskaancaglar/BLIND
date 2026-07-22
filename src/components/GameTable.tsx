@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { getOpponentSeatPosition } from "@/lib/seatLayout";
 import { getHandDisplayCount, getBlindMode } from "@/lib/gameLogic";
 import { ChatMessage, Player, Rank, RevealResult, Room } from "@/lib/types";
+import { BidHistoryButton, BidHistoryPanel } from "./BidHistoryPanel";
 import { BotBadge } from "./BotBadge";
 import { CardFan } from "./CardFan";
 import { CurrentBidDisplay } from "./CurrentBidDisplay";
@@ -51,7 +52,13 @@ export function GameTable({
 }: GameTableProps) {
   const { translate } = useLanguage();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [showBidHistory, setShowBidHistory] = useState(false);
   const blindMode = getBlindMode(room);
+  const bidHistory = room.bidHistory ?? [];
+
+  useEffect(() => {
+    setShowBidHistory(false);
+  }, [room.roundNumber, room.phase]);
   const handCount = me ? getHandDisplayCount(me, blindMode) : 0;
   const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
   const isBidding = compactDock && room.phase === "bidding";
@@ -200,6 +207,13 @@ export function GameTable({
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          {room.status === "playing" ? (
+            <BidHistoryButton
+              bidCount={bidHistory.length}
+              active={showBidHistory}
+              onClick={() => setShowBidHistory(true)}
+            />
+          ) : null}
           {onHomeClick ? (
             <button type="button" onClick={onHomeClick} className="home-footer-btn !min-h-7 px-2 py-1 text-[10px]">
               {translate("home")}
@@ -222,10 +236,10 @@ export function GameTable({
 
         <div className="relative z-10 flex h-full min-h-0 flex-col p-1 sm:p-2">
           <div className="opponents-table relative min-h-0 flex-1 overflow-visible">
-            {room.status === "playing" && room.phase === "bidding" ? (
+            {room.status === "playing" ? (
               <TurnFlowIndicator
                 turnOrder={room.turnOrder}
-                turnPlayerId={turnPlayerId}
+                activeTurnId={room.phase === "bidding" ? turnPlayerId : undefined}
                 playerId={playerId}
                 opponents={opponents}
                 players={players}
@@ -258,6 +272,13 @@ export function GameTable({
           </div>
         </div>
       </div>
+
+      <BidHistoryPanel
+        open={showBidHistory}
+        onClose={() => setShowBidHistory(false)}
+        bids={bidHistory}
+        roundNumber={room.roundNumber}
+      />
 
       {isBidding && room.currentBid ? (
         <div className="bid-strip shrink-0">

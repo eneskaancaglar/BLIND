@@ -5,17 +5,25 @@ import type { Player } from "@/lib/types";
 
 type TurnFlowIndicatorProps = {
   turnOrder: string[];
-  turnPlayerId?: string;
+  /** Current bidder — only the arrow to the next player glows */
+  activeTurnId?: string;
   playerId: string;
   opponents: Player[];
   players: Player[];
 };
 
-function arcPath(x1: number, y1: number, x2: number, y2: number, bulge = 1): string {
+const TABLE_CENTER = { x: 50, y: 46 };
+const OUTWARD_BULGE = 16;
+
+/** Quadratic arc bulging outward from the table center (not inward). */
+function outwardArcPath(x1: number, y1: number, x2: number, y2: number): string {
   const mx = (x1 + x2) / 2;
   const my = (y1 + y2) / 2;
-  const cx = 50 + (mx - 50) * 0.15;
-  const cy = 42 + (my - 42) * 0.15 * bulge;
+  const dx = mx - TABLE_CENTER.x;
+  const dy = my - TABLE_CENTER.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const cx = mx + (dx / len) * OUTWARD_BULGE;
+  const cy = my + (dy / len) * OUTWARD_BULGE;
   return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
 }
 
@@ -35,7 +43,7 @@ function playerAnchor(
 
 export function TurnFlowIndicator({
   turnOrder,
-  turnPlayerId,
+  activeTurnId,
   playerId,
   opponents,
   players,
@@ -47,12 +55,11 @@ export function TurnFlowIndicator({
 
   if (activeOrder.length < 2) return null;
 
-  const currentIndex = turnPlayerId ? activeOrder.indexOf(turnPlayerId) : -1;
   const segments = activeOrder.map((fromId, index) => {
     const toId = activeOrder[(index + 1) % activeOrder.length];
     const from = playerAnchor(fromId, playerId, opponents);
     const to = playerAnchor(toId, playerId, opponents);
-    const isActive = index === currentIndex;
+    const isActive = Boolean(activeTurnId && fromId === activeTurnId);
     return { fromId, toId, from, to, isActive, key: `${fromId}-${toId}` };
   });
 
@@ -66,55 +73,38 @@ export function TurnFlowIndicator({
       <defs>
         <marker
           id="turn-flow-arrow"
+          markerWidth="5"
+          markerHeight="5"
+          refX="4.5"
+          refY="2.5"
+          orient="auto"
+        >
+          <path d="M0,0 L5,2.5 L0,5 Z" fill="rgba(196, 181, 253, 0.75)" />
+        </marker>
+        <marker
+          id="turn-flow-arrow-active"
           markerWidth="6"
           markerHeight="6"
           refX="5"
           refY="3"
           orient="auto"
         >
-          <path d="M0,0 L6,3 L0,6 Z" fill="rgba(167, 139, 250, 0.85)" />
-        </marker>
-        <marker
-          id="turn-flow-arrow-active"
-          markerWidth="7"
-          markerHeight="7"
-          refX="5.5"
-          refY="3.5"
-          orient="auto"
-        >
-          <path d="M0,0 L7,3.5 L0,7 Z" fill="rgba(250, 204, 21, 0.95)" />
+          <path d="M0,0 L6,3 L0,6 Z" fill="rgba(253, 224, 71, 1)" />
         </marker>
       </defs>
 
       {segments.map((segment) => (
         <path
           key={segment.key}
-          d={arcPath(segment.from.x, segment.from.y, segment.to.x, segment.to.y)}
+          d={outwardArcPath(segment.from.x, segment.from.y, segment.to.x, segment.to.y)}
           fill="none"
-          stroke={segment.isActive ? "rgba(250, 204, 21, 0.9)" : "rgba(167, 139, 250, 0.35)"}
-          strokeWidth={segment.isActive ? 0.55 : 0.35}
-          strokeDasharray={segment.isActive ? "2 1.2" : "none"}
+          stroke={segment.isActive ? "rgba(253, 224, 71, 0.98)" : "rgba(167, 139, 250, 0.62)"}
+          strokeWidth={segment.isActive ? 0.62 : 0.42}
+          strokeLinecap="round"
           markerEnd={segment.isActive ? "url(#turn-flow-arrow-active)" : "url(#turn-flow-arrow)"}
-          className={segment.isActive ? "turn-flow-active" : undefined}
+          className={segment.isActive ? "turn-flow-active" : "turn-flow-idle"}
         />
       ))}
-
-      {turnPlayerId ? (
-        (() => {
-          const anchor = playerAnchor(turnPlayerId, playerId, opponents);
-          return (
-            <circle
-              cx={anchor.x}
-              cy={anchor.y}
-              r={2.8}
-              fill="none"
-              stroke="rgba(250, 204, 21, 0.95)"
-              strokeWidth={0.45}
-              className="turn-flow-current-ring"
-            />
-          );
-        })()
-      ) : null}
     </svg>
   );
 }

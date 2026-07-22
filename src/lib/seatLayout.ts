@@ -1,12 +1,12 @@
 export type SeatPosition = "top" | "top-left" | "top-right" | "left" | "right" | "bottom";
 
 const SEAT_ANCHORS: Record<SeatPosition, { x: number; y: number }> = {
-  top: { x: 50, y: 26 },
-  "top-left": { x: 28, y: 28 },
-  "top-right": { x: 72, y: 28 },
-  left: { x: 18, y: 50 },
-  right: { x: 82, y: 50 },
-  bottom: { x: 50, y: 88 },
+  top: { x: 50, y: 16 },
+  "top-left": { x: 20, y: 20 },
+  "top-right": { x: 80, y: 20 },
+  left: { x: 10, y: 44 },
+  right: { x: 90, y: 44 },
+  bottom: { x: 50, y: 92 },
 };
 
 export function getSeatAnchorPercent(seat: SeatPosition): { x: number; y: number } {

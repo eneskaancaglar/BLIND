@@ -40,6 +40,8 @@ export type Room = {
   currentTurnIndex: number;
   turnOrder: string[];
   currentBid: Bid | null;
+  /** Bids placed in the current round (cleared each round) */
+  bidHistory?: Bid[];
   roundNumber: number;
   deck: Card[];
   deckCount: 1 | 2;

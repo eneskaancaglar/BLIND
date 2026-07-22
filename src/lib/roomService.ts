@@ -411,6 +411,7 @@ export async function createRoom(
     currentTurnIndex: 0,
     turnOrder: [playerId, ...botIds],
     currentBid: null,
+    bidHistory: [],
     roundNumber: 0,
     deck: [],
     deckCount: settings.deckCount,
@@ -549,6 +550,7 @@ export async function startGame(roomCode: string, hostId: string): Promise<void>
       roundNumber: 1,
       deck,
       currentBid: null,
+      bidHistory: [],
       currentTurnIndex: 0,
       turnOrder,
       revealResult: null,
@@ -588,8 +590,10 @@ export async function placeBid(
   }
 
   const bid: Bid = { count, rank, playerId, playerName };
+  const bidHistory = [...(room.bidHistory ?? []), bid];
   await updateDoc(roomRef, touchRoom({
     currentBid: bid,
+    bidHistory,
     currentTurnIndex: nextTurnIndex(room.turnOrder, room.currentTurnIndex),
   }));
 }
@@ -679,6 +683,7 @@ export async function continueAfterReveal(roomCode: string, actorId: string): Pr
       roundNumber: resolved.roundNumber,
       deck: resolved.deck,
       currentBid: resolved.currentBid,
+      bidHistory: [],
       turnOrder: resolved.turnOrder,
       currentTurnIndex: resolved.currentTurnIndex,
       revealResult: resolved.revealResult,

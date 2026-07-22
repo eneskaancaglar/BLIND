@@ -84,6 +84,10 @@ const en = {
   botDifficultyNormal: "Normal — human-like",
   botDifficultyExpert: "Expert — precise",
 
+  bidHistory: "Bid history",
+  bidHistoryShort: "History",
+  bidHistoryEmpty: "No bids this round yet.",
+
   lobbyBlindCards: "BLIND cards: {value}",
   lobbyRoom: "Room",
   lobbyShare: "Share this code with other players",
@@ -232,6 +236,10 @@ const tr: Record<keyof typeof en, string> = {
   botDifficulty: "Bot seviyesi",
   botDifficultyNormal: "Normal — insan gibi",
   botDifficultyExpert: "Uzman — daha isabetli",
+
+  bidHistory: "İddia geçmişi",
+  bidHistoryShort: "Geçmiş",
+  bidHistoryEmpty: "Bu elde henüz iddia yok.",
 
   lobbyBlindCards: "BLIND kart: {value}",
 

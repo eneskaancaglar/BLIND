@@ -10,9 +10,10 @@ import {
   refreshRoomState,
 } from "./roomService";
 
-const BOT_THINK_MIN_MS = 850;
-const BOT_THINK_MAX_MS = 2200;
-const BOT_CONTINUE_MS = 2400;
+const BOT_THINK_MIN_MS = 2800;
+const BOT_THINK_MAX_MS = 5200;
+const BOT_CONTINUE_MS = 4200;
+const BOT_POST_BID_PAUSE_MS = 1200;
 
 let botActing = false;
 let lastBotTurnKey = "";
@@ -85,6 +86,8 @@ async function runBotBiddingTurn(params: {
     }
 
     const decision = decideBotMove(freshTurn, freshRoom, fresh.players);
+
+    await delay(BOT_POST_BID_PAUSE_MS);
 
     if (decision.action === "bid") {
       await placeBid(
