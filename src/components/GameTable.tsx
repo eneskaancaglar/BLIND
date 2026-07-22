@@ -62,7 +62,6 @@ export function GameTable({
   const handCount = me ? getHandDisplayCount(me, blindMode) : 0;
   const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
   const isBiddingPhase = room.phase === "bidding";
-  const showCompactDock = compactDock && isBiddingPhase;
   const handSize = isBiddingPhase ? "xs" : compactDock ? "sm" : "md";
   const handSpread = "tight";
   const handMaxVisible = isBiddingPhase ? 5 : undefined;
@@ -158,37 +157,13 @@ export function GameTable({
       );
     }
 
-    if (isBiddingPhase && !room.currentBid) {
+    if (isBiddingPhase) {
       return (
         <>
           <p className="text-[8px] font-medium uppercase tracking-wider text-slate-400">
             {translate("turn")}
           </p>
           <p className="mt-0.5 truncate text-sm font-medium text-white">{turnName ?? "..."}</p>
-        </>
-      );
-    }
-
-    if (showCompactDock) {
-      return (
-        <>
-          <p className="text-[8px] font-medium uppercase tracking-wider text-slate-400">
-            {translate("turn")}
-          </p>
-          <p className="mt-0.5 truncate text-sm font-medium text-white">{turnName ?? "..."}</p>
-        </>
-      );
-    }
-
-    if (room.currentBid && room.phase === "bidding") {
-      return (
-        <>
-          <p className="text-[9px] font-medium uppercase tracking-wider text-slate-400 sm:text-[10px]">
-            {translate("currentBid")}
-          </p>
-          <div className="mt-1">
-            <CurrentBidDisplay bid={room.currentBid} playerName={room.currentBid.playerName} compact />
-          </div>
         </>
       );
     }
@@ -247,7 +222,7 @@ export function GameTable({
         <div className="table-glow pointer-events-none absolute inset-0" />
 
         <div className="relative z-10 flex h-full min-h-0 flex-col p-1 sm:p-2">
-          <div className="opponents-table relative min-h-0 flex-1 overflow-visible">
+          <div className="opponents-table relative min-h-0 flex-1 overflow-hidden">
             {room.status === "playing" ? (
               <TurnFlowIndicator
                 turnOrder={room.turnOrder}

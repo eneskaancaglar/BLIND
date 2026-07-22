@@ -581,17 +581,20 @@ button:disabled {
 
 .opponent-slot-top {
   left: 50%;
-  top: 14%;
+  top: 18%;
+  transform: translateX(-50%);
 }
 
 .opponent-slot-top-left {
   left: 24%;
-  top: 18%;
+  top: 20%;
+  transform: translateX(-50%);
 }
 
 .opponent-slot-top-right {
   left: 76%;
-  top: 18%;
+  top: 20%;
+  transform: translateX(-50%);
 }
 
 .opponent-slot-left {
@@ -622,6 +625,8 @@ button:disabled {
   height: 46dvh;
   min-height: 46dvh;
   max-height: 46dvh;
+  flex-shrink: 0;
+  overflow: hidden;
 }
 
 @media (max-width: 639px) {
@@ -630,6 +635,7 @@ button:disabled {
     height: 50dvh;
     min-height: 50dvh;
     max-height: 50dvh;
+    flex-shrink: 0;
   }
 }
 
@@ -649,8 +655,9 @@ button:disabled {
 
 .game-bidding .opponents-table {
   min-height: 0;
-  flex: 1 1 auto;
-  padding: 0.5rem 0.2rem 0.1rem;
+  flex: 1 1 0;
+  overflow: hidden;
+  padding: 1.35rem 0.45rem 0.2rem;
 }
 
 .game-bidding .opponent-slot {
@@ -668,27 +675,30 @@ button:disabled {
 
 .game-bidding .opponent-slot-top {
   left: 50%;
-  top: 12%;
+  top: 0.15rem;
+  transform: translateX(-50%);
 }
 
 .game-bidding .opponent-slot-top-left {
-  left: 22%;
-  top: 16%;
+  left: 24%;
+  top: 0.35rem;
+  transform: translateX(-50%);
 }
 
 .game-bidding .opponent-slot-top-right {
-  left: 78%;
-  top: 16%;
+  left: 76%;
+  top: 0.35rem;
+  transform: translateX(-50%);
 }
 
 .game-bidding .opponent-slot-left {
-  left: 20%;
-  top: 52%;
+  left: 22%;
+  top: 54%;
 }
 
 .game-bidding .opponent-slot-right {
-  left: 80%;
-  top: 52%;
+  left: 78%;
+  top: 54%;
 }
 
 .bid-strip {
@@ -723,13 +733,19 @@ button:disabled {
 }
 
 .game-bidding .opponent-seat-cards .card-fan-row {
-  min-height: 2.65rem !important;
-  transform: scale(0.82);
+  min-height: 2.45rem !important;
+  transform: scale(0.78);
   transform-origin: bottom center;
 }
 
+.game-bidding .opponent-seat {
+  overflow: hidden;
+}
+
 .game-bidding .opponent-seat-cards {
-  min-height: 2.5rem;
+  min-height: 2.35rem;
+  max-height: 2.75rem;
+  overflow: hidden;
 }
 
 .game-bidding .game-dock-hand {
@@ -761,6 +777,12 @@ button:disabled {
 
 .game-bidding .center-pot-compact {
   padding: 0.15rem 0.35rem;
+  min-height: 2.1rem;
+  max-height: 2.1rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .game-bidding .center-pot-compact p {
