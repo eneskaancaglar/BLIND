@@ -10,6 +10,16 @@ import {
   refreshRoomState,
 } from "./roomService";
 
+let suppressedContinueRound: number | null = null;
+
+export function suppressBotContinueForRound(roundNumber: number): void {
+  suppressedContinueRound = roundNumber;
+}
+
+export function clearBotContinueSuppression(): void {
+  suppressedContinueRound = null;
+}
+
 const BOT_TURN_DELAY_MS = 3000;
 const BOT_CONTINUE_MS = 3000;
 
@@ -114,6 +124,7 @@ async function runBotContinueRound(params: {
   if (!room.revealResult) return;
   if (predictGameEndsAfterReveal(players, room.revealResult, room)) return;
   if (room.resolvedRoundNumber === room.roundNumber) return;
+  if (suppressedContinueRound === room.roundNumber) return;
 
   const continueKey = `${room.roundNumber}-continue-${room.syncVersion ?? 0}`;
   if (lastBotContinueKey === continueKey || botActing) return;

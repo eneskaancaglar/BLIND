@@ -73,6 +73,16 @@ export function mergeRoomSyncState(prev: Room | null, next: Room | null): Room |
   ) {
     return { ...next, revealResult: prev.revealResult };
   }
+  if (
+    prev &&
+    next.phase === "revealed" &&
+    next.revealResult &&
+    (prev.resolvedRoundNumber === next.roundNumber ||
+      prev.roundNumber > next.roundNumber ||
+      (prev.phase === "bidding" && prev.roundNumber >= next.roundNumber))
+  ) {
+    return prev;
+  }
   return next;
 }
 

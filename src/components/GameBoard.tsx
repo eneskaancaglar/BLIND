@@ -11,7 +11,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useSound } from "@/context/SoundContext";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { getActivePlayers, getBlindMode, getHandDisplayCount, predictGameEndsAfterReveal, predictWinnerAfterReveal } from "@/lib/gameLogic";
-import { runBotOrchestrator } from "@/lib/botRunner";
+import { clearBotContinueSuppression, runBotOrchestrator, suppressBotContinueForRound } from "@/lib/botRunner";
 import { Player, Room } from "@/lib/types";
 import {
   attachRoomSync,
@@ -55,6 +55,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const [animateDeal, setAnimateDeal] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [gameEndDisplay, setGameEndDisplay] = useState<GameEndDisplay | null>(null);
+  const [dismissedRevealKey, setDismissedRevealKey] = useState<string | null>(null);
 
   const prevPhaseRef = useRef<Room["phase"] | null>(null);
   const skipPhaseTransitionRef = useRef(false);
@@ -143,6 +144,13 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     });
     return fresh;
   }, [roomCode]);
+
+  useEffect(() => {
+    if (room?.phase === "bidding") {
+      setDismissedRevealKey(null);
+      clearBotContinueSuppression();
+    }
+  }, [room?.phase, room?.roundNumber]);
 
   useEffect(() => {
     if (!roomPhase) return;
@@ -337,12 +345,18 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
 
   const transitionRound = room?.roundNumber ?? 1;
 
+  const currentRevealKey = room?.revealResult
+    ? `${room.roundNumber}-${room.revealResult.loserId}`
+    : null;
+
   const showResultOverlay = Boolean(
-    room?.revealResult &&
-      room.phase === "revealed" &&
+    currentRevealKey &&
+      room?.phase === "revealed" &&
       !showTransition &&
       room.status !== "finished" &&
-      !isGameEndingReveal
+      !isGameEndingReveal &&
+      dismissedRevealKey !== currentRevealKey &&
+      room.resolvedRoundNumber !== room.roundNumber
   );
 
   async function handleBid(count: number, rank: Parameters<typeof placeBid>[4]) {
@@ -371,16 +385,39 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   async function handleContinue() {
     if (!room?.revealResult) return;
 
+    const revealKey = `${room.roundNumber}-${room.revealResult.loserId}`;
+
     setLoading(true);
     setError("");
+    setDismissedRevealKey(revealKey);
+    suppressBotContinueForRound(room.roundNumber);
     skipPhaseTransitionRef.current = true;
-    startTransition(TRANSITION_MS);
 
     try {
       await continueAfterReveal(roomCode, playerId);
-      await applyFreshState(false);
+
+      let fresh = await applyFreshState(false);
+      if (fresh.room?.phase === "revealed" && fresh.room.revealResult) {
+        await new Promise((resolve) => window.setTimeout(resolve, 350));
+        fresh = await applyFreshState(false);
+      }
+
+      if (fresh.room?.phase === "bidding") {
+        clearBotContinueSuppression();
+        startTransition(TRANSITION_MS);
+        return;
+      }
+
+      if (fresh.room?.resolvedRoundNumber === room.roundNumber) {
+        startTransition(TRANSITION_MS);
+        return;
+      }
+
+      setDismissedRevealKey(null);
+      setError(translate("errContinue"));
     } catch (err) {
-      endTransition();
+      setDismissedRevealKey(null);
+      clearBotContinueSuppression();
       setError(err instanceof Error ? err.message : translate("errContinue"));
     } finally {
       setLoading(false);
