@@ -78,6 +78,52 @@ function RoomSettingsPanel({
       </div>
 
       <div>
+        <p className="mb-2 text-xs text-slate-400">{translate("botCount")}</p>
+        <div className="grid grid-cols-4 gap-2">
+          {([0, 1, 2, 3] as const).map((count) => (
+            <button
+              key={count}
+              type="button"
+              onClick={() => {
+                play("click");
+                setRoomSettings((s) => ({ ...s, botCount: count }));
+              }}
+              className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
+                roomSettings.botCount === count ? "home-chip-active" : ""
+              }`}
+            >
+              {count === 0 ? translate("botCountNone") : translate("botCountLabel", { count })}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {roomSettings.botCount > 0 ? (
+        <div>
+          <p className="mb-2 text-xs text-slate-400">{translate("botDifficulty")}</p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {(["normal", "expert"] as const).map((level) => (
+              <button
+                key={level}
+                type="button"
+                onClick={() => {
+                  play("click");
+                  setRoomSettings((s) => ({ ...s, botDifficulty: level }));
+                }}
+                className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
+                  roomSettings.botDifficulty === level ? "home-chip-active" : ""
+                }`}
+              >
+                {level === "normal"
+                  ? translate("botDifficultyNormal")
+                  : translate("botDifficultyExpert")}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div>
         <p className="mb-2 text-xs text-slate-400">{translate("blindGetsCards")}</p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <button

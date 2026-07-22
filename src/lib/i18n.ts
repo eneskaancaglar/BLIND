@@ -1,4 +1,4 @@
-import type { Rank, RevealResult, BlindMode } from "./types";
+import type { Rank, RevealResult, BlindMode, BotDifficulty } from "./types";
 
 export type Language = "en" | "tr";
 
@@ -6,6 +6,8 @@ export type RoomSettings = {
   deckCount: 1 | 2;
   blindThreshold: 5 | 6 | 7;
   blindMode: BlindMode;
+  botCount: 0 | 1 | 2 | 3;
+  botDifficulty: BotDifficulty;
 };
 
 const STORAGE_KEY = "blind_language";
@@ -16,6 +18,8 @@ export const DEFAULT_ROOM_SETTINGS: RoomSettings = {
   deckCount: 1,
   blindThreshold: 6,
   blindMode: "ORIGINAL_BLIND",
+  botCount: 0,
+  botDifficulty: "normal",
 };
 
 export type Vars = Record<string, string | number>;
@@ -71,6 +75,14 @@ const en = {
   blindHiddenCards: "BLIND — cards hidden",
   blindGetsCardsYes: "Yes (can't see)",
   blindGetsCardsNo: "No",
+
+  botCount: "Bots",
+  botCountNone: "None",
+  botCountLabel: "{count} bot(s)",
+  botBadge: "Bot",
+  botDifficulty: "Bot level",
+  botDifficultyNormal: "Normal — human-like",
+  botDifficultyExpert: "Expert — precise",
 
   lobbyBlindCards: "BLIND cards: {value}",
   lobbyRoom: "Room",
@@ -212,6 +224,14 @@ const tr: Record<keyof typeof en, string> = {
   blindHiddenCards: "BLIND — kartların gizli",
   blindGetsCardsYes: "Evet (görmez)",
   blindGetsCardsNo: "Hayır",
+
+  botCount: "Botlar",
+  botCountNone: "Yok",
+  botCountLabel: "{count} bot",
+  botBadge: "Bot",
+  botDifficulty: "Bot seviyesi",
+  botDifficultyNormal: "Normal — insan gibi",
+  botDifficultyExpert: "Uzman — daha isabetli",
 
   lobbyBlindCards: "BLIND kart: {value}",
 

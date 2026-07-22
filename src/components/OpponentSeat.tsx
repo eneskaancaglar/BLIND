@@ -3,6 +3,7 @@
 import { useLanguage } from "@/context/LanguageContext";
 import { getHandDisplayCount } from "@/lib/gameLogic";
 import { BlindMode, ChatMessage, Player, Rank } from "@/lib/types";
+import { BotBadge } from "./BotBadge";
 import { getRecentReaction } from "./EmojiChat";
 import { CardFan } from "./CardFan";
 
@@ -18,9 +19,10 @@ type OpponentSeatProps = {
   messages?: ChatMessage[];
 };
 
-function OpponentNameRow({ name, count }: { name: string; count: number }) {
+function OpponentNameRow({ name, count, isBot }: { name: string; count: number; isBot?: boolean }) {
   return (
-    <div className="opponent-name-row flex max-w-full items-center justify-center gap-1.5">
+    <div className="opponent-name-row flex max-w-full items-center justify-center gap-1">
+      {isBot ? <BotBadge /> : null}
       <p className="opponent-name min-w-0">{name}</p>
       <span className="count-dot shrink-0" aria-label={`${count} cards`}>
         {count}
@@ -81,7 +83,7 @@ export function OpponentSeat({
         </span>
       ) : null}
 
-      <OpponentNameRow name={player.name} count={displayCount} />
+      <OpponentNameRow name={player.name} count={displayCount} isBot={player.isBot} />
 
       {player.isBlind && !showCards ? (
         <span className="mt-0.5 text-center text-[8px] text-slate-400">{translate("blind")}</span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
+import { BotBadge } from "./BotBadge";
 import { Player } from "@/lib/types";
 import { PlayingCard } from "./PlayingCard";
 
@@ -36,9 +37,12 @@ export function PlayerList({
           >
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="font-semibold text-slate-100">
-                  {player.name}
-                  {isMe ? ` (${translate("you")})` : ""}
+                <p className="flex items-center gap-1.5 font-semibold text-slate-100">
+                  {player.isBot ? <BotBadge size="sm" /> : null}
+                  <span>
+                    {player.name}
+                    {isMe ? ` (${translate("you")})` : ""}
+                  </span>
                 </p>
                 <p className="text-sm text-slate-400">
                   {player.isEliminated
@@ -52,6 +56,11 @@ export function PlayerList({
                 {player.isHost || player.id === hostId ? (
                   <span className="home-chip rounded-full px-2 py-1 text-xs">
                     {translate("host")}
+                  </span>
+                ) : null}
+                {player.isBot ? (
+                  <span className="home-chip rounded-full px-2 py-1 text-xs text-violet-200">
+                    {translate("botBadge")}
                   </span>
                 ) : null}
                 {player.isBlind ? (

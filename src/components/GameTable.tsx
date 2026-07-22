@@ -5,18 +5,21 @@ import { useLanguage } from "@/context/LanguageContext";
 import { getOpponentSeatPosition } from "@/lib/seatLayout";
 import { getHandDisplayCount, getBlindMode } from "@/lib/gameLogic";
 import { ChatMessage, Player, Rank, RevealResult, Room } from "@/lib/types";
+import { BotBadge } from "./BotBadge";
 import { CardFan } from "./CardFan";
 import { CurrentBidDisplay } from "./CurrentBidDisplay";
 import { EmojiChat } from "./EmojiChat";
 import { OpponentSeat } from "./OpponentSeat";
 import { RevealPotSummary } from "./RevealPotSummary";
 import { SoundToggle } from "./SoundToggle";
+import { TurnFlowIndicator } from "./TurnFlowIndicator";
 
 type GameTableProps = {
   room: Room;
   roomCode: string;
   me: Player | undefined;
   opponents: Player[];
+  players: Player[];
   playerId: string;
   turnPlayerId?: string;
   showAllCards: boolean;
@@ -34,6 +37,7 @@ export function GameTable({
   roomCode,
   me,
   opponents,
+  players,
   playerId,
   turnPlayerId,
   showAllCards,
@@ -218,6 +222,15 @@ export function GameTable({
 
         <div className="relative z-10 flex h-full min-h-0 flex-col p-1 sm:p-2">
           <div className="opponents-table relative min-h-0 flex-1 overflow-visible">
+            {room.status === "playing" && room.phase === "bidding" ? (
+              <TurnFlowIndicator
+                turnOrder={room.turnOrder}
+                turnPlayerId={turnPlayerId}
+                playerId={playerId}
+                opponents={opponents}
+                players={players}
+              />
+            ) : null}
             {opponents.map((player, index) => {
               const seat = getOpponentSeatPosition(index, opponents.length);
               return (
@@ -262,8 +275,9 @@ export function GameTable({
       >
         {!compactDock ? (
           <div className="mb-1 flex items-center justify-between px-1.5">
-            <p className="truncate text-[11px] font-semibold text-slate-100">
-              {me?.name ?? translate("you")}
+            <p className="flex min-w-0 items-center gap-1 truncate text-[11px] font-semibold text-slate-100">
+              {me?.isBot ? <BotBadge size="sm" /> : null}
+              <span className="truncate">{me?.name ?? translate("you")}</span>
             </p>
             {me && !me.isEliminated && handCount > 0 ? (
               <span className="count-badge shrink-0">{handCount}</span>

@@ -28,12 +28,14 @@ import {
   getActivePlayers,
   getBlindMode,
   getWinner,
+  isValidBid,
   nextTurnIndex,
   resolveChallenge,
   resolveRoundAfterReveal,
   predictGameEndsAfterReveal,
 } from "./gameLogic";
 import { Bid, ChatMessage, Player, Rank, Room } from "./types";
+import { getBotDisplayName } from "./botAI";
 import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "./i18n";
 
 const ROOMS = "rooms";
@@ -395,13 +397,19 @@ export async function createRoom(
     attempts += 1;
   }
 
+  const botCount = settings.botCount ?? 0;
+  const botIds: string[] = [];
+  for (let i = 0; i < botCount; i += 1) {
+    botIds.push(`bot-${crypto.randomUUID()}`);
+  }
+
   const room: Room = {
     code: roomCode,
     hostId: playerId,
     status: "waiting",
     phase: "bidding",
     currentTurnIndex: 0,
-    turnOrder: [playerId],
+    turnOrder: [playerId, ...botIds],
     currentBid: null,
     roundNumber: 0,
     deck: [],
@@ -430,8 +438,27 @@ export async function createRoom(
   };
 
   try {
-    await setDoc(doc(getDb(), ROOMS, roomCode), room);
-    await setDoc(doc(getDb(), ROOMS, roomCode, PLAYERS, playerId), player);
+    const batch = writeBatch(getDb());
+    batch.set(doc(getDb(), ROOMS, roomCode), room);
+    batch.set(doc(getDb(), ROOMS, roomCode, PLAYERS, playerId), player);
+
+    botIds.forEach((botId, index) => {
+      const botPlayer: Player = {
+        id: botId,
+        name: getBotDisplayName(index),
+        isHost: false,
+        isBot: true,
+        botDifficulty: settings.botDifficulty ?? "normal",
+        cards: [],
+        cardCount: 1,
+        isBlind: false,
+        isEliminated: false,
+        joinedAt: Date.now() + index + 1,
+      };
+      batch.set(doc(getDb(), ROOMS, roomCode, PLAYERS, botId), botPlayer);
+    });
+
+    await batch.commit();
   } catch (error) {
     throw new Error(toFriendlyError(error, "Oda kurulamadı."));
   }
@@ -552,6 +579,13 @@ export async function placeBid(
 
   const currentPlayerId = room.turnOrder[room.currentTurnIndex];
   if (currentPlayerId !== playerId) throw new Error("Sıra sizde değil.");
+
+  const players = await fetchPlayers(roomCode);
+  const activeCount = getActivePlayers(players).length;
+  const deckCount = room.deckCount ?? 1;
+  if (!isValidBid({ count, rank }, room.currentBid, activeCount, deckCount)) {
+    throw new Error("Geçersiz iddia.");
+  }
 
   const bid: Bid = { count, rank, playerId, playerName };
   await updateDoc(roomRef, touchRoom({

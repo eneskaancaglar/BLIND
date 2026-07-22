@@ -58,10 +58,14 @@ export type Room = {
   resolvedRoundNumber?: number | null;
 };
 
+export type BotDifficulty = "normal" | "expert";
+
 export type Player = {
   id: string;
   name: string;
   isHost: boolean;
+  isBot?: boolean;
+  botDifficulty?: BotDifficulty;
   cards: Card[];
   cardCount: number;
   isBlind: boolean;

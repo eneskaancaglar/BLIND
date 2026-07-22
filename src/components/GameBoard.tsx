@@ -11,6 +11,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useSound } from "@/context/SoundContext";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { getActivePlayers, getBlindMode, getHandDisplayCount, predictGameEndsAfterReveal, predictWinnerAfterReveal } from "@/lib/gameLogic";
+import { runBotOrchestrator } from "@/lib/botRunner";
 import { Player, Room } from "@/lib/types";
 import {
   attachRoomSync,
@@ -117,6 +118,22 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
       onError: (err) => setError(err.message),
     });
   }, [roomCode]);
+
+  useEffect(() => {
+    if (!room || !playerId || room.hostId !== playerId) return;
+    void runBotOrchestrator({ roomCode, room, players, driverPlayerId: playerId });
+  }, [
+    roomCode,
+    playerId,
+    room,
+    players,
+    room?.syncVersion,
+    room?.currentTurnIndex,
+    room?.phase,
+    room?.status,
+    room?.roundNumber,
+    room?.resolvedRoundNumber,
+  ]);
 
   const applyFreshState = useCallback(async (preferCache = true) => {
     const fresh = await refreshRoomState(roomCode, { preferCache });
@@ -451,6 +468,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         roomCode={roomCode}
         me={me}
         opponents={opponents}
+        players={players}
         playerId={playerId}
         turnPlayerId={turnPlayerId}
         showAllCards={showAllCards}
