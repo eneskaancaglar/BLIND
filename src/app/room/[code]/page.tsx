@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { RoomLobby } from "@/components/RoomLobby";
 import { clearStoredRoomCode, verifyRoomMembership } from "@/lib/roomService";
@@ -9,6 +9,11 @@ export default function RoomPage() {
   const params = useParams<{ code: string }>();
   const router = useRouter();
   const roomCode = params.code?.toUpperCase() ?? "";
+
+  useEffect(() => {
+    if (!roomCode) return;
+    router.prefetch(`/game/${roomCode}`);
+  }, [roomCode, router]);
 
   useEffect(() => {
     if (!roomCode) return;
@@ -24,15 +29,19 @@ export default function RoomPage() {
     })();
   }, [roomCode, router]);
 
-  function handleLeave() {
+  const handleLeave = useCallback(() => {
     clearStoredRoomCode();
     router.replace("/");
-  }
+  }, [router]);
+
+  const handleGameStarted = useCallback(() => {
+    router.replace(`/game/${roomCode}`);
+  }, [router, roomCode]);
 
   return (
     <RoomLobby
       roomCode={roomCode}
-      onGameStarted={() => router.replace(`/game/${roomCode}`)}
+      onGameStarted={handleGameStarted}
       onLeave={handleLeave}
     />
   );

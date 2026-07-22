@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HomeFloatingCards } from "@/components/HomeFloatingCards";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { PlayerList } from "@/components/PlayerList";
@@ -15,6 +15,8 @@ import {
   getPlayerId,
   startGame,
   attachRoomSync,
+  refreshRoomState,
+  stashRoomBootstrap,
 } from "@/lib/roomService";
 
 type RoomLobbyProps = {
@@ -36,6 +38,11 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
   const players = syncState.players;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const onGameStartedRef = useRef(onGameStarted);
+
+  useEffect(() => {
+    onGameStartedRef.current = onGameStarted;
+  }, [onGameStarted]);
 
   useEffect(() => {
     setPlayerId(getPlayerId());
@@ -56,14 +63,15 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
           players: nextPlayers.map((player) => ({ ...player })),
         });
         if (nextRoom.status === "playing" || nextRoom.status === "finished") {
-          onGameStarted();
+          stashRoomBootstrap(roomCode, { room: nextRoom, players: nextPlayers });
+          onGameStartedRef.current();
         }
       },
       onError: (err) => setError(err.message),
     });
 
     return detach;
-  }, [roomCode, onGameStarted, language]);
+  }, [roomCode, language]);
 
   async function copyShareLink() {
     if (!shareLink) return;
@@ -81,7 +89,15 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
     setError("");
     try {
       await startGame(roomCode, playerId);
-      onGameStarted();
+      const fresh = await refreshRoomState(roomCode, { preferCache: true });
+      if (fresh.room) {
+        stashRoomBootstrap(roomCode, fresh);
+        setSyncState({
+          room: fresh.room,
+          players: fresh.players.map((player) => ({ ...player })),
+        });
+      }
+      onGameStartedRef.current();
     } catch (err) {
       setError(err instanceof Error ? err.message : translate("lobbyStarting"));
     } finally {

@@ -39,8 +39,9 @@ import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "./i18n";
 const ROOMS = "rooms";
 const PLAYERS = "players";
 const MESSAGES = "messages";
-const MOBILE_POLL_MS = 100;
-const DESKTOP_POLL_MS = 400;
+const MOBILE_POLL_MS = 50;
+const DESKTOP_POLL_MS = 300;
+const BOOTSTRAP_PREFIX = "blind_bootstrap_";
 
 function isMobileBrowser(): boolean {
   if (typeof window === "undefined") return false;
@@ -70,23 +71,45 @@ export function mergeRoomSyncState(prev: Room | null, next: Room | null): Room |
   return next;
 }
 
-async function fetchRoomFromServer(roomCode: string): Promise<Room | null> {
-  const snapshot = await getDocFromServer(doc(getDb(), ROOMS, roomCode));
+async function fetchRoom(roomCode: string, preferCache = false): Promise<Room | null> {
+  const roomRef = doc(getDb(), ROOMS, roomCode);
+  const snapshot = preferCache ? await getDoc(roomRef) : await getDocFromServer(roomRef);
   if (!snapshot.exists()) return null;
   return snapshot.data() as Room;
 }
 
-async function fetchPlayersFromServer(roomCode: string): Promise<Player[]> {
-  const snapshot = await getDocsFromServer(
-    query(collection(getDb(), ROOMS, roomCode, PLAYERS), orderBy("joinedAt", "asc"))
-  );
+async function fetchPlayers(roomCode: string, preferCache = false): Promise<Player[]> {
+  const playersQuery = query(collection(getDb(), ROOMS, roomCode, PLAYERS), orderBy("joinedAt", "asc"));
+  const snapshot = preferCache ? await getDocs(playersQuery) : await getDocsFromServer(playersQuery);
   return snapshot.docs.map((d) => d.data() as Player);
 }
 
-export async function refreshRoomState(roomCode: string): Promise<RoomSyncState> {
+export function stashRoomBootstrap(roomCode: string, state: RoomSyncState): void {
+  if (typeof window === "undefined") return;
+  sessionStorage.setItem(`${BOOTSTRAP_PREFIX}${roomCode}`, JSON.stringify(state));
+}
+
+export function takeRoomBootstrap(roomCode: string): RoomSyncState | null {
+  if (typeof window === "undefined") return null;
+  const key = `${BOOTSTRAP_PREFIX}${roomCode}`;
+  const raw = sessionStorage.getItem(key);
+  if (!raw) return null;
+  sessionStorage.removeItem(key);
+  try {
+    return JSON.parse(raw) as RoomSyncState;
+  } catch {
+    return null;
+  }
+}
+
+export async function refreshRoomState(
+  roomCode: string,
+  options: { preferCache?: boolean } = {}
+): Promise<RoomSyncState> {
+  const preferCache = options.preferCache ?? false;
   const [room, players] = await Promise.all([
-    fetchRoomFromServer(roomCode),
-    fetchPlayersFromServer(roomCode),
+    fetchRoom(roomCode, preferCache),
+    fetchPlayers(roomCode, preferCache),
   ]);
   return { room, players };
 }
@@ -180,7 +203,7 @@ async function fetchPlayerDoc(roomCode: string, playerId: string): Promise<Playe
 async function fetchRoomWithRetry(roomCode: string, attempts = 3): Promise<Room | null> {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     try {
-      const room = await fetchRoomFromServer(roomCode);
+      const room = await fetchRoom(roomCode);
       if (room) return room;
     } catch {
       const room = await fetchRoomSnapshot(roomCode);
@@ -258,13 +281,6 @@ export function buildJoinLink(roomCode: string): string {
   return `${window.location.origin}/?room=${roomCode.toUpperCase()}`;
 }
 
-async function fetchPlayers(roomCode: string): Promise<Player[]> {
-  const snapshot = await getDocs(
-    query(collection(getDb(), ROOMS, roomCode, PLAYERS), orderBy("joinedAt", "asc"))
-  );
-  return snapshot.docs.map((d) => d.data() as Player);
-}
-
 export async function fetchRoomSnapshot(roomCode: string): Promise<Room | null> {
   const snapshot = await getDoc(doc(getDb(), ROOMS, roomCode));
   if (!snapshot.exists()) return null;
@@ -285,7 +301,7 @@ export function attachRoomSync(
   const mobile = isMobileBrowser();
   const pollMs = mobile ? MOBILE_POLL_MS : DESKTOP_POLL_MS;
 
-  const pullLatest = async () => {
+  const pullLatest = async (preferCache = false) => {
     if (stopped) return;
     if (pulling) {
       pullQueued = true;
@@ -294,7 +310,7 @@ export function attachRoomSync(
 
     pulling = true;
     try {
-      const state = await refreshRoomState(roomCode);
+      const state = await refreshRoomState(roomCode, { preferCache });
       if (!stopped) {
         handlers.onSync(state);
       }
@@ -304,7 +320,7 @@ export function attachRoomSync(
       pulling = false;
       if (pullQueued) {
         pullQueued = false;
-        void pullLatest();
+        void pullLatest(true);
       }
     }
   };
@@ -316,33 +332,35 @@ export function attachRoomSync(
     }
     pollTimer = window.setTimeout(() => {
       pollTimer = null;
-      void pullLatest().finally(schedulePoll);
+      void pullLatest(false).finally(schedulePoll);
     }, pollMs);
   };
 
-  const kick = () => {
-    void pullLatest();
+  const kick = (preferCache = true) => {
+    void pullLatest(preferCache);
   };
 
-  void pullLatest();
+  const kickFromServer = () => kick(false);
+
+  void pullLatest(false);
   schedulePoll();
 
   const unsubs = [
-    subscribeToRoom(roomCode, () => kick(), handlers.onError),
-    subscribeToPlayers(roomCode, () => kick(), handlers.onError),
+    subscribeToRoom(roomCode, () => kick(true), handlers.onError),
+    subscribeToPlayers(roomCode, () => kick(true), handlers.onError),
   ];
 
   const onVisible = () => {
-    if (document.visibilityState === "visible") kick();
+    if (document.visibilityState === "visible") kickFromServer();
   };
 
   const onPageShow = (event: PageTransitionEvent) => {
-    if (event.persisted) kick();
+    if (event.persisted) kickFromServer();
   };
 
   document.addEventListener("visibilitychange", onVisible);
-  window.addEventListener("online", kick);
-  window.addEventListener("focus", kick);
+  window.addEventListener("online", kickFromServer);
+  window.addEventListener("focus", kickFromServer);
   window.addEventListener("pageshow", onPageShow);
 
   return () => {
@@ -350,8 +368,8 @@ export function attachRoomSync(
     unsubs.forEach((unsub) => unsub());
     if (pollTimer !== null) window.clearTimeout(pollTimer);
     document.removeEventListener("visibilitychange", onVisible);
-    window.removeEventListener("online", kick);
-    window.removeEventListener("focus", kick);
+    window.removeEventListener("online", kickFromServer);
+    window.removeEventListener("focus", kickFromServer);
     window.removeEventListener("pageshow", onPageShow);
   };
 }
