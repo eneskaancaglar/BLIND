@@ -59,6 +59,13 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const skipPhaseTransitionRef = useRef(false);
   const prevRoundRef = useRef(0);
   const gameEndFinalizedRef = useRef(false);
+  const gameEndRevealKeyRef = useRef<string | null>(null);
+  const gameEndOverlayTimerRef = useRef<number | null>(null);
+  const gameEndFinalizeTimerRef = useRef<number | null>(null);
+  const playersRef = useRef(players);
+  const roomRef = useRef(room);
+  playersRef.current = players;
+  roomRef.current = room;
   const transitionTimerRef = useRef<number | null>(null);
   const revealSoundRef = useRef<string | null>(null);
   const transitionSoundRef = useRef(false);
@@ -199,14 +206,26 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   }, [gameEndDisplay, playerId, play]);
 
   useEffect(() => {
-    if (room?.status !== "finished") return;
-    setGameEndDisplay((current) =>
-      current ?? {
-        winnerId: room.winnerId,
-        winnerName: room.winnerName,
-        isDraw: !room.winnerName,
+    return () => {
+      if (gameEndOverlayTimerRef.current !== null) {
+        window.clearTimeout(gameEndOverlayTimerRef.current);
       }
-    );
+      if (gameEndFinalizeTimerRef.current !== null) {
+        window.clearTimeout(gameEndFinalizeTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (room?.status === "finished") {
+      setGameEndDisplay((current) =>
+        current ?? {
+          winnerId: room.winnerId,
+          winnerName: room.winnerName,
+          isDraw: !room.winnerName,
+        }
+      );
+    }
   }, [room?.status, room?.winnerId, room?.winnerName]);
 
   const isGameEndingReveal = useMemo(() => {
@@ -217,51 +236,59 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const me = players.find((player) => player.id === playerId);
 
   useEffect(() => {
-    if (!isGameEndingReveal || !room?.revealResult || gameEndDisplay) {
+    if (!isGameEndingReveal || !room?.revealResult) {
       return;
     }
 
-    let cancelled = false;
-
-    const overlayTimer = window.setTimeout(() => {
-      if (cancelled) return;
-      const winner = predictWinnerAfterReveal(players, room.revealResult!, room);
-      setGameEndDisplay({
-        winnerId: winner?.id ?? null,
-        winnerName: winner?.name ?? null,
-        isDraw: !winner,
-      });
-    }, GAME_END_CARD_VIEW_MS);
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(overlayTimer);
-    };
-  }, [isGameEndingReveal, room, players, gameEndDisplay]);
-
-  useEffect(() => {
-    if (
-      !isGameEndingReveal ||
-      !room?.revealResult ||
-      gameEndFinalizedRef.current ||
-      me?.isEliminated
-    ) {
+    const revealKey = `${room.roundNumber}-${room.revealResult.loserId}`;
+    if (gameEndRevealKeyRef.current === revealKey) {
       return;
     }
 
-    const timer = window.setTimeout(() => {
-      gameEndFinalizedRef.current = true;
-      void continueAfterReveal(roomCode, playerId)
-        .then(() => applyFreshState(false))
-        .catch((err) => {
-          gameEndFinalizedRef.current = false;
-          setError(err instanceof Error ? err.message : translate("errContinue"));
-        });
+    gameEndRevealKeyRef.current = revealKey;
+    gameEndFinalizedRef.current = false;
+
+    if (gameEndOverlayTimerRef.current !== null) {
+      window.clearTimeout(gameEndOverlayTimerRef.current);
+    }
+    if (gameEndFinalizeTimerRef.current !== null) {
+      window.clearTimeout(gameEndFinalizeTimerRef.current);
+    }
+
+    gameEndOverlayTimerRef.current = window.setTimeout(() => {
+      gameEndOverlayTimerRef.current = null;
+      const currentRoom = roomRef.current;
+      const currentPlayers = playersRef.current;
+      const revealResult = currentRoom?.revealResult;
+      if (!currentRoom || !revealResult) return;
+
+      const winner = predictWinnerAfterReveal(currentPlayers, revealResult, currentRoom);
+      setGameEndDisplay((current) =>
+        current ?? {
+          winnerId: winner?.id ?? null,
+          winnerName: winner?.name ?? null,
+          isDraw: !winner,
+        }
+      );
     }, GAME_END_CARD_VIEW_MS);
 
-    return () => window.clearTimeout(timer);
+    if (!me?.isEliminated) {
+      gameEndFinalizeTimerRef.current = window.setTimeout(() => {
+        gameEndFinalizeTimerRef.current = null;
+        if (gameEndFinalizedRef.current) return;
+        gameEndFinalizedRef.current = true;
+        void continueAfterReveal(roomCode, playerId)
+          .then(() => applyFreshState(false))
+          .catch((err) => {
+            gameEndFinalizedRef.current = false;
+            setError(err instanceof Error ? err.message : translate("errContinue"));
+          });
+      }, GAME_END_CARD_VIEW_MS);
+    }
   }, [
     isGameEndingReveal,
+    room?.roundNumber,
+    room?.revealResult?.loserId,
     room?.revealResult,
     roomCode,
     playerId,

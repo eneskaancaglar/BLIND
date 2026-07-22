@@ -146,17 +146,6 @@ export function GameTable({
       );
     }
 
-    if (room.status === "finished" && room.phase === "round_end" && room.winnerName) {
-      return (
-        <>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/90">
-            {translate("gameOver")}
-          </p>
-          <p className="mt-1 text-lg font-bold text-white">{room.winnerName}</p>
-        </>
-      );
-    }
-
     if (isBidding) {
       return (
         <>
