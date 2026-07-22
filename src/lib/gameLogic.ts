@@ -81,7 +81,7 @@ function openerIsNextAfterBidder(turnOrder: string[], bidderId: string, openerId
   if (turnOrder.length === 0) return false;
   const bidderIndex = turnOrder.indexOf(bidderId);
   if (bidderIndex === -1) return false;
-  const nextIndex = (bidderIndex + 1) % turnOrder.length;
+  const nextIndex = (bidderIndex - 1 + turnOrder.length) % turnOrder.length;
   return turnOrder[nextIndex] === openerId;
 }
 
@@ -465,7 +465,7 @@ export function resolveRoundAfterReveal(
 
 export function nextTurnIndex(turnOrder: string[], currentIndex: number): number {
   if (turnOrder.length === 0) return 0;
-  return (currentIndex + 1) % turnOrder.length;
+  return (currentIndex - 1 + turnOrder.length) % turnOrder.length;
 }
 
 export function buildTurnOrder(players: Player[], startWithId?: string | null): string[] {
@@ -473,12 +473,17 @@ export function buildTurnOrder(players: Player[], startWithId?: string | null): 
     .sort((a, b) => a.joinedAt - b.joinedAt)
     .map((player) => player.id);
 
-  if (!startWithId || activeIds.length === 0) return activeIds;
+  const order =
+    activeIds.length > 2
+      ? [activeIds[0], ...activeIds.slice(1).reverse()]
+      : activeIds;
 
-  const startIndex = activeIds.indexOf(startWithId);
-  if (startIndex === -1) return activeIds;
+  if (!startWithId || order.length === 0) return order;
 
-  return [...activeIds.slice(startIndex), ...activeIds.slice(0, startIndex)];
+  const startIndex = order.indexOf(startWithId);
+  if (startIndex === -1) return order;
+
+  return [...order.slice(startIndex), ...order.slice(0, startIndex)];
 }
 
 export function cardMatchesBid(card: Card, bidRank: Rank): boolean {

@@ -296,9 +296,8 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         gameEndFinalizedRef.current = true;
         void continueAfterReveal(roomCode, playerId)
           .then(() => applyFreshState(false))
-          .catch((err) => {
+          .catch(() => {
             gameEndFinalizedRef.current = false;
-            setError(err instanceof Error ? err.message : translate("errContinue"));
           });
       }, GAME_END_CARD_VIEW_MS);
     }

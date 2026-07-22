@@ -70,7 +70,7 @@ export function TurnFlowIndicator({
   if (activeOrder.length < 2) return null;
 
   const segments = activeOrder.map((fromId, index) => {
-    const toId = activeOrder[(index + 1) % activeOrder.length];
+    const toId = activeOrder[(index - 1 + activeOrder.length) % activeOrder.length];
     const from = playerArrowAnchor(fromId, playerId, opponents);
     const to = playerArrowAnchor(toId, playerId, opponents);
     const isActive = Boolean(activeTurnId && fromId === activeTurnId);

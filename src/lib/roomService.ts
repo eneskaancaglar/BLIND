@@ -644,14 +644,14 @@ export async function continueAfterReveal(roomCode: string, actorId: string): Pr
 
   await runTransaction(getDb(), async (transaction) => {
     const roomSnap = await transaction.get(roomRef);
-    if (!roomSnap.exists()) throw new Error("Oda bulunamadı.");
+    if (!roomSnap.exists()) return;
 
     const room = roomSnap.data() as Room;
     if (room.phase !== "revealed" || !room.revealResult) {
-      throw new Error("Bu el zaten tamamlandı.");
+      return;
     }
     if (room.resolvedRoundNumber === room.roundNumber) {
-      throw new Error("Bu el zaten tamamlandı.");
+      return;
     }
 
     const actorSnap = await transaction.get(doc(getDb(), ROOMS, roomCode, PLAYERS, actorId));
