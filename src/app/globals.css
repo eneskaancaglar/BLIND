@@ -263,7 +263,7 @@ button:disabled {
 }
 
 .turn-flow-idle {
-  opacity: 0.85;
+  opacity: 0.92;
 }
 
 .turn-flow-active {
@@ -581,27 +581,27 @@ button:disabled {
 
 .opponent-slot-top {
   left: 50%;
-  top: 20%;
+  top: 14%;
 }
 
 .opponent-slot-top-left {
-  left: 22%;
-  top: 22%;
+  left: 24%;
+  top: 18%;
 }
 
 .opponent-slot-top-right {
-  left: 78%;
-  top: 22%;
+  left: 76%;
+  top: 18%;
 }
 
 .opponent-slot-left {
-  left: 12%;
-  top: 48%;
+  left: 8%;
+  top: 50%;
 }
 
 .opponent-slot-right {
-  left: 88%;
-  top: 48%;
+  left: 92%;
+  top: 50%;
 }
 
 .game-dock {
@@ -618,10 +618,19 @@ button:disabled {
 }
 
 .game-layout.game-bidding .game-table-area {
-  flex: 0 0 42dvh;
-  height: 42dvh;
-  min-height: 42dvh;
-  max-height: 42dvh;
+  flex: 0 0 46dvh;
+  height: 46dvh;
+  min-height: 46dvh;
+  max-height: 46dvh;
+}
+
+@media (max-width: 639px) {
+  .game-layout.game-bidding .game-table-area {
+    flex: 0 0 50dvh;
+    height: 50dvh;
+    min-height: 50dvh;
+    max-height: 50dvh;
+  }
 }
 
 .game-dock-area {
@@ -641,12 +650,12 @@ button:disabled {
 .game-bidding .opponents-table {
   min-height: 0;
   flex: 1 1 auto;
-  padding: 0.65rem 0.25rem 0.15rem;
+  padding: 0.5rem 0.2rem 0.1rem;
 }
 
 .game-bidding .opponent-slot {
-  width: min(34vw, 9rem);
-  max-width: min(34vw, 9rem);
+  width: min(28vw, 8.25rem);
+  max-width: min(28vw, 8.25rem);
 }
 
 .winner-overlay-panel {
@@ -658,27 +667,28 @@ button:disabled {
 }
 
 .game-bidding .opponent-slot-top {
-  top: 16%;
+  left: 50%;
+  top: 12%;
 }
 
 .game-bidding .opponent-slot-top-left {
-  left: 20%;
-  top: 20%;
+  left: 22%;
+  top: 16%;
 }
 
 .game-bidding .opponent-slot-top-right {
-  left: 80%;
-  top: 20%;
+  left: 78%;
+  top: 16%;
 }
 
 .game-bidding .opponent-slot-left {
-  left: 10%;
-  top: 44%;
+  left: 6%;
+  top: 52%;
 }
 
 .game-bidding .opponent-slot-right {
-  left: 90%;
-  top: 44%;
+  left: 94%;
+  top: 52%;
 }
 
 .bid-strip {

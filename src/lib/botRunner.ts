@@ -10,10 +10,8 @@ import {
   refreshRoomState,
 } from "./roomService";
 
-const BOT_THINK_MIN_MS = 2800;
-const BOT_THINK_MAX_MS = 5200;
-const BOT_CONTINUE_MS = 4200;
-const BOT_POST_BID_PAUSE_MS = 1200;
+const BOT_TURN_DELAY_MS = 3000;
+const BOT_CONTINUE_MS = 3000;
 
 let botActing = false;
 let lastBotTurnKey = "";
@@ -24,7 +22,7 @@ function delay(ms: number): Promise<void> {
 }
 
 function randomThinkDelay(): number {
-  return BOT_THINK_MIN_MS + Math.floor(Math.random() * (BOT_THINK_MAX_MS - BOT_THINK_MIN_MS));
+  return BOT_TURN_DELAY_MS;
 }
 
 function currentTurnPlayer(room: Room, players: Player[]): Player | undefined {
@@ -86,8 +84,6 @@ async function runBotBiddingTurn(params: {
     }
 
     const decision = decideBotMove(freshTurn, freshRoom, fresh.players);
-
-    await delay(BOT_POST_BID_PAUSE_MS);
 
     if (decision.action === "bid") {
       await placeBid(
