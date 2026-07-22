@@ -20,19 +20,24 @@ export function clearBotContinueSuppression(): void {
   suppressedContinueRound = null;
 }
 
+/** Clear bidding locks when phase/round changes so the next bot turn is not blocked. */
+export function resetBotRunnerForPhaseChange(): void {
+  lastBotTurnKey = "";
+  lastCompletedBidKey = "";
+  biddingBusy = false;
+}
+
 const BOT_TURN_DELAY_MS = 3000;
 const BOT_CONTINUE_MS = 3000;
 
-let botActing = false;
+let biddingBusy = false;
+let continueBusy = false;
 let lastBotTurnKey = "";
+let lastCompletedBidKey = "";
 let lastBotContinueKey = "";
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
-}
-
-function randomThinkDelay(): number {
-  return BOT_TURN_DELAY_MS;
 }
 
 function currentTurnPlayer(room: Room, players: Player[]): Player | undefined {
@@ -72,13 +77,14 @@ async function runBotBiddingTurn(params: {
   if (!turnPlayer?.isBot || turnPlayer.isEliminated) return;
 
   const turnKey = `${room.syncVersion ?? 0}-${room.roundNumber}-${room.currentTurnIndex}-bid`;
-  if (lastBotTurnKey === turnKey || botActing) return;
+  if (biddingBusy || lastCompletedBidKey === turnKey) return;
+  if (lastBotTurnKey === turnKey) return;
 
-  botActing = true;
+  biddingBusy = true;
   lastBotTurnKey = turnKey;
 
   try {
-    await delay(randomThinkDelay());
+    await delay(BOT_TURN_DELAY_MS);
 
     const fresh = await refreshRoomState(roomCode, { preferCache: false });
     const freshRoom = fresh.room;
@@ -89,6 +95,12 @@ async function runBotBiddingTurn(params: {
 
     const freshTurn = currentTurnPlayer(freshRoom, fresh.players);
     if (!freshTurn?.isBot || freshTurn.isEliminated) {
+      lastBotTurnKey = "";
+      return;
+    }
+
+    const freshTurnKey = `${freshRoom.syncVersion ?? 0}-${freshRoom.roundNumber}-${freshRoom.currentTurnIndex}-bid`;
+    if (freshTurnKey !== turnKey) {
       lastBotTurnKey = "";
       return;
     }
@@ -106,10 +118,13 @@ async function runBotBiddingTurn(params: {
     } else {
       await openChallenge(roomCode, freshTurn.id, freshTurn.name);
     }
+
+    lastCompletedBidKey = turnKey;
   } catch {
     lastBotTurnKey = "";
+    lastCompletedBidKey = "";
   } finally {
-    botActing = false;
+    biddingBusy = false;
   }
 }
 
@@ -127,9 +142,9 @@ async function runBotContinueRound(params: {
   if (suppressedContinueRound === room.roundNumber) return;
 
   const continueKey = `${room.roundNumber}-continue-${room.syncVersion ?? 0}`;
-  if (lastBotContinueKey === continueKey || botActing) return;
+  if (continueBusy || lastBotContinueKey === continueKey) return;
 
-  botActing = true;
+  continueBusy = true;
   lastBotContinueKey = continueKey;
 
   try {
@@ -154,6 +169,6 @@ async function runBotContinueRound(params: {
   } catch {
     lastBotContinueKey = "";
   } finally {
-    botActing = false;
+    continueBusy = false;
   }
 }

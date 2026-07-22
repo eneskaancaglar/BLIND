@@ -11,7 +11,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useSound } from "@/context/SoundContext";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { getActivePlayers, getBlindMode, getHandDisplayCount, predictGameEndsAfterReveal, predictWinnerAfterReveal } from "@/lib/gameLogic";
-import { clearBotContinueSuppression, runBotOrchestrator, suppressBotContinueForRound } from "@/lib/botRunner";
+import { clearBotContinueSuppression, resetBotRunnerForPhaseChange, runBotOrchestrator, suppressBotContinueForRound } from "@/lib/botRunner";
+import { roomHasBots } from "@/lib/botAI";
 import { Player, Room } from "@/lib/types";
 import {
   attachRoomSync,
@@ -136,6 +137,31 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     room?.resolvedRoundNumber,
   ]);
 
+  useEffect(() => {
+    resetBotRunnerForPhaseChange();
+  }, [room?.phase, room?.roundNumber]);
+
+  useEffect(() => {
+    if (!room || !playerId || room.hostId !== playerId || !roomHasBots(players)) return;
+    if (room.status !== "playing") return;
+
+    const timer = window.setInterval(() => {
+      const currentRoom = roomRef.current;
+      const currentPlayers = playersRef.current;
+      if (!currentRoom || currentRoom.hostId !== playerId || currentRoom.status !== "playing") {
+        return;
+      }
+      void runBotOrchestrator({
+        roomCode,
+        room: currentRoom,
+        players: currentPlayers,
+        driverPlayerId: playerId,
+      });
+    }, 2000);
+
+    return () => window.clearInterval(timer);
+  }, [roomCode, playerId, room?.status, room?.hostId, players.length]);
+
   const applyFreshState = useCallback(async (preferCache = true) => {
     const fresh = await refreshRoomState(roomCode, { preferCache });
     setSyncState({
@@ -144,6 +170,11 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
     });
     return fresh;
   }, [roomCode]);
+
+  useEffect(() => {
+    if (!room?.revealResult || room.hostId !== playerId) return;
+    void applyFreshState(false);
+  }, [room?.revealResult?.loserId, room?.roundNumber, room?.hostId, playerId, applyFreshState]);
 
   useEffect(() => {
     if (room?.phase === "bidding") {
@@ -331,7 +362,11 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const turnPlayerId = room?.turnOrder[room.currentTurnIndex] ?? undefined;
   const isMyTurn = turnPlayerId === playerId;
   const isHost = room?.hostId === playerId;
-  const showAllCards = room?.phase === "revealed" && !gameEndDisplay;
+  const showAllCards = Boolean(
+    room?.revealResult &&
+      room.status !== "finished" &&
+      !gameEndDisplay
+  );
   const deckCount = room?.deckCount ?? 1;
   const highlightRank = showAllCards && room?.currentBid ? room.currentBid.rank : null;
   const showBidDock = Boolean(
