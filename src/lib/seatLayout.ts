@@ -21,7 +21,7 @@ export type SeatCardLayout = {
 };
 
 const SEAT_CARD_LAYOUTS: Record<SeatPosition, SeatCardLayout> = {
-  bottom: { containerRotate: 0, pivotX: "18%", pivotY: "100%", maxSpreadDeg: 52, tiltX: 14 },
+  bottom: { containerRotate: 0, pivotX: "50%", pivotY: "100%", maxSpreadDeg: 56, tiltX: 12 },
   top: { containerRotate: 180, pivotX: "82%", pivotY: "100%", maxSpreadDeg: 42, tiltX: 14 },
   left: { containerRotate: 90, pivotX: "94%", pivotY: "90%", maxSpreadDeg: 38, tiltX: 40 },
   right: { containerRotate: -90, pivotX: "6%", pivotY: "90%", maxSpreadDeg: 38, tiltX: 40 },

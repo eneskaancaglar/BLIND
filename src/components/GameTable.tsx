@@ -6,7 +6,6 @@ import { getOpponentSeatPosition } from "@/lib/seatLayout";
 import { getHandDisplayCount, getBlindMode } from "@/lib/gameLogic";
 import { ChatMessage, Player, Rank, RevealResult, Room } from "@/lib/types";
 import { BidHistoryButton, BidHistoryPanel } from "./BidHistoryPanel";
-import { BotBadge } from "./BotBadge";
 import { CardFan } from "./CardFan";
 import { CurrentBidDisplay } from "./CurrentBidDisplay";
 import { EmojiChat } from "./EmojiChat";
@@ -15,6 +14,7 @@ import { RevealPotSummary } from "./RevealPotSummary";
 import { SoundToggle } from "./SoundToggle";
 import { TurnFlowIndicator } from "./TurnFlowIndicator";
 import { GameRoomAmbience } from "./GameRoomAmbience";
+import { PlayerAvatar } from "./PlayerAvatar";
 
 type GameTableProps = {
   room: Room;
@@ -63,9 +63,10 @@ export function GameTable({
   const handCount = me ? getHandDisplayCount(me, blindMode) : 0;
   const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
   const isBiddingPhase = room.phase === "bidding";
-  const handSize = isBiddingPhase ? "xs" : compactDock ? "sm" : "md";
+  const handSize = isBiddingPhase ? "sm" : compactDock ? "sm" : "md";
   const handSpread = "tight";
   const handMaxVisible = isBiddingPhase ? 5 : undefined;
+  const isMyTurn = turnPlayerId === playerId;
 
   const turnName =
     opponents.find((p) => p.id === turnPlayerId)?.name ??
@@ -302,17 +303,12 @@ export function GameTable({
       <div
         className={`game-dock game-dock-area ${isBiddingPhase ? "game-dock-compact" : compactDock ? "game-dock-compact" : ""} min-h-0 shrink-0 px-1 pb-1.5 pt-1 sm:pb-3`}
       >
-        {!isBiddingPhase && !compactDock ? (
-          <div className="mb-1 flex items-center justify-between px-1.5">
-            <p className="flex min-w-0 items-center gap-1 truncate text-[11px] font-semibold text-slate-100">
-              {me?.isBot ? <BotBadge size="sm" /> : null}
-              <span className="truncate">{me?.name ?? translate("you")}</span>
-            </p>
-            {me && !me.isEliminated && handCount > 0 ? (
-              <span className="count-badge shrink-0">{handCount}</span>
-            ) : null}
-          </div>
-        ) : null}
+        <div className="mb-0.5 flex flex-col items-center px-1.5">
+          {isMyTurn ? (
+            <p className="seat-name-tag seat-name-tag-self mb-0.5">{me?.name ?? translate("you")}</p>
+          ) : null}
+          <PlayerAvatar player={me} size={isBiddingPhase ? "sm" : "md"} isTurn={isMyTurn} />
+        </div>
 
         <div className="game-dock-hand flex w-full shrink-0 justify-center">{renderHand()}</div>
 

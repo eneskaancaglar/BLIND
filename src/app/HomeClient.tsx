@@ -10,6 +10,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useSound } from "@/context/SoundContext";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "@/lib/i18n";
+import { AvatarPicker } from "@/components/AvatarPicker";
+import { getStoredAvatarId, setStoredAvatarId } from "@/lib/avatars";
 import { resumeAudio } from "@/lib/sounds";
 import {
   createRoom,
@@ -172,12 +174,14 @@ export default function HomeClient() {
   const [showRules, setShowRules] = useState(false);
   const [showCreateSetup, setShowCreateSetup] = useState(false);
   const [roomSettings, setRoomSettings] = useState<RoomSettings>(DEFAULT_ROOM_SETTINGS);
+  const [avatarId, setAvatarId] = useState("fox");
   const [restoring, setRestoring] = useState(true);
 
   useEffect(() => {
     setMounted(true);
     setFirebaseReady(isFirebaseConfigured());
     setName(getStoredPlayerName());
+    setAvatarId(getStoredAvatarId());
     if (inviteCode) {
       setRoomCode(inviteCode);
     }
@@ -308,6 +312,16 @@ export default function HomeClient() {
             className="home-input w-full rounded-xl px-4 py-3.5 text-lg text-white outline-none"
           />
         </label>
+
+        <div className="home-panel-light rounded-2xl p-4">
+          <AvatarPicker
+            value={avatarId}
+            onChange={(id) => {
+              setAvatarId(id);
+              setStoredAvatarId(id);
+            }}
+          />
+        </div>
 
         {inviteCode ? (
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center text-sm text-slate-200">

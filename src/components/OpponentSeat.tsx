@@ -1,12 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { getHandDisplayCount } from "@/lib/gameLogic";
 import { BlindMode, ChatMessage, Player, Rank } from "@/lib/types";
 import type { SeatPosition } from "@/lib/seatLayout";
-import { BotBadge } from "./BotBadge";
 import { getRecentReaction } from "./EmojiChat";
 import { CardFan } from "./CardFan";
+import { PlayerAvatar } from "./PlayerAvatar";
 
 type OpponentSeatProps = {
   player: Player;
@@ -21,17 +22,6 @@ type OpponentSeatProps = {
   messages?: ChatMessage[];
 };
 
-function OpponentNameRow({ name, count }: { name: string; count: number; isBot?: boolean }) {
-  return (
-    <div className="opponent-name-row flex max-w-full items-center justify-center gap-0.5">
-      <p className="opponent-name min-w-0">{name}</p>
-      <span className="count-dot shrink-0" aria-label={`${count} cards`}>
-        {count}
-      </span>
-    </div>
-  );
-}
-
 export function OpponentSeat({
   player,
   seatPosition,
@@ -45,6 +35,13 @@ export function OpponentSeat({
   messages = [],
 }: OpponentSeatProps) {
   const { translate } = useLanguage();
+  const [namePinned, setNamePinned] = useState(false);
+  const showName = isTurn || namePinned;
+
+  useEffect(() => {
+    if (!isTurn) setNamePinned(false);
+  }, [isTurn]);
+
   const displayCount =
     showCards && player.cards.length > 0
       ? player.cards.length
@@ -56,7 +53,7 @@ export function OpponentSeat({
   const reaction = getRecentReaction(messages, player.id);
 
   const fanProps = {
-    size: "xs" as const,
+    size: "sm" as const,
     spread: "tight" as const,
     tilt: "table" as const,
     fanStyle: "classic" as const,
@@ -68,8 +65,9 @@ export function OpponentSeat({
 
   if (player.isEliminated) {
     return (
-      <div className="flex flex-col items-center opacity-40">
-        <p className="opponent-name">{player.name}</p>
+      <div className="opponent-seat opponent-seat-eliminated flex flex-col items-center opacity-40">
+        <PlayerAvatar player={player} size="sm" />
+        {showName ? <p className="seat-name-tag mt-1">{player.name}</p> : null}
         <span className="mt-0.5 text-[9px] text-slate-400">{translate("eliminated")}</span>
       </div>
     );
@@ -77,38 +75,44 @@ export function OpponentSeat({
 
   return (
     <div
-      className={`opponent-seat relative flex w-full min-w-0 flex-col items-center px-1 py-0.5 ${
+      className={`opponent-seat relative flex w-full min-w-0 flex-col items-center ${
         compact ? "opponent-seat-compact" : ""
       } ${isTurn ? "opponent-seat-turn" : ""}`}
     >
       {reaction ? (
-        <span key={reaction.id} className="seat-emoji-bubble absolute -top-2.5 z-20 text-base" aria-hidden>
+        <span key={reaction.id} className="seat-emoji-bubble absolute -top-2 z-30 text-base" aria-hidden>
           {reaction.emoji}
         </span>
       ) : null}
 
-      <div className="seat-avatar-wrap">
-        <div className={`seat-avatar ${isTurn ? "seat-avatar-turn" : ""}`} aria-hidden>
-          {player.name.charAt(0).toUpperCase()}
-        </div>
-        {player.isBot ? (
-          <span className="seat-avatar-bot">
-            <BotBadge size="sm" />
+      {showName ? (
+        <p className="seat-name-tag" title={player.name}>
+          {player.name}
+        </p>
+      ) : null}
+
+      <div className="seat-avatar-row relative z-20 shrink-0">
+        <PlayerAvatar
+          player={player}
+          size={compact ? "sm" : "md"}
+          isTurn={isTurn}
+          onClick={() => setNamePinned((prev) => !prev)}
+          title={player.name}
+        />
+        {displayCount > 0 ? (
+          <span className="seat-card-count" aria-label={`${displayCount} cards`}>
+            {displayCount}
           </span>
         ) : null}
       </div>
 
-      <div className="seat-info-pill mt-0.5 w-full max-w-full">
-        <OpponentNameRow name={player.name} count={displayCount} isBot={player.isBot} />
-      </div>
-
       {player.isBlind && !showCards ? (
-        <span className="mt-0.5 text-center text-[7px] font-medium uppercase tracking-wide text-emerald-200/50">
+        <span className="relative z-20 mt-0.5 text-center text-[7px] font-medium uppercase tracking-wide text-emerald-200/55">
           {translate("blind")}
         </span>
       ) : null}
 
-      <div className="opponent-seat-cards mt-0.5 w-full">
+      <div className="opponent-seat-cards relative z-10 mt-0.5 w-full">
         {showCards && player.cards.length > 0 ? (
           <CardFan cards={player.cards} highlightRank={highlightRank} {...fanProps} />
         ) : showCards && player.isBlind ? (

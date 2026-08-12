@@ -65,6 +65,7 @@ export type BotDifficulty = "normal" | "expert";
 export type Player = {
   id: string;
   name: string;
+  avatarId?: string;
   isHost: boolean;
   isBot?: boolean;
   botDifficulty?: BotDifficulty;

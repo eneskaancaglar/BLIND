@@ -379,22 +379,11 @@ button:disabled {
   transform: rotateX(9deg) translateZ(0);
   transform-style: preserve-3d;
   backface-visibility: hidden;
-  animation: table-hover-3d 5.5s ease-in-out infinite;
   box-shadow:
     0 0 0 2px rgba(120, 210, 255, 0.38),
     0 0 28px rgba(56, 189, 248, 0.22),
     0 18px 48px rgba(0, 0, 0, 0.62),
     0 42px 72px rgba(0, 0, 0, 0.35);
-}
-
-@keyframes table-hover-3d {
-  0%,
-  100% {
-    transform: rotateX(9deg) translateY(0) translateZ(0);
-  }
-  50% {
-    transform: rotateX(8deg) translateY(-3px) translateZ(6px);
-  }
 }
 
 .table-felt {
@@ -586,54 +575,109 @@ button:disabled {
   padding-inline: 0.15rem;
 }
 
-.seat-avatar-wrap {
+.seat-avatar-row {
   position: relative;
   display: flex;
   justify-content: center;
 }
 
-.seat-avatar {
-  display: flex;
-  width: 1.85rem;
-  height: 1.85rem;
-  flex-shrink: 0;
+.seat-name-tag {
+  position: absolute;
+  top: -1.05rem;
+  left: 50%;
+  z-index: 25;
+  max-width: 6.5rem;
+  transform: translateX(-50%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 0.35rem;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 0.12rem 0.4rem;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fef3c7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.seat-name-tag-self {
+  position: static;
+  transform: none;
+  max-width: 100%;
+  margin-bottom: 0.2rem;
+}
+
+.seat-card-count {
+  position: absolute;
+  right: -0.2rem;
+  bottom: -0.1rem;
+  z-index: 5;
+  display: inline-flex;
+  min-width: 1rem;
+  height: 1rem;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  border: 2px solid rgba(255, 210, 140, 0.45);
-  background: linear-gradient(145deg, #4a5568 0%, #2d3748 45%, #1a202c 100%);
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #fef3c7;
+  border: 1px solid rgba(255, 230, 180, 0.35);
+  background: rgba(10, 8, 6, 0.92);
+  padding: 0 0.2rem;
+  font-size: 8px;
+  font-weight: 800;
+  color: #fde68a;
+  line-height: 1;
+}
+
+.player-avatar-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.player-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 210, 140, 0.42);
   box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.45),
-    0 0 10px rgba(255, 200, 120, 0.12),
-    inset 0 2px 4px rgba(255, 255, 255, 0.15),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.25);
-  transform: translateZ(8px);
+    0 5px 14px rgba(0, 0, 0, 0.48),
+    0 0 12px rgba(255, 200, 120, 0.1),
+    inset 0 2px 5px rgba(255, 255, 255, 0.18),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.28);
+  transform: translateZ(10px);
 }
 
-.seat-avatar-turn {
-  border-color: rgba(250, 204, 21, 0.75);
+.player-avatar-turn {
+  border-color: rgba(250, 204, 21, 0.85);
   box-shadow:
-    0 0 0 2px rgba(250, 204, 21, 0.25),
-    0 0 14px rgba(250, 204, 21, 0.35),
-    0 2px 8px rgba(0, 0, 0, 0.35);
+    0 0 0 2px rgba(250, 204, 21, 0.28),
+    0 0 18px rgba(250, 204, 21, 0.38),
+    0 5px 14px rgba(0, 0, 0, 0.45);
 }
 
-.seat-avatar-bot {
-  position: absolute;
-  right: -0.35rem;
-  bottom: -0.15rem;
-  transform: scale(0.72);
-  transform-origin: bottom right;
+.player-avatar-emoji {
+  font-size: 1.05em;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
 }
 
-.seat-info-pill {
-  border-radius: 0.35rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.48);
-  padding: 0.1rem 0.25rem;
+.avatar-pick-btn {
+  display: flex;
+  aspect-ratio: 1;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.avatar-pick-btn-active {
+  border-color: rgba(255, 230, 160, 0.75);
+  box-shadow: 0 0 0 2px rgba(255, 200, 100, 0.25), 0 4px 14px rgba(0, 0, 0, 0.35);
+  transform: scale(1.06);
 }
 
 .card-fan-classic-wrap {
@@ -653,18 +697,18 @@ button:disabled {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  min-height: 3rem;
-  perspective: 520px;
+  min-height: 3.75rem;
+  perspective: 620px;
+  margin-top: -0.15rem;
+}
+
+.opponent-seat {
+  position: relative;
+  padding-top: 0.65rem;
 }
 
 .opponent-seat-turn {
   filter: none;
-}
-
-.opponent-seat-turn .seat-info-pill {
-  border-color: rgba(250, 204, 21, 0.35);
-  background: rgba(0, 0, 0, 0.58);
-  box-shadow: 0 0 12px rgba(250, 204, 21, 0.12);
 }
 
 .turn-flow-svg {
@@ -984,8 +1028,8 @@ button:disabled {
   position: absolute;
   transform: translate(-50%, -50%);
   z-index: 4;
-  width: min(28vw, 6.75rem);
-  max-width: min(28vw, 6.75rem);
+  width: min(30vw, 7.5rem);
+  max-width: min(30vw, 7.5rem);
 }
 
 .opponent-slot-top {
@@ -1087,8 +1131,8 @@ button:disabled {
 }
 
 .game-bidding .opponent-slot {
-  width: min(24vw, 6.25rem);
-  max-width: min(24vw, 6.25rem);
+  width: min(26vw, 7rem);
+  max-width: min(26vw, 7rem);
 }
 
 .winner-overlay-panel {
@@ -1127,18 +1171,6 @@ button:disabled {
   top: 48%;
 }
 
-.seat-avatar {
-  width: 1.65rem;
-  height: 1.65rem;
-  font-size: 0.62rem;
-}
-
-.game-bidding .seat-avatar {
-  width: 1.5rem;
-  height: 1.5rem;
-  font-size: 0.58rem;
-}
-
 .bid-strip {
   display: flex;
   align-items: center;
@@ -1156,7 +1188,6 @@ button:disabled {
   .room-ceiling-beam-secondary,
   .room-table-shadow,
   .room-dust-particle,
-  .game-table-area,
   .table-spotlight,
   .table-edge-shine,
   .center-pot {
@@ -1185,11 +1216,11 @@ button:disabled {
 }
 
 .game-bidding .opponent-seat-cards .card-fan-classic-wrap {
-  min-height: 2.85rem !important;
+  min-height: 3.35rem !important;
 }
 
 .game-bidding .opponent-seat-cards .card-fan-classic {
-  transform: scale(0.88);
+  transform: scale(0.82);
   transform-origin: bottom center;
 }
 
@@ -1204,15 +1235,15 @@ button:disabled {
 }
 
 .game-bidding .opponent-seat-cards {
-  min-height: 2.65rem;
-  max-height: 3.1rem;
+  min-height: 3.15rem;
+  max-height: 3.65rem;
   overflow: hidden;
 }
 
 .game-bidding .game-dock-hand {
-  max-height: 4.25rem;
+  max-height: 5rem;
   overflow: hidden;
-  perspective: 760px;
+  perspective: 820px;
 }
 
 .game-bidding .game-dock-hand .card-fan-row {
@@ -1281,12 +1312,6 @@ button:disabled {
   .game-table-area {
     width: min(88vw, 24rem);
     border-radius: 50% / 19%;
-  }
-
-  .seat-avatar {
-    width: 2.1rem;
-    height: 2.1rem;
-    font-size: 0.75rem;
   }
 
   .opponent-slot {

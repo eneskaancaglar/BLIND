@@ -6,19 +6,19 @@ import { Card as CardType, Rank } from "@/lib/types";
 import { PlayingCard, CardSize } from "./PlayingCard";
 
 const CARD_WIDTH_PX: Record<CardSize, number> = {
-  xs: 40,
-  sm: 53.6,
-  md: 69.6,
-  lg: 92,
-  xl: 96,
+  xs: 48,
+  sm: 58,
+  md: 72,
+  lg: 94,
+  xl: 100,
 };
 
 const CARD_HEIGHT_PX: Record<CardSize, number> = {
-  xs: 56,
-  sm: 76,
-  md: 96,
-  lg: 128,
-  xl: 124,
+  xs: 66,
+  sm: 80,
+  md: 100,
+  lg: 130,
+  xl: 132,
 };
 
 function computeFitOverlap(
@@ -38,15 +38,21 @@ function computeFitOverlap(
 
 function computeClassicSpread(count: number, maxSpread: number): number {
   if (count <= 1) return 0;
-  if (count === 2) return Math.min(maxSpread * 0.55, 22);
-  return Math.min(maxSpread, 5 + count * (maxSpread / Math.max(count, 6)));
+  if (count === 2) return Math.min(maxSpread * 0.5, 26);
+  return Math.min(maxSpread, 8 + count * (maxSpread / Math.max(count, 5)));
 }
 
-function computeClassicAngles(count: number, spreadDeg: number): number[] {
+/** Asymmetric hand fan — heavy overlap, pinch at bottom center (photo reference). */
+function computePhotoFanAngles(count: number, spreadDeg: number): number[] {
   if (count <= 0) return [];
   if (count === 1) return [0];
-  const half = spreadDeg / 2;
-  return Array.from({ length: count }, (_, i) => -half + (i / (count - 1)) * spreadDeg);
+  const start = -spreadDeg * 0.72;
+  const end = spreadDeg * 0.28;
+  return Array.from({ length: count }, (_, i) => start + (i / (count - 1)) * (end - start));
+}
+
+function computePhotoFanNudge(index: number, cardWidth: number): number {
+  return index * cardWidth * 0.1;
 }
 
 function estimateClassicWidth(cardWidth: number, cardHeight: number, spreadDeg: number): number {
@@ -102,7 +108,7 @@ export function CardFan({
   const useClassic =
     fanStyle === "classic" ||
     (fanStyle !== "overlap" &&
-      ((tilt === "table" && displayTotal >= 2) || (tilt === "hand" && displayTotal >= 3)));
+      ((tilt === "table" && displayTotal >= 2) || (tilt === "hand" && displayTotal >= 2)));
 
   const seatLayout = seatPosition ? getSeatCardLayout(seatPosition) : null;
 
@@ -153,7 +159,7 @@ export function CardFan({
   }, [seatLayout, tilt, displayTotal, fitAll, fanWidth, cardWidth, cardHeight]);
 
   const classicAngles = useMemo(
-    () => computeClassicAngles(displayTotal, classicSpread),
+    () => computePhotoFanAngles(displayTotal, classicSpread),
     [displayTotal, classicSpread]
   );
 
@@ -194,11 +200,11 @@ export function CardFan({
           ? "5.5rem"
           : size === "xs"
             ? useClassic
-              ? "3.75rem"
-              : "3.25rem"
-            : "6rem";
+              ? "4.35rem"
+              : "3.75rem"
+            : "6.25rem";
 
-  const pivotX = seatLayout?.pivotX ?? "18%";
+  const pivotX = seatLayout?.pivotX ?? "50%";
   const pivotY = seatLayout?.pivotY ?? "100%";
   const tiltX = seatLayout?.tiltX ?? (tilt === "table" ? 40 : 14);
 
@@ -232,7 +238,7 @@ export function CardFan({
                 key={isBack ? `wrap-${i}` : `wrap-${(item as { index: number }).index}`}
                 className={`absolute bottom-0 left-0 ${animateDeal ? "card-deal-in" : ""}`}
                 style={{
-                  transform: `rotate(${classicAngles[i] ?? 0}deg)`,
+                  transform: `translateX(${computePhotoFanNudge(i, cardWidth)}px) rotate(${classicAngles[i] ?? 0}deg)`,
                   transformOrigin: `${pivotX} ${pivotY}`,
                   zIndex: i,
                   animationDelay: animateDeal ? `${i * 0.07}s` : undefined,

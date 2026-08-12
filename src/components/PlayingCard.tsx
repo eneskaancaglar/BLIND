@@ -5,11 +5,11 @@ import { Card, Rank, SUIT_SYMBOLS } from "@/lib/types";
 export type CardSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 const SIZE_CLASSES: Record<CardSize, string> = {
-  xs: "h-14 w-10 text-[10px]",
-  sm: "h-[4.75rem] w-[3.35rem] text-xs",
-  md: "h-24 w-[4.35rem] text-sm",
+  xs: "h-[4.1rem] w-[3rem] text-[11px]",
+  sm: "h-[5rem] w-[3.65rem] text-xs",
+  md: "h-[6.25rem] w-[4.5rem] text-sm",
   lg: "h-32 w-[5.75rem] text-base",
-  xl: "h-[7.75rem] w-[5.5rem] text-lg sm:h-[10.25rem] sm:w-[6rem] sm:text-xl",
+  xl: "h-[8rem] w-[6.25rem] text-lg sm:h-[10.5rem] sm:w-[6.5rem] sm:text-xl",
 };
 
 type PlayingCardProps = {

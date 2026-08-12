@@ -36,6 +36,7 @@ import {
 } from "./gameLogic";
 import { Bid, ChatMessage, Player, Rank, Room } from "./types";
 import { getBotDisplayName } from "./botAI";
+import { getBotAvatarId, getStoredAvatarId } from "./avatars";
 import { DEFAULT_ROOM_SETTINGS, type RoomSettings } from "./i18n";
 
 const ROOMS = "rooms";
@@ -440,6 +441,7 @@ export async function createRoom(
   const player: Player = {
     id: playerId,
     name: playerName.trim(),
+    avatarId: getStoredAvatarId(),
     isHost: true,
     cards: [],
     cardCount: 1,
@@ -457,6 +459,7 @@ export async function createRoom(
       const botPlayer: Player = {
         id: botId,
         name: getBotDisplayName(index),
+        avatarId: getBotAvatarId(index),
         isHost: false,
         isBot: true,
         botDifficulty: settings.botDifficulty ?? "normal",
@@ -495,7 +498,7 @@ export async function joinRoom(roomCode: string, playerName: string): Promise<vo
   const playerSnap = await getDoc(playerRef);
 
   if (playerSnap.exists()) {
-    await updateDoc(playerRef, { name: playerName.trim() });
+    await updateDoc(playerRef, { name: playerName.trim(), avatarId: getStoredAvatarId() });
     localStorage.setItem("blind_room_code", normalizedCode);
     return;
   }
@@ -507,6 +510,7 @@ export async function joinRoom(roomCode: string, playerName: string): Promise<vo
   const player: Player = {
     id: playerId,
     name: playerName.trim(),
+    avatarId: getStoredAvatarId(),
     isHost: false,
     cards: [],
     cardCount: 1,
