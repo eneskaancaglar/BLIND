@@ -164,7 +164,8 @@ function toFriendlyError(error: unknown, fallback: string): string {
   if (error instanceof Error) {
     const msg = error.message.toLowerCase();
     if (msg.includes("permission") || msg.includes("insufficient")) {
-      return "Firebase izin hatası: Firestore test modu süresi dolmuş olabilir. Firebase Console > Firestore > Rules bölümünden kuralları güncelleyin.";
+      const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "blind-a5b04";
+      return `Firebase izin hatası: Firestore kuralları güncellenmemiş (proje: ${projectId}). Vercel deploy kuralları değiştirmez — Firebase Console > Firestore > Rules adresinden firestore.rules içeriğini yapıştırıp Publish deyin.`;
     }
     if (msg.includes("network") || msg.includes("offline")) {
       return "İnternet bağlantısı yok gibi görünüyor.";
