@@ -52,6 +52,15 @@ export function getDb(): Firestore {
   return dbInstance;
 }
 
+export function getFirebaseProjectId(): string {
+  return process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "";
+}
+
+export function getFirestoreRulesUrl(): string {
+  const projectId = getFirebaseProjectId() || "blind-a5b04";
+  return `https://console.firebase.google.com/project/${projectId}/firestore/databases/-default-/rules`;
+}
+
 export function isFirebaseConfigured(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&

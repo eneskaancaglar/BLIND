@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "deploy:rules": "npx firebase-tools deploy --only firestore:rules --project blind-a5b04",
+    "login:firebase": "npx firebase-tools login"
   },
   "dependencies": {
     "firebase": "^11.6.0",

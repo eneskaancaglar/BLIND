@@ -165,7 +165,8 @@ function toFriendlyError(error: unknown, fallback: string): string {
     const msg = error.message.toLowerCase();
     if (msg.includes("permission") || msg.includes("insufficient")) {
       const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "blind-a5b04";
-      return `Firebase izin hatası: Firestore kuralları güncellenmemiş (proje: ${projectId}). Vercel deploy kuralları değiştirmez — Firebase Console > Firestore > Rules adresinden firestore.rules içeriğini yapıştırıp Publish deyin.`;
+      const rulesUrl = `https://console.firebase.google.com/project/${projectId}/firestore/databases/-default-/rules`;
+      return `Firebase izin hatası (proje: ${projectId}). Firestore kuralları hâlâ kapalı — Vercel deploy bunu düzeltmez. Şu adresten firestore.rules dosyasını yapıştırıp Publish edin: ${rulesUrl}`;
     }
     if (msg.includes("network") || msg.includes("offline")) {
       return "İnternet bağlantısı yok gibi görünüyor.";

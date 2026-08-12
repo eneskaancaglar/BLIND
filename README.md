@@ -60,11 +60,18 @@ service cloud.firestore {
 
 Alternatif — Firebase CLI ile (proje klasöründe):
 
-```bash
+```powershell
 npm install -g firebase-tools
 firebase login
 firebase use blind-a5b04
 firebase deploy --only firestore:rules
+```
+
+Windows PowerShell `npx` hatası verirse `.cmd` sonekini kullanın:
+
+```powershell
+npx.cmd firebase-tools login
+npm.cmd run deploy:rules
 ```
 
 > Prototip için açık kurallar kullanıldı. Canlıya almadan önce güvenlik kurallarını sıkılaştırın.

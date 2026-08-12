@@ -19,10 +19,9 @@ type OpponentSeatProps = {
   messages?: ChatMessage[];
 };
 
-function OpponentNameRow({ name, count, isBot }: { name: string; count: number; isBot?: boolean }) {
+function OpponentNameRow({ name, count }: { name: string; count: number; isBot?: boolean }) {
   return (
-    <div className="opponent-name-row flex max-w-full items-center justify-center gap-1">
-      {isBot ? <BotBadge /> : null}
+    <div className="opponent-name-row flex max-w-full items-center justify-center gap-0.5">
       <p className="opponent-name min-w-0">{name}</p>
       <span className="count-dot shrink-0" aria-label={`${count} cards`}>
         {count}
@@ -73,20 +72,35 @@ export function OpponentSeat({
 
   return (
     <div
-      className={`opponent-seat relative flex w-full min-w-0 flex-col items-stretch px-1.5 py-1 ${
-        compact ? "py-0.5" : ""
+      className={`opponent-seat relative flex w-full min-w-0 flex-col items-center px-1 py-0.5 ${
+        compact ? "opponent-seat-compact" : ""
       } ${isTurn ? "opponent-seat-turn" : ""}`}
     >
       {reaction ? (
-        <span key={reaction.id} className="seat-emoji-bubble absolute -top-3 z-20 text-base" aria-hidden>
+        <span key={reaction.id} className="seat-emoji-bubble absolute -top-2.5 z-20 text-base" aria-hidden>
           {reaction.emoji}
         </span>
       ) : null}
 
-      <OpponentNameRow name={player.name} count={displayCount} isBot={player.isBot} />
+      <div className="seat-avatar-wrap">
+        <div className={`seat-avatar ${isTurn ? "seat-avatar-turn" : ""}`} aria-hidden>
+          {player.name.charAt(0).toUpperCase()}
+        </div>
+        {player.isBot ? (
+          <span className="seat-avatar-bot">
+            <BotBadge size="sm" />
+          </span>
+        ) : null}
+      </div>
+
+      <div className="seat-info-pill mt-0.5 w-full max-w-full">
+        <OpponentNameRow name={player.name} count={displayCount} isBot={player.isBot} />
+      </div>
 
       {player.isBlind && !showCards ? (
-        <span className="mt-0.5 text-center text-[8px] text-slate-400">{translate("blind")}</span>
+        <span className="mt-0.5 text-center text-[7px] font-medium uppercase tracking-wide text-emerald-200/50">
+          {translate("blind")}
+        </span>
       ) : null}
 
       <div className="opponent-seat-cards mt-0.5 w-full">

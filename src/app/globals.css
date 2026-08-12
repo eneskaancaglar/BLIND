@@ -161,42 +161,94 @@ button:disabled {
   line-height: 1;
 }
 
-/* Oyun masası */
+/* Oyun masası — poker salonu */
 .game-shell {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(ellipse at 20% 0%, rgba(217, 70, 239, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(34, 211, 238, 0.08) 0%, transparent 50%),
-    linear-gradient(165deg, #1e1035 0%, #0f172a 45%, #134e4a 100%);
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    radial-gradient(ellipse 90% 55% at 50% 18%, rgba(56, 189, 248, 0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 40% at 50% 85%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+    linear-gradient(180deg, #141b24 0%, #0c1018 42%, #080b10 100%);
+  background-size: 28px 28px, 28px 28px, 100% 100%, 100% 100%, 100% 100%;
+}
+
+.game-table-stage {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+  padding: 0.25rem 0.5rem 0.15rem;
+  overflow: hidden;
+}
+
+.game-table-area {
+  position: relative;
+  width: min(92vw, 21.5rem);
+  height: 100%;
+  max-height: 100%;
+  border-radius: 50% / 21%;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow:
+    0 0 0 2px rgba(56, 189, 248, 0.42),
+    0 0 22px rgba(56, 189, 248, 0.18),
+    0 10px 36px rgba(0, 0, 0, 0.55);
 }
 
 .table-felt {
   background:
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    radial-gradient(ellipse at 50% 25%, rgba(255, 255, 255, 0.05) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 100%, rgba(0, 0, 0, 0.35) 0%, transparent 50%),
-    linear-gradient(165deg, #111827 0%, #0f172a 40%, #0b1220 100%);
-  background-size: 22px 22px, 22px 22px, 100% 100%, 100% 100%, 100% 100%;
+    radial-gradient(ellipse 72% 58% at 50% 38%, rgba(255, 255, 255, 0.09) 0%, transparent 52%),
+    radial-gradient(ellipse 95% 80% at 50% 55%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.38) 100%),
+    linear-gradient(168deg, #1f8f66 0%, #157a56 28%, #0f6044 58%, #0a4a35 100%);
+}
+
+.table-rail {
+  box-shadow:
+    inset 0 0 0 3px #2a1810,
+    inset 0 0 0 5px #4a3020,
+    inset 0 0 0 7px #1a120c,
+    inset 0 0 0 9px rgba(0, 0, 0, 0.35);
+  border-radius: inherit;
 }
 
 .table-rim {
+  border-radius: inherit;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-    inset 0 0 0 4px rgba(0, 0, 0, 0.25),
-    inset 0 0 80px rgba(0, 0, 0, 0.35);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 0 48px rgba(0, 0, 0, 0.22);
 }
 
 .table-glow {
-  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.2);
+  border-radius: inherit;
+  box-shadow: inset 0 -30px 60px rgba(0, 0, 0, 0.18);
+}
+
+.table-brand {
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.14);
+  white-space: nowrap;
 }
 
 .center-pot {
-  background: rgba(15, 23, 42, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 4px 18px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(6px);
 }
 
 .player-hand {
@@ -219,6 +271,12 @@ button:disabled {
   color: rgba(226, 232, 240, 0.55);
 }
 
+.game-header {
+  border-bottom: 1px solid rgba(56, 189, 248, 0.08);
+  background: rgba(8, 12, 18, 0.72);
+  backdrop-filter: blur(8px);
+}
+
 .game-chip {
   border-radius: 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -233,12 +291,63 @@ button:disabled {
 }
 
 .opponent-seat {
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(15, 23, 42, 0.42);
-  backdrop-filter: blur(6px);
+  border-radius: 0.65rem;
+  border: none;
+  background: transparent;
+  backdrop-filter: none;
   overflow: hidden;
   max-width: 100%;
+}
+
+.opponent-seat-compact {
+  padding-inline: 0.15rem;
+}
+
+.seat-avatar-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.seat-avatar {
+  display: flex;
+  width: 1.85rem;
+  height: 1.85rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 2px solid rgba(56, 189, 248, 0.45);
+  background: linear-gradient(145deg, #334155 0%, #1e293b 55%, #0f172a 100%);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.seat-avatar-turn {
+  border-color: rgba(250, 204, 21, 0.75);
+  box-shadow:
+    0 0 0 2px rgba(250, 204, 21, 0.25),
+    0 0 14px rgba(250, 204, 21, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.seat-avatar-bot {
+  position: absolute;
+  right: -0.35rem;
+  bottom: -0.15rem;
+  transform: scale(0.72);
+  transform-origin: bottom right;
+}
+
+.seat-info-pill {
+  border-radius: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.48);
+  padding: 0.1rem 0.25rem;
 }
 
 .opponent-seat-cards {
@@ -252,10 +361,13 @@ button:disabled {
 }
 
 .opponent-seat-turn {
-  filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.35));
-  border-color: rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 24px rgba(255, 255, 255, 0.06);
+  filter: none;
+}
+
+.opponent-seat-turn .seat-info-pill {
+  border-color: rgba(250, 204, 21, 0.35);
+  background: rgba(0, 0, 0, 0.58);
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.12);
 }
 
 .turn-flow-svg {
@@ -566,61 +678,67 @@ button:disabled {
 .opponents-table {
   position: relative;
   width: 100%;
-  min-height: 8rem;
-  overflow: visible;
-  padding: 1rem 0.35rem 0.35rem;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0.85rem 0.25rem 0.15rem;
 }
 
 .opponent-slot {
   position: absolute;
   transform: translate(-50%, -50%);
   z-index: 4;
-  width: min(32vw, 8rem);
-  max-width: min(32vw, 8rem);
+  width: min(28vw, 6.75rem);
+  max-width: min(28vw, 6.75rem);
 }
 
 .opponent-slot-top {
   left: 50%;
-  top: 18%;
+  top: 14%;
   transform: translateX(-50%);
 }
 
 .opponent-slot-top-left {
   left: 24%;
-  top: 20%;
+  top: 17%;
   transform: translateX(-50%);
 }
 
 .opponent-slot-top-right {
   left: 76%;
-  top: 20%;
+  top: 17%;
   transform: translateX(-50%);
 }
 
 .opponent-slot-left {
-  left: 18%;
-  top: 50%;
+  left: 13%;
+  top: 46%;
 }
 
 .opponent-slot-right {
-  left: 82%;
-  top: 50%;
+  left: 87%;
+  top: 46%;
 }
 
 .game-dock {
   flex-shrink: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(15, 23, 42, 0.88);
+  border-top: 1px solid rgba(56, 189, 248, 0.12);
+  background: linear-gradient(180deg, rgba(12, 16, 22, 0.96) 0%, rgba(6, 9, 14, 0.98) 100%);
   backdrop-filter: blur(10px);
 }
 
-.game-layout .game-table-area {
+.game-layout .game-table-stage {
   flex: 0 1 42dvh;
   max-height: 42dvh;
   min-height: 28dvh;
 }
 
-.game-layout.game-bidding .game-table-area {
+.game-layout .game-table-area {
+  flex: unset;
+  max-height: unset;
+  min-height: unset;
+}
+
+.game-layout.game-bidding .game-table-stage {
   flex: 0 0 46dvh;
   height: 46dvh;
   min-height: 46dvh;
@@ -630,7 +748,7 @@ button:disabled {
 }
 
 @media (max-width: 639px) {
-  .game-layout.game-bidding .game-table-area {
+  .game-layout.game-bidding .game-table-stage {
     flex: 0 0 50dvh;
     height: 50dvh;
     min-height: 50dvh;
@@ -657,12 +775,12 @@ button:disabled {
   min-height: 0;
   flex: 1 1 0;
   overflow: hidden;
-  padding: 1.35rem 0.45rem 0.2rem;
+  padding: 0.75rem 0.2rem 0.1rem;
 }
 
 .game-bidding .opponent-slot {
-  width: min(26vw, 7.25rem);
-  max-width: min(26vw, 7.25rem);
+  width: min(24vw, 6.25rem);
+  max-width: min(24vw, 6.25rem);
 }
 
 .winner-overlay-panel {
@@ -675,30 +793,42 @@ button:disabled {
 
 .game-bidding .opponent-slot-top {
   left: 50%;
-  top: 0.15rem;
+  top: 0.05rem;
   transform: translateX(-50%);
 }
 
 .game-bidding .opponent-slot-top-left {
   left: 24%;
-  top: 0.35rem;
+  top: 0.2rem;
   transform: translateX(-50%);
 }
 
 .game-bidding .opponent-slot-top-right {
   left: 76%;
-  top: 0.35rem;
+  top: 0.2rem;
   transform: translateX(-50%);
 }
 
 .game-bidding .opponent-slot-left {
-  left: 22%;
-  top: 54%;
+  left: 13%;
+  top: 48%;
 }
 
 .game-bidding .opponent-slot-right {
-  left: 78%;
-  top: 54%;
+  left: 87%;
+  top: 48%;
+}
+
+.seat-avatar {
+  width: 1.65rem;
+  height: 1.65rem;
+  font-size: 0.62rem;
+}
+
+.game-bidding .seat-avatar {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.58rem;
 }
 
 .bid-strip {
@@ -706,9 +836,9 @@ button:disabled {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(15, 23, 42, 0.94);
+  border-top: 1px solid rgba(56, 189, 248, 0.1);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.1);
+  background: rgba(8, 12, 18, 0.94);
   padding: 0.3rem 0.5rem;
 }
 
@@ -816,9 +946,20 @@ button:disabled {
 }
 
 @media (min-width: 640px) {
+  .game-table-area {
+    width: min(88vw, 24rem);
+    border-radius: 50% / 19%;
+  }
+
+  .seat-avatar {
+    width: 2.1rem;
+    height: 2.1rem;
+    font-size: 0.75rem;
+  }
+
   .opponent-slot {
-    width: min(38vw, 12rem);
-    max-width: min(38vw, 12rem);
+    width: min(32vw, 7.5rem);
+    max-width: min(32vw, 7.5rem);
   }
 
   .opponent-name {

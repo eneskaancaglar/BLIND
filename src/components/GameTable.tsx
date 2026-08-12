@@ -216,13 +216,16 @@ export function GameTable({
         </div>
       </header>
 
-      <div className="game-table-area relative mx-1 mb-0.5 flex shrink-0 flex-col overflow-hidden rounded-xl border border-white/10 sm:mx-2 sm:mb-1 sm:rounded-2xl">
-        <div className="table-felt absolute inset-0" />
-        <div className="table-rim pointer-events-none absolute inset-0 rounded-xl sm:rounded-2xl" />
-        <div className="table-glow pointer-events-none absolute inset-0" />
+      <div className="game-table-stage">
+        <div className="game-table-area">
+          <div className="table-felt absolute inset-0" />
+          <div className="table-rail pointer-events-none absolute inset-0" />
+          <div className="table-rim pointer-events-none absolute inset-0" />
+          <div className="table-glow pointer-events-none absolute inset-0" />
+          <p className="table-brand pointer-events-none absolute z-[2]">BLIND</p>
 
-        <div className="relative z-10 flex h-full min-h-0 flex-col p-1 sm:p-2">
-          <div className="opponents-table relative min-h-0 flex-1 overflow-hidden">
+          <div className="relative z-10 flex h-full min-h-0 flex-col p-1 sm:p-2">
+            <div className="opponents-table relative min-h-0 flex-1 overflow-hidden">
             {room.status === "playing" ? (
               <TurnFlowIndicator
                 turnOrder={room.turnOrder}
@@ -256,6 +259,7 @@ export function GameTable({
             <div className="center-pot center-pot-compact rounded-lg px-2 py-1.5 text-center sm:rounded-2xl sm:px-4 sm:py-3">
               {renderCenterPot()}
             </div>
+          </div>
           </div>
         </div>
       </div>
