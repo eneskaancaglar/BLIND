@@ -11,6 +11,28 @@ const SEAT_ANCHORS: Record<SeatPosition, { x: number; y: number }> = {
   bottom: { x: 50, y: 82 },
 };
 
+export type SeatCardLayout = {
+  /** Z rotation of the whole fan toward table center */
+  containerRotate: number;
+  pivotX: string;
+  pivotY: string;
+  maxSpreadDeg: number;
+  tiltX: number;
+};
+
+const SEAT_CARD_LAYOUTS: Record<SeatPosition, SeatCardLayout> = {
+  bottom: { containerRotate: 0, pivotX: "18%", pivotY: "100%", maxSpreadDeg: 52, tiltX: 14 },
+  top: { containerRotate: 180, pivotX: "82%", pivotY: "100%", maxSpreadDeg: 42, tiltX: 14 },
+  left: { containerRotate: 90, pivotX: "94%", pivotY: "90%", maxSpreadDeg: 38, tiltX: 40 },
+  right: { containerRotate: -90, pivotX: "6%", pivotY: "90%", maxSpreadDeg: 38, tiltX: 40 },
+  "top-left": { containerRotate: 128, pivotX: "88%", pivotY: "94%", maxSpreadDeg: 36, tiltX: 32 },
+  "top-right": { containerRotate: -128, pivotX: "12%", pivotY: "94%", maxSpreadDeg: 36, tiltX: 32 },
+};
+
+export function getSeatCardLayout(seat: SeatPosition): SeatCardLayout {
+  return SEAT_CARD_LAYOUTS[seat];
+}
+
 export function getSeatAnchorPercent(seat: SeatPosition): { x: number; y: number } {
   return SEAT_ANCHORS[seat];
 }

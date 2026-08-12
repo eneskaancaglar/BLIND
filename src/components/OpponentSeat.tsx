@@ -3,12 +3,14 @@
 import { useLanguage } from "@/context/LanguageContext";
 import { getHandDisplayCount } from "@/lib/gameLogic";
 import { BlindMode, ChatMessage, Player, Rank } from "@/lib/types";
+import type { SeatPosition } from "@/lib/seatLayout";
 import { BotBadge } from "./BotBadge";
 import { getRecentReaction } from "./EmojiChat";
 import { CardFan } from "./CardFan";
 
 type OpponentSeatProps = {
   player: Player;
+  seatPosition: SeatPosition;
   isTurn: boolean;
   showCards: boolean;
   blindMode?: BlindMode;
@@ -32,6 +34,7 @@ function OpponentNameRow({ name, count }: { name: string; count: number; isBot?:
 
 export function OpponentSeat({
   player,
+  seatPosition,
   isTurn,
   showCards,
   blindMode = "ORIGINAL_BLIND",
@@ -56,6 +59,8 @@ export function OpponentSeat({
     size: "xs" as const,
     spread: "tight" as const,
     tilt: "table" as const,
+    fanStyle: "classic" as const,
+    seatPosition,
     fitAll: true,
     animateDeal,
     dealKey,

@@ -92,6 +92,8 @@ export function GameTable({
           size={handSize}
           spread={handSpread}
           tilt="hand"
+          fanStyle="classic"
+          seatPosition="bottom"
           maxVisible={handMaxVisible}
           animateDeal={animateDeal}
           dealKey={dealKey}
@@ -107,6 +109,8 @@ export function GameTable({
           size={handSize}
           spread={handSpread}
           tilt="hand"
+          fanStyle="classic"
+          seatPosition="bottom"
           maxVisible={handMaxVisible}
           animateDeal={animateDeal}
           dealKey={dealKey}
@@ -120,6 +124,8 @@ export function GameTable({
           size={handSize}
           spread={handSpread}
           tilt="hand"
+          fanStyle="classic"
+          seatPosition="bottom"
           maxVisible={handMaxVisible}
           highlightRank={highlightRank ?? undefined}
         />
@@ -140,6 +146,8 @@ export function GameTable({
         size={handSize}
         spread={handSpread}
         tilt="hand"
+        fanStyle="classic"
+        seatPosition="bottom"
         maxVisible={handMaxVisible}
         animateDeal={animateDeal}
         dealKey={dealKey}
@@ -248,6 +256,7 @@ export function GameTable({
                 <div key={player.id} className={`opponent-slot opponent-slot-${seat}`}>
                   <OpponentSeat
                     player={player}
+                    seatPosition={seat}
                     isTurn={player.id === turnPlayerId}
                     showCards={showAllCards}
                     blindMode={blindMode}

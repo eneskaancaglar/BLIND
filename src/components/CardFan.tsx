@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { getSeatCardLayout, type SeatPosition } from "@/lib/seatLayout";
 import { Card as CardType, Rank } from "@/lib/types";
 import { PlayingCard, CardSize } from "./PlayingCard";
 
@@ -10,6 +11,14 @@ const CARD_WIDTH_PX: Record<CardSize, number> = {
   md: 69.6,
   lg: 92,
   xl: 96,
+};
+
+const CARD_HEIGHT_PX: Record<CardSize, number> = {
+  xs: 56,
+  sm: 76,
+  md: 96,
+  lg: 128,
+  xl: 124,
 };
 
 function computeFitOverlap(
@@ -27,6 +36,24 @@ function computeFitOverlap(
   return Math.min(maxAllowedOverlap, Math.max(baseOverlap, requiredOverlap));
 }
 
+function computeClassicSpread(count: number, maxSpread: number): number {
+  if (count <= 1) return 0;
+  if (count === 2) return Math.min(maxSpread * 0.55, 22);
+  return Math.min(maxSpread, 5 + count * (maxSpread / Math.max(count, 6)));
+}
+
+function computeClassicAngles(count: number, spreadDeg: number): number[] {
+  if (count <= 0) return [];
+  if (count === 1) return [0];
+  const half = spreadDeg / 2;
+  return Array.from({ length: count }, (_, i) => -half + (i / (count - 1)) * spreadDeg);
+}
+
+function estimateClassicWidth(cardWidth: number, cardHeight: number, spreadDeg: number): number {
+  const rad = (spreadDeg / 2) * (Math.PI / 180);
+  return cardWidth + Math.sin(rad) * cardHeight * 0.85 + 8;
+}
+
 type CardFanProps = {
   cards?: CardType[];
   count?: number;
@@ -36,6 +63,8 @@ type CardFanProps = {
   spread?: "tight" | "normal" | "wide";
   faceDown?: boolean;
   tilt?: "hand" | "table" | "flat";
+  fanStyle?: "classic" | "overlap";
+  seatPosition?: SeatPosition;
   showCountBadge?: boolean;
   maxVisible?: number;
   fitAll?: boolean;
@@ -54,6 +83,8 @@ export function CardFan({
   spread = "normal",
   faceDown = false,
   tilt = "hand",
+  fanStyle,
+  seatPosition,
   showCountBadge = false,
   maxVisible,
   fitAll = false,
@@ -67,6 +98,13 @@ export function CardFan({
   const [visibleCount, setVisibleCount] = useState(animateDeal ? 0 : displayTotal);
   const fanWrapRef = useRef<HTMLDivElement>(null);
   const [fanWidth, setFanWidth] = useState<number | null>(null);
+
+  const useClassic =
+    fanStyle === "classic" ||
+    (fanStyle !== "overlap" &&
+      ((tilt === "table" && displayTotal >= 2) || (tilt === "hand" && displayTotal >= 3)));
+
+  const seatLayout = seatPosition ? getSeatCardLayout(seatPosition) : null;
 
   useLayoutEffect(() => {
     if (!fitAll) {
@@ -83,7 +121,7 @@ export function CardFan({
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [fitAll, displayTotal]);
+  }, [fitAll, displayTotal, useClassic]);
 
   useEffect(() => {
     if (!animateDeal) {
@@ -99,20 +137,41 @@ export function CardFan({
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, [animateDeal, dealKey, displayTotal]);
 
+  const cardWidth = CARD_WIDTH_PX[size];
+  const cardHeight = CARD_HEIGHT_PX[size];
+
+  const classicSpread = useMemo(() => {
+    const baseMax = seatLayout?.maxSpreadDeg ?? (tilt === "table" ? 36 : 52);
+    let spreadDeg = computeClassicSpread(displayTotal, baseMax);
+    if (fitAll && fanWidth) {
+      const estimated = estimateClassicWidth(cardWidth, cardHeight, spreadDeg);
+      if (estimated > fanWidth) {
+        spreadDeg *= (fanWidth / estimated) * 0.94;
+      }
+    }
+    return spreadDeg;
+  }, [seatLayout, tilt, displayTotal, fitAll, fanWidth, cardWidth, cardHeight]);
+
+  const classicAngles = useMemo(
+    () => computeClassicAngles(displayTotal, classicSpread),
+    [displayTotal, classicSpread]
+  );
+
   if (total === 0) return null;
 
   const baseOverlap =
     spread === "tight" ? (size === "xs" ? 14 : 20) : spread === "wide" ? 32 : size === "xl" ? 36 : 24;
   const overlap =
     fitAll && fanWidth
-      ? computeFitOverlap(CARD_WIDTH_PX[size], displayTotal, fanWidth, baseOverlap)
+      ? computeFitOverlap(cardWidth, displayTotal, fanWidth, baseOverlap)
       : baseOverlap;
-  const cardWidth = CARD_WIDTH_PX[size];
   const step = displayTotal <= 1 ? cardWidth : cardWidth - overlap;
   const estimatedWidth =
     displayTotal <= 1 ? cardWidth : cardWidth + (displayTotal - 1) * step;
   const fitScale =
-    fitAll && fanWidth && estimatedWidth > fanWidth ? (fanWidth / estimatedWidth) * 0.96 : 1;
+    !useClassic && fitAll && fanWidth && estimatedWidth > fanWidth
+      ? (fanWidth / estimatedWidth) * 0.96
+      : 1;
   const fanLift =
     fitAll && displayTotal > 3 ? 0 : spread === "wide" ? 3 : spread === "tight" ? 1 : 2;
   const maxRotate =
@@ -134,8 +193,16 @@ export function CardFan({
         : size === "sm"
           ? "5.5rem"
           : size === "xs"
-            ? "3.25rem"
+            ? useClassic
+              ? "3.75rem"
+              : "3.25rem"
             : "6rem";
+
+  const pivotX = seatLayout?.pivotX ?? "18%";
+  const pivotY = seatLayout?.pivotY ?? "100%";
+  const tiltX = seatLayout?.tiltX ?? (tilt === "table" ? 40 : 14);
+
+  const classicContainerWidth = estimateClassicWidth(cardWidth, cardHeight, classicSpread);
 
   return (
     <div ref={fanWrapRef} className={`relative flex w-full flex-col items-center ${className}`}>
@@ -143,46 +210,91 @@ export function CardFan({
         <div className="count-badge mb-1">{total}</div>
       ) : null}
 
-      <div
-        className="card-fan-row flex items-end justify-center"
-        style={{
-          minHeight: rowMinHeight,
-          transform: fitScale < 1 ? `scale(${fitScale})` : undefined,
-          transformOrigin: "bottom center",
-        }}
-      >
-        {items.slice(0, renderCount).map((item, i) => {
-          const center = (displayTotal - 1) / 2;
-          const rotate = (i - center) * (maxRotate / Math.max(center, 1));
-          const lift = Math.abs(i - center) * fanLift;
-
-          return (
-            <div
-              key={isBack ? `wrap-${i}` : `wrap-${(item as { index: number }).index}`}
-              className={animateDeal ? "card-deal-in" : ""}
-              style={{
-                marginLeft: i === 0 ? 0 : -overlap,
-                zIndex: i,
-                animationDelay: animateDeal ? `${i * 0.07}s` : undefined,
-              }}
-            >
-              <PlayingCard
-                key={isBack ? `back-${i}` : `card-${(item as { index: number }).index}`}
-                card={isBack ? undefined : (item as { card: CardType }).card}
-                hidden={hidden && !blind && !faceDown}
-                blind={blind}
-                faceDown={faceDown}
-                size={size}
-                tilt={tilt}
-                highlightRank={highlightRank}
+      {useClassic ? (
+        <div
+          className="card-fan-classic-wrap flex items-end justify-center"
+          style={{
+            minHeight: rowMinHeight,
+            transform: seatLayout ? `rotate(${seatLayout.containerRotate}deg)` : undefined,
+            transformOrigin: "center center",
+          }}
+        >
+          <div
+            className="card-fan-classic relative"
+            style={{
+              width: `${classicContainerWidth}px`,
+              height: rowMinHeight,
+              maxWidth: fitAll && fanWidth ? `${fanWidth}px` : undefined,
+            }}
+          >
+            {items.slice(0, renderCount).map((item, i) => (
+              <div
+                key={isBack ? `wrap-${i}` : `wrap-${(item as { index: number }).index}`}
+                className={`absolute bottom-0 left-0 ${animateDeal ? "card-deal-in" : ""}`}
                 style={{
-                  transform: `rotate(${rotate}deg) translateY(${lift}px)`,
+                  transform: `rotate(${classicAngles[i] ?? 0}deg)`,
+                  transformOrigin: `${pivotX} ${pivotY}`,
+                  zIndex: i,
+                  animationDelay: animateDeal ? `${i * 0.07}s` : undefined,
+                  ["--card-tilt-x" as string]: `${tiltX}deg`,
                 }}
-              />
-            </div>
-          );
-        })}
-      </div>
+              >
+                <PlayingCard
+                  key={isBack ? `back-${i}` : `card-${(item as { index: number }).index}`}
+                  card={isBack ? undefined : (item as { card: CardType }).card}
+                  hidden={hidden && !blind && !faceDown}
+                  blind={blind}
+                  faceDown={faceDown}
+                  size={size}
+                  tilt={tilt}
+                  highlightRank={highlightRank}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div
+          className="card-fan-row flex items-end justify-center"
+          style={{
+            minHeight: rowMinHeight,
+            transform: fitScale < 1 ? `scale(${fitScale})` : undefined,
+            transformOrigin: "bottom center",
+          }}
+        >
+          {items.slice(0, renderCount).map((item, i) => {
+            const center = (displayTotal - 1) / 2;
+            const rotate = (i - center) * (maxRotate / Math.max(center, 1));
+            const lift = Math.abs(i - center) * fanLift;
+
+            return (
+              <div
+                key={isBack ? `wrap-${i}` : `wrap-${(item as { index: number }).index}`}
+                className={animateDeal ? "card-deal-in" : ""}
+                style={{
+                  marginLeft: i === 0 ? 0 : -overlap,
+                  zIndex: i,
+                  animationDelay: animateDeal ? `${i * 0.07}s` : undefined,
+                }}
+              >
+                <PlayingCard
+                  key={isBack ? `back-${i}` : `card-${(item as { index: number }).index}`}
+                  card={isBack ? undefined : (item as { card: CardType }).card}
+                  hidden={hidden && !blind && !faceDown}
+                  blind={blind}
+                  faceDown={faceDown}
+                  size={size}
+                  tilt={tilt}
+                  highlightRank={highlightRank}
+                  style={{
+                    transform: `rotate(${rotate}deg) translateY(${lift}px)`,
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
