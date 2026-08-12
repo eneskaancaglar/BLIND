@@ -14,6 +14,7 @@ import { OpponentSeat } from "./OpponentSeat";
 import { RevealPotSummary } from "./RevealPotSummary";
 import { SoundToggle } from "./SoundToggle";
 import { TurnFlowIndicator } from "./TurnFlowIndicator";
+import { GameRoomAmbience } from "./GameRoomAmbience";
 
 type GameTableProps = {
   room: Room;
@@ -184,6 +185,8 @@ export function GameTable({
         isBiddingPhase ? "game-bidding" : ""
       }`}
     >
+      <GameRoomAmbience />
+
       <header className="game-header relative z-20 flex shrink-0 items-center justify-between gap-1.5 px-2 py-1 sm:px-4 sm:py-1.5">
         <div className="min-w-0 flex-1">
           <p className="truncate text-[11px] font-medium text-slate-200 sm:text-sm">
@@ -217,12 +220,16 @@ export function GameTable({
       </header>
 
       <div className="game-table-stage">
-        <div className="game-table-area">
-          <div className="table-felt absolute inset-0" />
-          <div className="table-rail pointer-events-none absolute inset-0" />
-          <div className="table-rim pointer-events-none absolute inset-0" />
-          <div className="table-glow pointer-events-none absolute inset-0" />
-          <p className="table-brand pointer-events-none absolute z-[2]">BLIND</p>
+        <div className="game-table-perspective">
+          <div className="game-table-area">
+            <div className="table-felt absolute inset-0" />
+            <div className="table-felt-grain pointer-events-none absolute inset-0" />
+            <div className="table-spotlight pointer-events-none absolute inset-0" />
+            <div className="table-rail pointer-events-none absolute inset-0" />
+            <div className="table-rim pointer-events-none absolute inset-0" />
+            <div className="table-glow pointer-events-none absolute inset-0" />
+            <div className="table-edge-shine pointer-events-none absolute inset-0" />
+            <p className="table-brand pointer-events-none absolute z-[2]">BLIND</p>
 
           <div className="relative z-10 flex h-full min-h-0 flex-col p-1 sm:p-2">
             <div className="opponents-table relative min-h-0 flex-1 overflow-hidden">
@@ -259,6 +266,7 @@ export function GameTable({
             <div className="center-pot center-pot-compact rounded-lg px-2 py-1.5 text-center sm:rounded-2xl sm:px-4 sm:py-3">
               {renderCenterPot()}
             </div>
+          </div>
           </div>
           </div>
         </div>
