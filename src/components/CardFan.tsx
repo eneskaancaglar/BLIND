@@ -2,34 +2,25 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getSeatCardLayout, type SeatPosition } from "@/lib/seatLayout";
-import { Card as CardType, CardBackColor, Rank } from "@/lib/types";
+import { Card as CardType, Rank } from "@/lib/types";
 import { PlayingCard, CardSize } from "./PlayingCard";
 
 const CARD_WIDTH_PX: Record<CardSize, number> = {
-  xs: 51,
-  sm: 63,
-  md: 78,
+  xs: 38,
+  sm: 46,
+  md: 57,
+  lg: 66,
+  xl: 72,
+};
+
+const CARD_HEIGHT_PX: Record<CardSize, number> = {
+  xs: 54,
+  sm: 66,
+  md: 80,
   lg: 94,
   xl: 102,
 };
 
-const CARD_HEIGHT_PX: Record<CardSize, number> = {
-  xs: 72,
-  sm: 88,
-  md: 108,
-  lg: 132,
-  xl: 144,
-};
-
-function resolveBackColor(
-  index: number,
-  deckCount: 1 | 2,
-  card?: CardType
-): CardBackColor {
-  if (card?.backColor) return card.backColor;
-  if (deckCount === 2) return index % 2 === 0 ? "blue" : "red";
-  return "blue";
-}
 
 function computeFitOverlap(
   cardWidth: number,
@@ -39,7 +30,7 @@ function computeFitOverlap(
 ): number {
   if (count <= 1) return 0;
 
-  const minVisibleStep = 7;
+  const minVisibleStep = 10;
   const maxAllowedOverlap = cardWidth - minVisibleStep;
   const requiredOverlap = (count * cardWidth - maxWidth) / (count - 1);
 
@@ -62,7 +53,7 @@ function computePhotoFanAngles(count: number, spreadDeg: number): number[] {
 }
 
 function computePhotoFanNudge(index: number, cardWidth: number): number {
-  return index * cardWidth * 0.1;
+  return index * cardWidth * 0.07;
 }
 
 function estimateClassicWidth(cardWidth: number, cardHeight: number, spreadDeg: number): number {
@@ -109,7 +100,7 @@ export function CardFan({
   dealKey,
   highlightRank,
   className = "",
-  deckCount = 1,
+  deckCount: _deckCount = 1,
 }: CardFanProps) {
   const total = count ?? cards.length;
   const displayTotal = maxVisible ? Math.min(total, maxVisible) : total;
@@ -178,7 +169,7 @@ export function CardFan({
   if (total === 0) return null;
 
   const baseOverlap =
-    spread === "tight" ? (size === "xs" ? 14 : 20) : spread === "wide" ? 32 : size === "xl" ? 36 : 24;
+    spread === "tight" ? (size === "xs" ? 18 : 24) : spread === "wide" ? 36 : size === "xl" ? 40 : 28;
   const overlap =
     fitAll && fanWidth
       ? computeFitOverlap(cardWidth, displayTotal, fanWidth, baseOverlap)
@@ -247,7 +238,6 @@ export function CardFan({
           >
             {items.slice(0, renderCount).map((item, i) => {
               const cardObj = isBack ? undefined : (item as { card: CardType }).card;
-              const backColor = resolveBackColor(i, deckCount, cardObj);
 
               return (
               <div
@@ -267,7 +257,6 @@ export function CardFan({
                   hidden={hidden && !blind && !faceDown}
                   blind={blind}
                   faceDown={faceDown}
-                  backColor={backColor}
                   size={size}
                   tilt={tilt}
                   highlightRank={highlightRank}
@@ -291,7 +280,6 @@ export function CardFan({
             const rotate = (i - center) * (maxRotate / Math.max(center, 1));
             const lift = Math.abs(i - center) * fanLift;
             const cardObj = isBack ? undefined : (item as { card: CardType }).card;
-            const backColor = resolveBackColor(i, deckCount, cardObj);
 
             return (
               <div
@@ -309,7 +297,6 @@ export function CardFan({
                   hidden={hidden && !blind && !faceDown}
                   blind={blind}
                   faceDown={faceDown}
-                  backColor={backColor}
                   size={size}
                   tilt={tilt}
                   highlightRank={highlightRank}

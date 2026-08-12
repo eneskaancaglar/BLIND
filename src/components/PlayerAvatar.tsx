@@ -1,7 +1,7 @@
 "use client";
 
+import Image from "next/image";
 import { getAvatarById, resolvePlayerAvatarId } from "@/lib/avatars";
-import { AvatarIcon } from "./AvatarIcon";
 
 type PlayerAvatarProps = {
   avatarId?: string;
@@ -14,9 +14,9 @@ type PlayerAvatarProps = {
 };
 
 const SIZE_PX = {
-  sm: 3.35,
-  md: 4.15,
-  lg: 5,
+  sm: 2.65,
+  md: 3.15,
+  lg: 3.75,
 };
 
 export function PlayerAvatar({
@@ -28,21 +28,25 @@ export function PlayerAvatar({
   className = "",
   title,
 }: PlayerAvatarProps) {
-  const resolvedId = avatarId ?? (player ? resolvePlayerAvatarId(player) : "fox");
+  const resolvedId = avatarId ?? (player ? resolvePlayerAvatarId(player) : "amber");
   const avatar = getAvatarById(resolvedId);
   const dim = SIZE_PX[size];
 
   const inner = (
     <span
       className={`player-avatar ${isTurn ? "player-avatar-turn" : ""} ${className}`}
-      style={{
-        width: `${dim}rem`,
-        height: `${dim}rem`,
-        background: avatar.gradient,
-      }}
+      style={{ width: `${dim}rem`, height: `${dim}rem` }}
       title={title}
     >
-      <AvatarIcon id={resolvedId} className="player-avatar-svg" />
+      <Image
+        src={avatar.imageUrl}
+        alt={avatar.label}
+        width={128}
+        height={128}
+        className="player-avatar-img"
+        unoptimized
+        draggable={false}
+      />
     </span>
   );
 

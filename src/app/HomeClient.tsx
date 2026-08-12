@@ -174,7 +174,7 @@ export default function HomeClient() {
   const [showRules, setShowRules] = useState(false);
   const [showCreateSetup, setShowCreateSetup] = useState(false);
   const [roomSettings, setRoomSettings] = useState<RoomSettings>(DEFAULT_ROOM_SETTINGS);
-  const [avatarId, setAvatarId] = useState("fox");
+  const [avatarId, setAvatarId] = useState("amber");
   const [restoring, setRestoring] = useState(true);
 
   useEffect(() => {

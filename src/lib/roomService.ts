@@ -459,7 +459,7 @@ export async function createRoom(
       const botPlayer: Player = {
         id: botId,
         name: getBotDisplayName(index),
-        avatarId: getBotAvatarId(index),
+        avatarId: getBotAvatarId(),
         isHost: false,
         isBot: true,
         botDifficulty: settings.botDifficulty ?? "normal",

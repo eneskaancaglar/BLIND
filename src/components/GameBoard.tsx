@@ -539,7 +539,6 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
         roomCode={roomCode}
         me={me}
         opponents={opponents}
-        players={players}
         playerId={playerId}
         turnPlayerId={turnPlayerId}
         showAllCards={showAllCards}

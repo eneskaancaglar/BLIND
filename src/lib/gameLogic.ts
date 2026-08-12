@@ -85,7 +85,7 @@ function openerIsNextAfterBidder(turnOrder: string[], bidderId: string, openerId
   if (turnOrder.length === 0) return false;
   const bidderIndex = turnOrder.indexOf(bidderId);
   if (bidderIndex === -1) return false;
-  const nextIndex = (bidderIndex - 1 + turnOrder.length) % turnOrder.length;
+  const nextIndex = (bidderIndex + 1) % turnOrder.length;
   return turnOrder[nextIndex] === openerId;
 }
 
@@ -469,7 +469,7 @@ export function resolveRoundAfterReveal(
 
 export function nextTurnIndex(turnOrder: string[], currentIndex: number): number {
   if (turnOrder.length === 0) return 0;
-  return (currentIndex - 1 + turnOrder.length) % turnOrder.length;
+  return (currentIndex + 1) % turnOrder.length;
 }
 
 export function buildTurnOrder(players: Player[], startWithId?: string | null): string[] {

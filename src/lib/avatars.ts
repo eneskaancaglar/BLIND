@@ -1,44 +1,81 @@
 export type AvatarDef = {
   id: string;
-  emoji: string;
-  gradient: string;
+  imageUrl: string;
   label: string;
 };
 
+/** DiceBear avatars — free, stable CDN portraits */
 export const PLAYER_AVATARS: AvatarDef[] = [
-  { id: "fox", emoji: "🦊", gradient: "linear-gradient(145deg,#fb923c,#c2410c)", label: "Fox" },
-  { id: "owl", emoji: "🦉", gradient: "linear-gradient(145deg,#a78bfa,#5b21b6)", label: "Owl" },
-  { id: "wolf", emoji: "🐺", gradient: "linear-gradient(145deg,#94a3b8,#334155)", label: "Wolf" },
-  { id: "lion", emoji: "🦁", gradient: "linear-gradient(145deg,#fbbf24,#b45309)", label: "Lion" },
-  { id: "tiger", emoji: "🐯", gradient: "linear-gradient(145deg,#f97316,#9a3412)", label: "Tiger" },
-  { id: "bear", emoji: "🐻", gradient: "linear-gradient(145deg,#92400e,#451a03)", label: "Bear" },
-  { id: "panda", emoji: "🐼", gradient: "linear-gradient(145deg,#f5f5f5,#737373)", label: "Panda" },
-  { id: "frog", emoji: "🐸", gradient: "linear-gradient(145deg,#4ade80,#15803d)", label: "Frog" },
-  { id: "octopus", emoji: "🐙", gradient: "linear-gradient(145deg,#f472b6,#be185d)", label: "Octopus" },
-  { id: "unicorn", emoji: "🦄", gradient: "linear-gradient(145deg,#e879f9,#86198f)", label: "Unicorn" },
-  { id: "dragon", emoji: "🐲", gradient: "linear-gradient(145deg,#34d399,#047857)", label: "Dragon" },
-  { id: "robot", emoji: "🤖", gradient: "linear-gradient(145deg,#38bdf8,#0369a1)", label: "Robot" },
-  { id: "alien", emoji: "👽", gradient: "linear-gradient(145deg,#a3e635,#4d7c0f)", label: "Alien" },
-  { id: "wizard", emoji: "🧙", gradient: "linear-gradient(145deg,#818cf8,#3730a3)", label: "Wizard" },
-  { id: "ninja", emoji: "🥷", gradient: "linear-gradient(145deg,#64748b,#0f172a)", label: "Ninja" },
-  { id: "pirate", emoji: "🏴‍☠️", gradient: "linear-gradient(145deg,#1e293b,#020617)", label: "Pirate" },
-  { id: "knight", emoji: "⚔️", gradient: "linear-gradient(145deg,#cbd5e1,#475569)", label: "Knight" },
-  { id: "crown", emoji: "👑", gradient: "linear-gradient(145deg,#fde047,#ca8a04)", label: "Crown" },
-  { id: "joker", emoji: "🃏", gradient: "linear-gradient(145deg,#ef4444,#7f1d1d)", label: "Joker" },
-  { id: "diamond", emoji: "💎", gradient: "linear-gradient(145deg,#22d3ee,#0e7490)", label: "Diamond" },
+  {
+    id: "amber",
+    label: "Amber",
+    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=amber&size=128",
+  },
+  {
+    id: "blaze",
+    label: "Blaze",
+    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=blaze&size=128",
+  },
+  {
+    id: "coral",
+    label: "Coral",
+    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=coral&size=128",
+  },
+  {
+    id: "dusk",
+    label: "Dusk",
+    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=dusk&size=128",
+  },
+  {
+    id: "ember",
+    label: "Ember",
+    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=ember&size=128",
+  },
+  {
+    id: "frost",
+    label: "Frost",
+    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=frost&size=128",
+  },
+  {
+    id: "grove",
+    label: "Grove",
+    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=grove&size=128",
+  },
+  {
+    id: "haze",
+    label: "Haze",
+    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=haze&size=128",
+  },
+  {
+    id: "iris",
+    label: "Iris",
+    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=iris&size=128",
+  },
+  {
+    id: "jade",
+    label: "Jade",
+    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=jade&size=128",
+  },
 ];
 
-export const BOT_AVATAR_IDS = ["robot", "wizard", "ninja"] as const;
+export const BOT_AVATAR_ID = "bot";
+
+export const BOT_AVATAR: AvatarDef = {
+  id: BOT_AVATAR_ID,
+  label: "Bot",
+  imageUrl: "https://api.dicebear.com/7.x/bottts/png?seed=blind-bot&size=128",
+};
 
 const STORAGE_KEY = "blind_avatar_id";
-const DEFAULT_AVATAR_ID = "fox";
+const DEFAULT_AVATAR_ID = "amber";
 
 export function getAvatarById(id?: string | null): AvatarDef {
+  if (id === BOT_AVATAR_ID) return BOT_AVATAR;
   return PLAYER_AVATARS.find((a) => a.id === id) ?? PLAYER_AVATARS[0];
 }
 
-export function getBotAvatarId(index: number): string {
-  return BOT_AVATAR_IDS[index % BOT_AVATAR_IDS.length];
+export function getBotAvatarId(): string {
+  return BOT_AVATAR_ID;
 }
 
 export function getStoredAvatarId(): string {
@@ -57,11 +94,7 @@ export function resolvePlayerAvatarId(player: {
   id?: string;
   name?: string;
 }): string {
+  if (player.isBot) return BOT_AVATAR_ID;
   if (player.avatarId) return player.avatarId;
-  if (player.isBot) {
-    const match = player.name?.match(/bot-(\d+)/i);
-    const index = match ? Number(match[1]) - 1 : 0;
-    return getBotAvatarId(Math.max(0, index));
-  }
   return DEFAULT_AVATAR_ID;
 }

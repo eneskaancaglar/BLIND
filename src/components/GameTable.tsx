@@ -12,7 +12,6 @@ import { EmojiChat } from "./EmojiChat";
 import { OpponentSeat } from "./OpponentSeat";
 import { RevealPotSummary } from "./RevealPotSummary";
 import { SoundToggle } from "./SoundToggle";
-import { TurnFlowIndicator } from "./TurnFlowIndicator";
 import { GameRoomAmbience } from "./GameRoomAmbience";
 import { PlayerAvatar } from "./PlayerAvatar";
 
@@ -21,7 +20,6 @@ type GameTableProps = {
   roomCode: string;
   me: Player | undefined;
   opponents: Player[];
-  players: Player[];
   playerId: string;
   turnPlayerId?: string;
   showAllCards: boolean;
@@ -39,7 +37,6 @@ export function GameTable({
   roomCode,
   me,
   opponents,
-  players,
   playerId,
   turnPlayerId,
   showAllCards,
@@ -63,9 +60,9 @@ export function GameTable({
   const handCount = me ? getHandDisplayCount(me, blindMode) : 0;
   const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
   const isBiddingPhase = room.phase === "bidding";
-  const handSize = isBiddingPhase ? "lg" : compactDock ? "md" : "lg";
+  const handSize = isBiddingPhase ? "md" : compactDock ? "sm" : "md";
   const handSpread = "tight";
-  const handMaxVisible = isBiddingPhase ? 5 : undefined;
+  const handMaxVisible = isBiddingPhase ? 7 : undefined;
   const isMyTurn = turnPlayerId === playerId;
   const deckCount = room.deckCount ?? 1;
 
@@ -171,6 +168,25 @@ export function GameTable({
       );
     }
 
+    if (isBiddingPhase && room.currentBid) {
+      return (
+        <div className="center-bid-display flex flex-col items-center gap-1">
+          <p className="text-[8px] font-semibold uppercase tracking-wider text-amber-200/80">
+            {translate("currentBid")}
+          </p>
+          <CurrentBidDisplay
+            bid={room.currentBid}
+            playerName={room.currentBid.playerName}
+            compact
+          />
+          <p className="mt-0.5 text-[8px] text-slate-400">
+            {translate("turn")}:{" "}
+            <span className="font-medium text-slate-200">{turnName ?? "..."}</span>
+          </p>
+        </div>
+      );
+    }
+
     if (isBiddingPhase) {
       return (
         <>
@@ -229,6 +245,12 @@ export function GameTable({
             onMessagesChange={setMessages}
           />
           <SoundToggle compact />
+          <div className="game-header-self ml-0.5 flex items-center gap-1.5 border-l border-white/10 pl-1.5">
+            <p className="game-header-self-name hidden max-w-[5.5rem] truncate text-[10px] font-semibold text-amber-100 sm:block">
+              {me?.name ?? translate("you")}
+            </p>
+            <PlayerAvatar player={me} size="sm" isTurn={isMyTurn} title={me?.name} />
+          </div>
         </div>
       </header>
 
@@ -246,15 +268,6 @@ export function GameTable({
 
           <div className="relative z-10 flex h-full min-h-0 flex-col p-1 sm:p-2">
             <div className="opponents-table relative min-h-0 flex-1 overflow-hidden">
-            {room.status === "playing" ? (
-              <TurnFlowIndicator
-                turnOrder={room.turnOrder}
-                activeTurnId={room.phase === "bidding" ? turnPlayerId : undefined}
-                playerId={playerId}
-                opponents={opponents}
-                players={players}
-              />
-            ) : null}
             {opponents.map((player, index) => {
               const seat = getOpponentSeatPosition(index, opponents.length);
               return (
@@ -277,7 +290,7 @@ export function GameTable({
             })}
           </div>
 
-          <div className="mx-auto w-full max-w-[14rem] shrink-0 px-0.5">
+          <div className="mx-auto w-full max-w-[16rem] shrink-0 px-0.5">
             <div className="center-pot center-pot-compact rounded-lg px-2 py-1.5 text-center sm:rounded-2xl sm:px-4 sm:py-3">
               {renderCenterPot()}
             </div>
@@ -294,27 +307,9 @@ export function GameTable({
         roundNumber={room.roundNumber}
       />
 
-      {isBiddingPhase && room.currentBid ? (
-        <div className="bid-strip shrink-0">
-          <p className="bid-strip-label">{translate("currentBid")}</p>
-          <CurrentBidDisplay
-            bid={room.currentBid}
-            playerName={room.currentBid.playerName}
-            strip
-          />
-        </div>
-      ) : null}
-
       <div
         className={`game-dock game-dock-area ${isBiddingPhase ? "game-dock-compact" : compactDock ? "game-dock-compact" : ""} min-h-0 shrink-0 px-1 pb-1.5 pt-1 sm:pb-3`}
       >
-        <div className="mb-0.5 flex flex-col items-center px-1.5">
-          {isMyTurn ? (
-            <p className="seat-name-tag seat-name-tag-self mb-0.5">{me?.name ?? translate("you")}</p>
-          ) : null}
-          <PlayerAvatar player={me} size={isBiddingPhase ? "md" : "lg"} isTurn={isMyTurn} />
-        </div>
-
         <div className="game-dock-hand flex w-full shrink-0 justify-center">{renderHand()}</div>
 
         {children ? <div className="game-dock-controls mt-1 shrink-0 px-0.5">{children}</div> : null}

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
+    "slice-cards": "node scripts/slice-cards.mjs",
     "deploy:rules": "npx firebase-tools deploy --only firestore:rules --project blind-a5b04",
     "login:firebase": "npx firebase-tools login"
   },
@@ -25,6 +26,7 @@
     "@types/react-dom": "^19.1.1",
     "eslint": "^9.24.0",
     "eslint-config-next": "^15.2.4",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4.1.3",
     "typescript": "^5.8.3",
     "vitest": "^3.1.1"
