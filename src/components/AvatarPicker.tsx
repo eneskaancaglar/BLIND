@@ -1,7 +1,8 @@
 "use client";
 
-import { PLAYER_AVATARS, getStoredAvatarId } from "@/lib/avatars";
+import { PLAYER_AVATARS } from "@/lib/avatars";
 import { useLanguage } from "@/context/LanguageContext";
+import { AvatarIcon } from "./AvatarIcon";
 
 type AvatarPickerProps = {
   value: string;
@@ -14,7 +15,7 @@ export function AvatarPicker({ value, onChange }: AvatarPickerProps) {
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium text-slate-300">{translate("chooseAvatar")}</p>
-      <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
+      <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-5">
         {PLAYER_AVATARS.map((avatar) => {
           const selected = value === avatar.id;
           return (
@@ -28,15 +29,11 @@ export function AvatarPicker({ value, onChange }: AvatarPickerProps) {
               className={`avatar-pick-btn ${selected ? "avatar-pick-btn-active" : ""}`}
               style={{ background: avatar.gradient }}
             >
-              <span className="text-lg sm:text-xl">{avatar.emoji}</span>
+              <AvatarIcon id={avatar.id} className="avatar-pick-svg" />
             </button>
           );
         })}
       </div>
     </div>
   );
-}
-
-export function useDefaultAvatarId(): string {
-  return getStoredAvatarId();
 }

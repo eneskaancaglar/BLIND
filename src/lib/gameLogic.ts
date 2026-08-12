@@ -14,12 +14,16 @@ const SUITS: Suit[] = ["H", "D", "C", "S"];
 
 export function createDeck(deckCount: 1 | 2 = 1): Card[] {
   const deck: Card[] = [];
+  const singleBack: Card["backColor"] = "blue";
 
   for (let d = 0; d < deckCount; d += 1) {
+    const backColor: Card["backColor"] =
+      deckCount === 1 ? singleBack : d === 0 ? "blue" : "red";
+
     for (const suit of SUITS) {
-      deck.push({ rank: "2", suit });
+      deck.push({ rank: "2", suit, backColor });
       for (const rank of RANKS) {
-        deck.push({ rank, suit });
+        deck.push({ rank, suit, backColor });
       }
     }
   }

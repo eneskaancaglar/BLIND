@@ -1,3 +1,5 @@
+export type CardBackColor = "blue" | "red";
+
 export type Rank =
   | "3"
   | "4"
@@ -17,6 +19,8 @@ export type Suit = "H" | "D" | "C" | "S";
 export type Card = {
   rank: Rank | "2";
   suit: Suit;
+  /** Deck back tint — blue/red for double-deck games */
+  backColor?: CardBackColor;
 };
 
 export type Bid = {

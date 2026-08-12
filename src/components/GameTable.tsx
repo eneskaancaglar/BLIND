@@ -63,10 +63,11 @@ export function GameTable({
   const handCount = me ? getHandDisplayCount(me, blindMode) : 0;
   const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
   const isBiddingPhase = room.phase === "bidding";
-  const handSize = isBiddingPhase ? "sm" : compactDock ? "sm" : "md";
+  const handSize = isBiddingPhase ? "lg" : compactDock ? "md" : "lg";
   const handSpread = "tight";
   const handMaxVisible = isBiddingPhase ? 5 : undefined;
   const isMyTurn = turnPlayerId === playerId;
+  const deckCount = room.deckCount ?? 1;
 
   const turnName =
     opponents.find((p) => p.id === turnPlayerId)?.name ??
@@ -95,6 +96,7 @@ export function GameTable({
           tilt="hand"
           fanStyle="classic"
           seatPosition="bottom"
+          deckCount={deckCount}
           maxVisible={handMaxVisible}
           animateDeal={animateDeal}
           dealKey={dealKey}
@@ -112,6 +114,7 @@ export function GameTable({
           tilt="hand"
           fanStyle="classic"
           seatPosition="bottom"
+          deckCount={deckCount}
           maxVisible={handMaxVisible}
           animateDeal={animateDeal}
           dealKey={dealKey}
@@ -127,6 +130,7 @@ export function GameTable({
           tilt="hand"
           fanStyle="classic"
           seatPosition="bottom"
+          deckCount={deckCount}
           maxVisible={handMaxVisible}
           highlightRank={highlightRank ?? undefined}
         />
@@ -258,6 +262,7 @@ export function GameTable({
                   <OpponentSeat
                     player={player}
                     seatPosition={seat}
+                    deckCount={deckCount}
                     isTurn={player.id === turnPlayerId}
                     showCards={showAllCards}
                     blindMode={blindMode}
@@ -307,7 +312,7 @@ export function GameTable({
           {isMyTurn ? (
             <p className="seat-name-tag seat-name-tag-self mb-0.5">{me?.name ?? translate("you")}</p>
           ) : null}
-          <PlayerAvatar player={me} size={isBiddingPhase ? "sm" : "md"} isTurn={isMyTurn} />
+          <PlayerAvatar player={me} size={isBiddingPhase ? "md" : "lg"} isTurn={isMyTurn} />
         </div>
 
         <div className="game-dock-hand flex w-full shrink-0 justify-center">{renderHand()}</div>

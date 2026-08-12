@@ -1,6 +1,7 @@
 "use client";
 
 import { getAvatarById, resolvePlayerAvatarId } from "@/lib/avatars";
+import { AvatarIcon } from "./AvatarIcon";
 
 type PlayerAvatarProps = {
   avatarId?: string;
@@ -13,9 +14,9 @@ type PlayerAvatarProps = {
 };
 
 const SIZE_PX = {
-  sm: 2.1,
-  md: 2.65,
-  lg: 3.2,
+  sm: 3.35,
+  md: 4.15,
+  lg: 5,
 };
 
 export function PlayerAvatar({
@@ -41,15 +42,21 @@ export function PlayerAvatar({
       }}
       title={title}
     >
-      <span className="player-avatar-emoji" aria-hidden>
-        {avatar.emoji}
-      </span>
+      <AvatarIcon id={resolvedId} className="player-avatar-svg" />
     </span>
   );
 
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className="player-avatar-btn shrink-0">
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onClick();
+        }}
+        className="player-avatar-btn shrink-0"
+        aria-label={title ?? player?.name ?? "Player"}
+      >
         {inner}
       </button>
     );

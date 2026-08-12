@@ -2,24 +2,34 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getSeatCardLayout, type SeatPosition } from "@/lib/seatLayout";
-import { Card as CardType, Rank } from "@/lib/types";
+import { Card as CardType, CardBackColor, Rank } from "@/lib/types";
 import { PlayingCard, CardSize } from "./PlayingCard";
 
 const CARD_WIDTH_PX: Record<CardSize, number> = {
-  xs: 48,
-  sm: 58,
-  md: 72,
+  xs: 51,
+  sm: 63,
+  md: 78,
   lg: 94,
-  xl: 100,
+  xl: 102,
 };
 
 const CARD_HEIGHT_PX: Record<CardSize, number> = {
-  xs: 66,
-  sm: 80,
-  md: 100,
-  lg: 130,
-  xl: 132,
+  xs: 72,
+  sm: 88,
+  md: 108,
+  lg: 132,
+  xl: 144,
 };
+
+function resolveBackColor(
+  index: number,
+  deckCount: 1 | 2,
+  card?: CardType
+): CardBackColor {
+  if (card?.backColor) return card.backColor;
+  if (deckCount === 2) return index % 2 === 0 ? "blue" : "red";
+  return "blue";
+}
 
 function computeFitOverlap(
   cardWidth: number,
@@ -78,6 +88,7 @@ type CardFanProps = {
   dealKey?: string | number;
   highlightRank?: Rank;
   className?: string;
+  deckCount?: 1 | 2;
 };
 
 export function CardFan({
@@ -98,6 +109,7 @@ export function CardFan({
   dealKey,
   highlightRank,
   className = "",
+  deckCount = 1,
 }: CardFanProps) {
   const total = count ?? cards.length;
   const displayTotal = maxVisible ? Math.min(total, maxVisible) : total;
@@ -200,9 +212,9 @@ export function CardFan({
           ? "5.5rem"
           : size === "xs"
             ? useClassic
-              ? "4.35rem"
-              : "3.75rem"
-            : "6.25rem";
+              ? "5rem"
+              : "4.5rem"
+            : "7rem";
 
   const pivotX = seatLayout?.pivotX ?? "50%";
   const pivotY = seatLayout?.pivotY ?? "100%";
@@ -233,30 +245,36 @@ export function CardFan({
               maxWidth: fitAll && fanWidth ? `${fanWidth}px` : undefined,
             }}
           >
-            {items.slice(0, renderCount).map((item, i) => (
+            {items.slice(0, renderCount).map((item, i) => {
+              const cardObj = isBack ? undefined : (item as { card: CardType }).card;
+              const backColor = resolveBackColor(i, deckCount, cardObj);
+
+              return (
               <div
                 key={isBack ? `wrap-${i}` : `wrap-${(item as { index: number }).index}`}
                 className={`absolute bottom-0 left-0 ${animateDeal ? "card-deal-in" : ""}`}
                 style={{
                   transform: `translateX(${computePhotoFanNudge(i, cardWidth)}px) rotate(${classicAngles[i] ?? 0}deg)`,
                   transformOrigin: `${pivotX} ${pivotY}`,
-                  zIndex: i,
+                  zIndex: i + 1,
                   animationDelay: animateDeal ? `${i * 0.07}s` : undefined,
                   ["--card-tilt-x" as string]: `${tiltX}deg`,
                 }}
               >
                 <PlayingCard
                   key={isBack ? `back-${i}` : `card-${(item as { index: number }).index}`}
-                  card={isBack ? undefined : (item as { card: CardType }).card}
+                  card={cardObj}
                   hidden={hidden && !blind && !faceDown}
                   blind={blind}
                   faceDown={faceDown}
+                  backColor={backColor}
                   size={size}
                   tilt={tilt}
                   highlightRank={highlightRank}
                 />
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
       ) : (
@@ -272,6 +290,8 @@ export function CardFan({
             const center = (displayTotal - 1) / 2;
             const rotate = (i - center) * (maxRotate / Math.max(center, 1));
             const lift = Math.abs(i - center) * fanLift;
+            const cardObj = isBack ? undefined : (item as { card: CardType }).card;
+            const backColor = resolveBackColor(i, deckCount, cardObj);
 
             return (
               <div
@@ -285,10 +305,11 @@ export function CardFan({
               >
                 <PlayingCard
                   key={isBack ? `back-${i}` : `card-${(item as { index: number }).index}`}
-                  card={isBack ? undefined : (item as { card: CardType }).card}
+                  card={cardObj}
                   hidden={hidden && !blind && !faceDown}
                   blind={blind}
                   faceDown={faceDown}
+                  backColor={backColor}
                   size={size}
                   tilt={tilt}
                   highlightRank={highlightRank}

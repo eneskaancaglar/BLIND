@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { getHandDisplayCount } from "@/lib/gameLogic";
 import { BlindMode, ChatMessage, Player, Rank } from "@/lib/types";
@@ -14,6 +14,7 @@ type OpponentSeatProps = {
   seatPosition: SeatPosition;
   isTurn: boolean;
   showCards: boolean;
+  deckCount?: 1 | 2;
   blindMode?: BlindMode;
   highlightRank?: Rank;
   compact?: boolean;
@@ -27,6 +28,7 @@ export function OpponentSeat({
   seatPosition,
   isTurn,
   showCards,
+  deckCount = 1,
   blindMode = "ORIGINAL_BLIND",
   highlightRank,
   compact = false,
@@ -37,10 +39,6 @@ export function OpponentSeat({
   const { translate } = useLanguage();
   const [namePinned, setNamePinned] = useState(false);
   const showName = isTurn || namePinned;
-
-  useEffect(() => {
-    if (!isTurn) setNamePinned(false);
-  }, [isTurn]);
 
   const displayCount =
     showCards && player.cards.length > 0
@@ -53,12 +51,13 @@ export function OpponentSeat({
   const reaction = getRecentReaction(messages, player.id);
 
   const fanProps = {
-    size: "sm" as const,
+    size: compact ? ("md" as const) : ("lg" as const),
     spread: "tight" as const,
     tilt: "table" as const,
     fanStyle: "classic" as const,
     seatPosition,
     fitAll: true,
+    deckCount,
     animateDeal,
     dealKey,
   };
@@ -66,8 +65,8 @@ export function OpponentSeat({
   if (player.isEliminated) {
     return (
       <div className="opponent-seat opponent-seat-eliminated flex flex-col items-center opacity-40">
-        <PlayerAvatar player={player} size="sm" />
-        {showName ? <p className="seat-name-tag mt-1">{player.name}</p> : null}
+        <PlayerAvatar player={player} size="md" />
+        {showName ? <p className="seat-name-tag seat-name-tag-static mt-1">{player.name}</p> : null}
         <span className="mt-0.5 text-[9px] text-slate-400">{translate("eliminated")}</span>
       </div>
     );
@@ -80,7 +79,7 @@ export function OpponentSeat({
       } ${isTurn ? "opponent-seat-turn" : ""}`}
     >
       {reaction ? (
-        <span key={reaction.id} className="seat-emoji-bubble absolute -top-2 z-30 text-base" aria-hidden>
+        <span key={reaction.id} className="seat-emoji-bubble absolute -top-2 z-40 text-base" aria-hidden>
           {reaction.emoji}
         </span>
       ) : null}
@@ -94,7 +93,7 @@ export function OpponentSeat({
       <div className="seat-avatar-row relative z-20 shrink-0">
         <PlayerAvatar
           player={player}
-          size={compact ? "sm" : "md"}
+          size={compact ? "md" : "lg"}
           isTurn={isTurn}
           onClick={() => setNamePinned((prev) => !prev)}
           title={player.name}
@@ -107,20 +106,20 @@ export function OpponentSeat({
       </div>
 
       {player.isBlind && !showCards ? (
-        <span className="relative z-20 mt-0.5 text-center text-[7px] font-medium uppercase tracking-wide text-emerald-200/55">
+        <span className="relative z-10 mt-0.5 text-center text-[8px] font-semibold uppercase tracking-wide text-emerald-100/70">
           {translate("blind")}
         </span>
       ) : null}
 
-      <div className="opponent-seat-cards relative z-10 mt-0.5 w-full">
+      <div className="opponent-seat-cards relative z-30 mt-2 w-full">
         {showCards && player.cards.length > 0 ? (
           <CardFan cards={player.cards} highlightRank={highlightRank} {...fanProps} />
         ) : showCards && player.isBlind ? (
-          <span className="block text-center text-[8px] text-slate-400">{blindStatusText}</span>
+          <span className="block text-center text-[8px] text-slate-300">{blindStatusText}</span>
         ) : player.isBlind && displayCount > 0 ? (
           <CardFan count={displayCount} faceDown {...fanProps} />
         ) : player.isBlind ? (
-          <span className="block text-center text-[8px] text-slate-400">{blindStatusText}</span>
+          <span className="block text-center text-[8px] text-slate-300">{blindStatusText}</span>
         ) : displayCount > 0 ? (
           <CardFan count={displayCount} faceDown {...fanProps} />
         ) : null}

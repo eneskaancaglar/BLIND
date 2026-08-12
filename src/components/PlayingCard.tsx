@@ -1,15 +1,17 @@
+"use client";
+
 import type { CSSProperties } from "react";
 import { cardMatchesBid } from "@/lib/gameLogic";
-import { Card, Rank, SUIT_SYMBOLS } from "@/lib/types";
+import { Card, CardBackColor, Rank, SUIT_SYMBOLS } from "@/lib/types";
 
 export type CardSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 const SIZE_CLASSES: Record<CardSize, string> = {
-  xs: "h-[4.1rem] w-[3rem] text-[11px]",
-  sm: "h-[5rem] w-[3.65rem] text-xs",
-  md: "h-[6.25rem] w-[4.5rem] text-sm",
-  lg: "h-32 w-[5.75rem] text-base",
-  xl: "h-[8rem] w-[6.25rem] text-lg sm:h-[10.5rem] sm:w-[6.5rem] sm:text-xl",
+  xs: "h-[4.5rem] w-[3.2rem] text-[12px]",
+  sm: "h-[5.5rem] w-[3.95rem] text-sm",
+  md: "h-[6.75rem] w-[4.85rem] text-base",
+  lg: "h-[8.25rem] w-[5.85rem] text-lg",
+  xl: "h-[9rem] w-[6.35rem] text-xl sm:h-[10.5rem] sm:w-[7rem]",
 };
 
 type PlayingCardProps = {
@@ -18,6 +20,7 @@ type PlayingCardProps = {
   blind?: boolean;
   size?: CardSize;
   faceDown?: boolean;
+  backColor?: CardBackColor;
   tilt?: "hand" | "table" | "flat";
   highlight?: boolean;
   highlightRank?: Rank;
@@ -34,23 +37,25 @@ const TILT_CLASS = {
 function CardBack({
   size,
   blind,
-  tableBack,
+  backColor = "blue",
 }: {
   size: CardSize;
   blind?: boolean;
-  tableBack?: boolean;
+  backColor?: CardBackColor;
 }) {
+  const toneClass = backColor === "red" ? "card-back-red" : "card-back-blue";
+
   return (
-    <div
-      className={`card-body ${tableBack ? "card-body-back-table" : "card-body-back"} ${SIZE_CLASSES[size]}`}
-    >
-      <div className="card-back-pattern absolute inset-[3px]" />
+    <div className={`card-body card-body-back ${toneClass} ${SIZE_CLASSES[size]}`}>
+      <div className="card-back-lattice absolute inset-[4px]" />
       <div className="card-back-frame" />
       <div className="absolute inset-0 flex items-center justify-center">
         {blind ? (
-          <span className="text-xl font-light tracking-widest text-slate-300/90">?</span>
+          <span className="text-2xl font-light text-white/90">?</span>
         ) : (
-          <span className="card-back-label">BLIND</span>
+          <span className={`card-back-emblem ${backColor === "red" ? "card-back-emblem-red" : ""}`}>
+            ♠
+          </span>
         )}
       </div>
     </div>
@@ -60,41 +65,37 @@ function CardBack({
 function CardFace({ card, size }: { card: Card; size: CardSize }) {
   const suit = SUIT_SYMBOLS[card.suit];
   const isRed = card.suit === "H" || card.suit === "D";
-  const inkClass = isRed ? "text-red-800" : "text-slate-900";
+  const inkClass = isRed ? "text-[#c8102e]" : "text-[#111827]";
 
   return (
     <div className={`card-body card-body-face ${SIZE_CLASSES[size]}`}>
-      <div className="card-face-shine pointer-events-none absolute inset-0" />
-
       <div
-        className={`card-corner absolute left-1 top-1 flex flex-col items-center leading-none ${inkClass}`}
+        className={`card-corner absolute left-1 top-0.5 flex flex-col items-center leading-none ${inkClass}`}
       >
-        <span className="font-bold">{card.rank}</span>
-        <span className="font-semibold">{suit}</span>
+        <span className="font-bold leading-none">{card.rank}</span>
+        <span className="text-[0.95em] font-bold leading-none">{suit}</span>
       </div>
 
       <div
-        className={`absolute inset-0 flex items-center justify-center text-2xl font-semibold sm:text-3xl ${inkClass} ${size === "xs" ? "text-xl" : ""} ${size === "lg" || size === "xl" ? "text-4xl sm:text-5xl" : ""}`}
+        className={`absolute inset-0 flex items-center justify-center font-bold ${inkClass} ${
+          size === "xs" ? "text-2xl" : size === "sm" ? "text-3xl" : size === "md" ? "text-4xl" : "text-5xl"
+        }`}
       >
         <span>{suit}</span>
       </div>
 
       <div
-        className={`card-corner absolute bottom-1 right-1 flex rotate-180 flex-col items-center leading-none ${inkClass}`}
+        className={`card-corner absolute bottom-0.5 right-1 flex rotate-180 flex-col items-center leading-none ${inkClass}`}
       >
-        <span className="font-bold">{card.rank}</span>
-        <span className="font-semibold">{suit}</span>
+        <span className="font-bold leading-none">{card.rank}</span>
+        <span className="text-[0.95em] font-bold leading-none">{suit}</span>
       </div>
 
       {card.rank === "2" ? (
-        <div className="absolute right-0.5 top-0.5 rounded-sm border border-amber-400/40 bg-amber-100 px-1 py-0.5 text-[7px] font-semibold tracking-wide text-amber-900">
-          JOKER
+        <div className="absolute right-0.5 top-0.5 rounded border border-amber-500 bg-amber-50 px-1 py-0.5 text-[7px] font-bold text-amber-900">
+          2
         </div>
       ) : null}
-
-      <div
-        className={`pointer-events-none absolute inset-0 ring-1 ring-inset ${isRed ? "ring-red-300/30" : "ring-slate-400/25"}`}
-      />
     </div>
   );
 }
@@ -105,6 +106,7 @@ export function PlayingCard({
   blind,
   size = "md",
   faceDown,
+  backColor,
   tilt = "hand",
   highlight = false,
   highlightRank,
@@ -112,7 +114,7 @@ export function PlayingCard({
   style,
 }: PlayingCardProps) {
   const showBack = hidden || blind || faceDown || !card;
-  const tableBack = Boolean(faceDown && !blind);
+  const resolvedBack = backColor ?? card?.backColor ?? "blue";
   const isHighlighted =
     highlight || Boolean(card && highlightRank && cardMatchesBid(card, highlightRank));
 
@@ -123,7 +125,7 @@ export function PlayingCard({
     >
       <div className={TILT_CLASS[tilt]}>
         {showBack ? (
-          <CardBack size={size} blind={blind} tableBack={tableBack} />
+          <CardBack size={size} blind={blind} backColor={resolvedBack} />
         ) : (
           <CardFace card={card} size={size} />
         )}

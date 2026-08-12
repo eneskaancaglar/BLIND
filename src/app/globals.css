@@ -32,95 +32,99 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* 3D Kartlar */
+/* 3D Kartlar — net iskambil, gölgesiz */
 .card-scene {
   perspective: 900px;
   flex-shrink: 0;
+  filter: none;
 }
 
 .card-tilt-hand {
-  transform: rotateX(var(--card-tilt-x, 14deg)) translateZ(6px);
+  transform: rotateX(var(--card-tilt-x, 12deg)) translateZ(2px);
   transform-style: preserve-3d;
+  filter: none;
 }
 
 .card-tilt-table {
-  transform: rotateX(var(--card-tilt-x, 40deg)) translateZ(4px);
+  transform: rotateX(var(--card-tilt-x, 36deg)) translateZ(2px);
   transform-style: preserve-3d;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+  filter: none;
 }
 
 .card-tilt-flat {
-  transform: rotateX(4deg);
+  transform: rotateX(2deg);
 }
 
 .card-body {
   position: relative;
-  border-radius: 0.25rem;
+  border-radius: 0.35rem;
   transform-style: preserve-3d;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.14) inset,
-    0 3px 6px rgba(0, 0, 0, 0.35),
-    0 10px 20px rgba(0, 0, 0, 0.32);
+  box-shadow: none;
+  outline: 1px solid rgba(0, 0, 0, 0.88);
 }
 
 .card-body-face {
-  background: linear-gradient(160deg, #ffffff 0%, #f1f5f9 50%, #e2e8f0 100%);
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #ffffff;
+  border: 2px solid #111827;
+  border-radius: 0.35rem;
 }
 
 .card-face-shine {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.4) 0%,
-    transparent 40%,
-    transparent 100%
-  );
-  border-radius: 0.2rem;
+  display: none;
 }
 
 .card-body-back {
-  background: linear-gradient(155deg, #1e293b 0%, #0f172a 55%, #020617 100%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 2px solid #f8fafc;
+  border-radius: 0.35rem;
 }
 
-.card-body-back-table {
-  background: linear-gradient(160deg, #111827 0%, #0b1220 45%, #030712 100%);
-  border: 1px solid rgba(148, 163, 184, 0.22);
+.card-back-blue {
+  background: linear-gradient(155deg, #2563eb 0%, #1d4ed8 45%, #1e40af 100%);
 }
 
-.card-back-pattern {
+.card-back-red {
+  background: linear-gradient(155deg, #dc2626 0%, #b91c1c 45%, #991b1b 100%);
+}
+
+.card-back-lattice {
+  border-radius: 0.25rem;
   background:
     repeating-linear-gradient(
-      0deg,
-      rgba(255, 255, 255, 0.04) 0px,
-      rgba(255, 255, 255, 0.04) 1px,
-      transparent 1px,
-      transparent 6px
+      45deg,
+      rgba(255, 255, 255, 0.14) 0px,
+      rgba(255, 255, 255, 0.14) 2px,
+      transparent 2px,
+      transparent 8px
     ),
     repeating-linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.04) 0px,
-      rgba(255, 255, 255, 0.04) 1px,
-      transparent 1px,
-      transparent 6px
+      -45deg,
+      rgba(255, 255, 255, 0.1) 0px,
+      rgba(255, 255, 255, 0.1) 2px,
+      transparent 2px,
+      transparent 8px
     );
-  border-radius: 0.15rem;
+}
+
+.card-back-emblem {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: none;
+}
+
+.card-back-emblem-red {
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .card-back-frame {
   position: absolute;
-  inset: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.1rem;
+  inset: 6px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 0.2rem;
 }
 
 .card-back-label {
-  font-size: 0.55rem;
-  font-weight: 500;
-  letter-spacing: 0.32em;
-  text-indent: 0.32em;
-  text-transform: uppercase;
-  color: rgba(148, 163, 184, 0.75);
+  display: none;
 }
 
 .count-badge {
@@ -567,7 +571,7 @@ button:disabled {
   border: none;
   background: transparent;
   backdrop-filter: none;
-  overflow: hidden;
+  overflow: visible;
   max-width: 100%;
 }
 
@@ -583,22 +587,26 @@ button:disabled {
 
 .seat-name-tag {
   position: absolute;
-  top: -1.05rem;
+  top: -1.25rem;
   left: 50%;
-  z-index: 25;
-  max-width: 6.5rem;
+  z-index: 50;
+  max-width: 7.5rem;
   transform: translateX(-50%);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  border-radius: 0.35rem;
-  background: rgba(0, 0, 0, 0.72);
-  padding: 0.12rem 0.4rem;
-  font-size: 9px;
+  border-radius: 0.4rem;
+  background: rgba(0, 0, 0, 0.88);
+  padding: 0.18rem 0.5rem;
+  font-size: 10px;
   font-weight: 700;
   color: #fef3c7;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   pointer-events: none;
+}
+
+.seat-name-tag-static {
+  position: static;
+  transform: none;
 }
 
 .seat-name-tag-self {
@@ -640,44 +648,106 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   border-radius: 9999px;
-  border: 2px solid rgba(255, 210, 140, 0.42);
-  box-shadow:
-    0 5px 14px rgba(0, 0, 0, 0.48),
-    0 0 12px rgba(255, 200, 120, 0.1),
-    inset 0 2px 5px rgba(255, 255, 255, 0.18),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.28);
+  border: 3px solid rgba(255, 230, 180, 0.55);
+  box-shadow: none;
   transform: translateZ(10px);
 }
 
-.player-avatar-turn {
-  border-color: rgba(250, 204, 21, 0.85);
-  box-shadow:
-    0 0 0 2px rgba(250, 204, 21, 0.28),
-    0 0 18px rgba(250, 204, 21, 0.38),
-    0 5px 14px rgba(0, 0, 0, 0.45);
-}
-
-.player-avatar-emoji {
-  font-size: 1.05em;
-  line-height: 1;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+.player-avatar-svg {
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
 }
 
 .avatar-pick-btn {
   display: flex;
   aspect-ratio: 1;
+  min-height: 3.25rem;
   align-items: center;
   justify-content: center;
-  border-radius: 0.75rem;
-  border: 2px solid rgba(255, 255, 255, 0.12);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  border-radius: 0.85rem;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
 .avatar-pick-btn-active {
-  border-color: rgba(255, 230, 160, 0.75);
-  box-shadow: 0 0 0 2px rgba(255, 200, 100, 0.25), 0 4px 14px rgba(0, 0, 0, 0.35);
-  transform: scale(1.06);
+  border-color: rgba(255, 230, 160, 0.85);
+  transform: scale(1.05);
+}
+
+.avatar-pick-svg {
+  width: 72%;
+  height: 72%;
+}
+
+.opponent-seat-cards {
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  min-height: 5.75rem;
+  perspective: 720px;
+  margin-top: 0.35rem;
+}
+
+.opponent-seat {
+  position: relative;
+  padding-top: 1rem;
+  overflow: visible;
+}
+
+.opponent-slot {
+  overflow: visible;
+}
+
+.game-bidding .opponents-table {
+  overflow: visible;
+}
+
+.game-bidding .opponent-seat {
+  overflow: visible;
+}
+
+.game-bidding .opponent-seat-cards .card-fan-classic-wrap {
+  min-height: 4.5rem !important;
+}
+
+.game-bidding .opponent-seat-cards .card-fan-classic {
+  transform: none;
+}
+
+.game-bidding .opponent-seat-cards {
+  min-height: 4.25rem;
+  max-height: none;
+  overflow: visible;
+}
+
+.game-bidding .game-dock-hand {
+  max-height: 6.5rem;
+  overflow: visible;
+  perspective: 820px;
+  filter: none;
+}
+
+.game-dock-hand {
+  filter: none;
+}
+
+.card-bid-highlight > .card-tilt-table,
+.card-bid-highlight > .card-tilt-hand {
+  filter: none;
+  outline: 2px solid #fbbf24;
+  outline-offset: 1px;
+  border-radius: 0.35rem;
+}
+
+.player-avatar-turn {
+  border-color: rgba(250, 204, 21, 0.85);
+  box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.35);
 }
 
 .card-fan-classic-wrap {
@@ -688,23 +758,6 @@ button:disabled {
 
 .card-fan-classic {
   transform-style: preserve-3d;
-}
-
-.opponent-seat-cards {
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  min-height: 3.75rem;
-  perspective: 620px;
-  margin-top: -0.15rem;
-}
-
-.opponent-seat {
-  position: relative;
-  padding-top: 0.65rem;
 }
 
 .opponent-seat-turn {
@@ -1020,7 +1073,7 @@ button:disabled {
   position: relative;
   width: 100%;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   padding: 0.85rem 0.25rem 0.15rem;
 }
 
@@ -1028,8 +1081,9 @@ button:disabled {
   position: absolute;
   transform: translate(-50%, -50%);
   z-index: 4;
-  width: min(30vw, 7.5rem);
-  max-width: min(30vw, 7.5rem);
+  width: min(36vw, 9.5rem);
+  max-width: min(36vw, 9.5rem);
+  overflow: visible;
 }
 
 .opponent-slot-top {
@@ -1074,8 +1128,8 @@ button:disabled {
 }
 
 .game-dock-hand {
-  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.45));
   transform: translateZ(12px);
+  filter: none;
 }
 
 .game-layout .game-table-stage {
@@ -1126,13 +1180,13 @@ button:disabled {
 .game-bidding .opponents-table {
   min-height: 0;
   flex: 1 1 0;
-  overflow: hidden;
+  overflow: visible;
   padding: 0.75rem 0.2rem 0.1rem;
 }
 
 .game-bidding .opponent-slot {
-  width: min(26vw, 7rem);
-  max-width: min(26vw, 7rem);
+  width: min(34vw, 9rem);
+  max-width: min(34vw, 9rem);
 }
 
 .winner-overlay-panel {
@@ -1216,34 +1270,33 @@ button:disabled {
 }
 
 .game-bidding .opponent-seat-cards .card-fan-classic-wrap {
-  min-height: 3.35rem !important;
+  min-height: 5.5rem !important;
 }
 
 .game-bidding .opponent-seat-cards .card-fan-classic {
-  transform: scale(0.82);
-  transform-origin: bottom center;
+  transform: none;
 }
 
 .game-bidding .opponent-seat-cards .card-fan-row {
-  min-height: 2.45rem !important;
-  transform: scale(0.78);
-  transform-origin: bottom center;
+  min-height: 4.5rem !important;
+  transform: none;
 }
 
 .game-bidding .opponent-seat {
-  overflow: hidden;
+  overflow: visible;
 }
 
 .game-bidding .opponent-seat-cards {
-  min-height: 3.15rem;
-  max-height: 3.65rem;
-  overflow: hidden;
+  min-height: 5rem;
+  max-height: none;
+  overflow: visible;
 }
 
 .game-bidding .game-dock-hand {
-  max-height: 5rem;
-  overflow: hidden;
+  max-height: 7.5rem;
+  overflow: visible;
   perspective: 820px;
+  filter: none;
 }
 
 .game-bidding .game-dock-hand .card-fan-row {
@@ -1315,8 +1368,8 @@ button:disabled {
   }
 
   .opponent-slot {
-    width: min(32vw, 7.5rem);
-    max-width: min(32vw, 7.5rem);
+    width: min(38vw, 10rem);
+    max-width: min(38vw, 10rem);
   }
 
   .opponent-name {
