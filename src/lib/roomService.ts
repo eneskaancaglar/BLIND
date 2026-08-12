@@ -164,7 +164,7 @@ function toFriendlyError(error: unknown, fallback: string): string {
   if (error instanceof Error) {
     const msg = error.message.toLowerCase();
     if (msg.includes("permission") || msg.includes("insufficient")) {
-      return "Firebase izin hatası. Firestore test modunda mı kontrol edin.";
+      return "Firebase izin hatası: Firestore test modu süresi dolmuş olabilir. Firebase Console > Firestore > Rules bölümünden kuralları güncelleyin.";
     }
     if (msg.includes("network") || msg.includes("offline")) {
       return "İnternet bağlantısı yok gibi görünüyor.";

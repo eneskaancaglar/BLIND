@@ -35,7 +35,11 @@ copy .env.local.example .env.local
 
 ### 4. Firestore kuralları (prototip)
 
-Firebase Console > Firestore > Rules:
+Firebase Console > **Firestore Database** > **Rules** sekmesi.
+
+Test modu **30 gün sonra** otomatik kapanır (`request.time < timestamp.date(...)`). Süre dolunca oda kurarken **Missing or insufficient permissions** hatası alırsınız.
+
+Repodaki `firestore.rules` dosyasını kopyalayıp **Publish** deyin:
 
 ```
 rules_version = '2';
@@ -46,9 +50,21 @@ service cloud.firestore {
       match /players/{playerId} {
         allow read, write: if true;
       }
+      match /messages/{messageId} {
+        allow read, write: if true;
+      }
     }
   }
 }
+```
+
+Alternatif — Firebase CLI ile (proje klasöründe):
+
+```bash
+npm install -g firebase-tools
+firebase login
+firebase use blind-a5b04
+firebase deploy --only firestore:rules
 ```
 
 > Prototip için açık kurallar kullanıldı. Canlıya almadan önce güvenlik kurallarını sıkılaştırın.
