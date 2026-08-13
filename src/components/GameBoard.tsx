@@ -485,13 +485,13 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
             onClick={() => setShowLeaveConfirm(false)}
             aria-hidden
           />
-          <div className="relative z-10 w-full max-w-sm rounded-3xl border border-white/15 bg-neutral-900/95 p-6 text-center shadow-2xl">
+          <div className="theme-modal-panel relative z-10 w-full max-w-sm p-6 text-center">
             <p className="text-lg font-semibold text-white">{translate("leaveGameConfirm")}</p>
             <div className="mt-6 flex gap-3">
               <button
                 type="button"
                 onClick={() => setShowLeaveConfirm(false)}
-                className="flex-1 rounded-2xl border border-white/15 bg-white/10 py-3 text-sm font-semibold text-white"
+                className="home-btn-join flex-1 py-3 text-sm font-semibold"
               >
                 {translate("leaveGameNo")}
               </button>
@@ -501,7 +501,7 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
                   setShowLeaveConfirm(false);
                   void handleLeave();
                 }}
-                className="flex-1 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 py-3 text-sm font-bold text-white"
+                className="home-btn-danger flex-1 py-3 text-sm font-bold"
               >
                 {translate("leaveGameYes")}
               </button>

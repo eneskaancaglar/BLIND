@@ -72,7 +72,7 @@ export function EmojiChat({
       </button>
 
       {open ? (
-        <div className="emoji-chat-panel absolute right-0 top-10 z-30 w-56 rounded-xl p-3 sm:w-64">
+        <div className="emoji-chat-panel absolute right-0 top-10 z-30 w-56 p-3 sm:w-64">
           <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400">
             {translate("chatTitle")}
           </p>

@@ -71,7 +71,7 @@ export function BidControls({
   }
 
   return (
-    <div className={`home-panel-light rounded-lg ${compact ? "bid-panel-compact p-1.5" : "rounded-2xl p-4"}`}>
+    <div className={`home-panel-light ${compact ? "bid-panel-compact p-1.5" : "p-4"}`}>
       {!compact ? (
         <p className="mb-3 text-center text-sm font-medium text-slate-200">
           {translate("bidYourMove")}
@@ -117,7 +117,7 @@ export function BidControls({
             disabled={disabled || loading}
             onClick={() => setRank(r)}
             className={`home-chip font-semibold transition ${
-              compact ? "rounded py-0.5 text-[10px]" : "rounded-lg py-2 text-sm"
+              compact ? "py-0.5 text-[10px]" : "py-2 text-sm"
             } ${rank === r ? "home-chip-active" : ""}`}
           >
             {r}
@@ -147,8 +147,8 @@ export function BidControls({
           type="button"
           disabled={disabled || loading || !valid}
           onClick={handleBid}
-          className={`home-btn-join w-full rounded-lg font-semibold disabled:opacity-50 ${
-            compact ? "py-1.5 text-[11px]" : "rounded-xl py-3.5 text-sm"
+          className={`home-btn-join w-full font-semibold disabled:opacity-50 ${
+            compact ? "py-1.5 text-[11px]" : "py-3.5 text-sm"
           }`}
         >
           {translate("bidPlace")}
@@ -157,8 +157,8 @@ export function BidControls({
           type="button"
           disabled={disabled || loading || !canOpen}
           onClick={handleOpen}
-          className={`w-full rounded-lg border border-red-400/25 bg-red-950/35 font-semibold text-red-100 transition hover:bg-red-950/50 disabled:opacity-50 ${
-            compact ? "py-1.5 text-[11px]" : "rounded-xl py-3.5 text-sm"
+          className={`home-btn-danger w-full font-semibold disabled:opacity-50 ${
+            compact ? "py-1.5 text-[11px]" : "py-3.5 text-sm"
           }`}
         >
           {translate("bidOpen")}

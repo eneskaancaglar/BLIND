@@ -74,7 +74,7 @@ export function OpponentSeat({
 
   return (
     <div
-      className={`opponent-seat relative flex w-full min-w-0 flex-col items-center ${
+      className={`opponent-seat opponent-seat-${seatPosition} relative flex w-full min-w-0 flex-col items-center ${
         compact ? "opponent-seat-compact" : ""
       } ${isTurn ? "opponent-seat-turn" : ""}`}
     >
@@ -90,40 +90,42 @@ export function OpponentSeat({
         </p>
       ) : null}
 
-      <div className="seat-avatar-row relative z-20 shrink-0">
-        <PlayerAvatar
-          player={player}
-          size={compact ? "md" : "lg"}
-          isTurn={isTurn}
-          onClick={() => setNamePinned((prev) => !prev)}
-          title={player.name}
-        />
-        {displayCount > 0 ? (
-          <span className="seat-card-count" aria-label={`${displayCount} cards`}>
-            {displayCount}
-          </span>
-        ) : null}
+      <div className="seat-hand-stack">
+        <div className="seat-avatar-behind">
+          <PlayerAvatar
+            player={player}
+            size={compact ? "md" : "lg"}
+            isTurn={isTurn}
+            onClick={() => setNamePinned((prev) => !prev)}
+            title={player.name}
+          />
+          {displayCount > 0 ? (
+            <span className="seat-card-count" aria-label={`${displayCount} cards`}>
+              {displayCount}
+            </span>
+          ) : null}
+        </div>
+
+        <div className="opponent-seat-cards">
+          {showCards && player.cards.length > 0 ? (
+            <CardFan cards={player.cards} highlightRank={highlightRank} {...fanProps} />
+          ) : showCards && player.isBlind ? (
+            <span className="block text-center text-[8px] text-slate-300">{blindStatusText}</span>
+          ) : player.isBlind && displayCount > 0 ? (
+            <CardFan count={displayCount} faceDown {...fanProps} />
+          ) : player.isBlind ? (
+            <span className="block text-center text-[8px] text-slate-300">{blindStatusText}</span>
+          ) : displayCount > 0 ? (
+            <CardFan count={displayCount} faceDown {...fanProps} />
+          ) : null}
+        </div>
       </div>
 
       {player.isBlind && !showCards ? (
-        <span className="relative z-10 mt-0.5 text-center text-[8px] font-semibold uppercase tracking-wide text-emerald-100/70">
+        <span className="relative z-30 mt-0.5 text-center text-[8px] font-semibold uppercase tracking-wide text-amber-100/70">
           {translate("blind")}
         </span>
       ) : null}
-
-      <div className="opponent-seat-cards relative z-30 mt-2 w-full">
-        {showCards && player.cards.length > 0 ? (
-          <CardFan cards={player.cards} highlightRank={highlightRank} {...fanProps} />
-        ) : showCards && player.isBlind ? (
-          <span className="block text-center text-[8px] text-slate-300">{blindStatusText}</span>
-        ) : player.isBlind && displayCount > 0 ? (
-          <CardFan count={displayCount} faceDown {...fanProps} />
-        ) : player.isBlind ? (
-          <span className="block text-center text-[8px] text-slate-300">{blindStatusText}</span>
-        ) : displayCount > 0 ? (
-          <CardFan count={displayCount} faceDown {...fanProps} />
-        ) : null}
-      </div>
     </div>
   );
 }

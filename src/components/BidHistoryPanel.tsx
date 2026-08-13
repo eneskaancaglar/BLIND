@@ -26,7 +26,7 @@ export function BidHistoryPanel({ open, onClose, bids, roundNumber }: BidHistory
         onClick={onClose}
       />
       <div
-        className="bid-history-panel fixed right-2 top-11 z-50 w-[min(18rem,calc(100vw-1rem))] rounded-2xl border border-white/15 bg-slate-950/96 p-3 shadow-2xl backdrop-blur-md sm:top-12 sm:right-3"
+        className="bid-history-panel fixed right-2 top-11 z-50 w-[min(18rem,calc(100vw-1rem))] p-3 sm:top-12 sm:right-3"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-label={translate("bidHistory")}
@@ -47,7 +47,7 @@ export function BidHistoryPanel({ open, onClose, bids, roundNumber }: BidHistory
             {bids.map((bid, index) => (
               <li
                 key={`${bid.playerId}-${index}-${bid.count}-${bid.rank}`}
-                className="flex items-center justify-between gap-2 rounded-xl border border-white/8 bg-white/5 px-2.5 py-2"
+                className="bid-history-item flex items-center justify-between gap-2 px-2.5 py-2"
               >
                 <div className="min-w-0">
                   <p className="truncate text-xs font-medium text-slate-100">{bid.playerName}</p>
@@ -96,7 +96,7 @@ export function BidHistoryButton({ onClick, bidCount, active = false }: BidHisto
         <span className="hidden min-[380px]:inline">{translate("bidHistoryShort")}</span>
       </span>
       {bidCount > 0 ? (
-        <span className="bid-history-count absolute -right-0.5 -top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-violet-500 px-0.5 text-[8px] font-bold text-white">
+        <span className="bid-history-count absolute -right-0.5 -top-0.5 flex h-3.5 min-w-3.5 items-center justify-center px-0.5 text-[8px] font-bold">
           {bidCount > 9 ? "9+" : bidCount}
         </span>
       ) : null}

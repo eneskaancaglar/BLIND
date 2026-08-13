@@ -8,8 +8,8 @@ export function BotBadge({ className = "", size = "xs" }: BotBadgeProps) {
 
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-violet-500/20 text-violet-200 ${className}`}
-      style={{ width: dim + 4, height: dim + 4 }}
+      className={`inline-flex shrink-0 items-center justify-center bg-amber-500/15 text-amber-200 ${className}`}
+      style={{ width: dim + 4, height: dim + 4, borderRadius: "var(--radius-sharp)" }}
       title="Bot"
       aria-label="Bot"
     >

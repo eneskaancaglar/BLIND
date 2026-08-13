@@ -122,7 +122,7 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
           <span className="home-brand-line" aria-hidden />
         </header>
 
-        <div className="home-panel space-y-3 rounded-3xl p-5 text-center">
+        <div className="home-panel space-y-3 p-5 text-center">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
             {translate("lobbyRoom")}
           </p>
@@ -130,7 +130,7 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
           <p className="text-sm text-slate-400">{translate("lobbyShare")}</p>
         </div>
 
-        <section className="home-panel-light space-y-3 rounded-2xl p-4">
+        <section className="home-panel-light space-y-3 p-4">
           <p className="text-sm font-medium text-slate-200/90">{translate("lobbySettings")}</p>
           <div className="flex flex-wrap gap-2">
             <span className="home-chip rounded-full px-3 py-1.5 text-xs font-semibold">
@@ -147,19 +147,19 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
           </div>
         </section>
 
-        <section className="home-panel space-y-3 rounded-3xl p-5">
+        <section className="home-panel space-y-3 p-5">
           <p className="text-sm font-medium text-slate-300">{translate("lobbyLink")}</p>
           <p className="break-all text-xs text-slate-400">{shareLink}</p>
           <button
             type="button"
             onClick={copyShareLink}
-            className="home-btn-join w-full rounded-xl py-3 text-base font-semibold"
+            className="home-btn-join w-full py-3 text-base font-semibold"
           >
             {copied ? translate("lobbyCopied") : translate("lobbyCopy")}
           </button>
         </section>
 
-        <section className="home-panel space-y-4 rounded-3xl p-5">
+        <section className="home-panel space-y-4 p-5">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-medium text-slate-300">{translate("lobbyPlayers")}</h2>
             <span className="home-chip rounded-full px-3 py-1 text-xs font-semibold">
@@ -174,12 +174,12 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
             type="button"
             disabled={loading || players.length < 2 || room?.status !== "waiting"}
             onClick={handleStart}
-            className="home-btn-start w-full rounded-2xl py-3.5 text-base font-semibold disabled:opacity-50"
+            className="home-btn-start w-full py-3.5 text-base font-semibold disabled:opacity-50"
           >
             {loading ? translate("lobbyStarting") : translate("lobbyStart")}
           </button>
         ) : (
-          <div className="home-panel-light rounded-2xl px-4 py-4 text-center text-sm text-slate-400">
+          <div className="home-panel-light px-4 py-4 text-center text-sm text-slate-400">
             {translate("lobbyWaitHost")}
           </div>
         )}
@@ -189,7 +189,7 @@ export function RoomLobby({ roomCode, onGameStarted, onLeave }: RoomLobbyProps) 
         ) : null}
 
         {error ? (
-          <div className="rounded-2xl border border-red-400/25 bg-red-950/30 p-3 text-center text-sm text-red-200/90">
+          <div className="home-alert-error p-3 text-center text-sm">
             {error}
           </div>
         ) : null}

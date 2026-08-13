@@ -278,7 +278,7 @@ export function GameTable({
                 {renderCenterPot()}
               </div>
 
-              <div className="table-player-hand absolute bottom-[16%] left-1/2 z-30 w-[min(72%,13.5rem)] -translate-x-1/2">
+              <div className="table-player-hand absolute bottom-[18%] left-1/2 z-30 w-[min(66%,12.5rem)] -translate-x-1/2">
                 {renderHand()}
               </div>
             </div>

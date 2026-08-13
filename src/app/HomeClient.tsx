@@ -34,7 +34,7 @@ function RoomSettingsPanel({
   const { translate } = useLanguage();
 
   return (
-    <div className="home-panel-light space-y-4 rounded-2xl p-4">
+    <div className="home-panel-light space-y-4 p-4">
       <p className="text-sm font-medium text-slate-200/90">{translate("lobbySettings")}</p>
 
       <div>
@@ -48,7 +48,7 @@ function RoomSettingsPanel({
                 play("click");
                 setRoomSettings((s) => ({ ...s, deckCount: count }));
               }}
-              className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
+              className={`home-chip py-2.5 text-sm font-semibold ${
                 roomSettings.deckCount === count ? "home-chip-active" : ""
               }`}
             >
@@ -69,7 +69,7 @@ function RoomSettingsPanel({
                 play("click");
                 setRoomSettings((s) => ({ ...s, blindThreshold: threshold }));
               }}
-              className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
+              className={`home-chip py-2.5 text-sm font-semibold ${
                 roomSettings.blindThreshold === threshold ? "home-chip-active" : ""
               }`}
             >
@@ -90,7 +90,7 @@ function RoomSettingsPanel({
                 play("click");
                 setRoomSettings((s) => ({ ...s, botCount: count }));
               }}
-              className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
+              className={`home-chip py-2.5 text-sm font-semibold ${
                 roomSettings.botCount === count ? "home-chip-active" : ""
               }`}
             >
@@ -112,7 +112,7 @@ function RoomSettingsPanel({
                   play("click");
                   setRoomSettings((s) => ({ ...s, botDifficulty: level }));
                 }}
-                className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
+                className={`home-chip py-2.5 text-sm font-semibold ${
                   roomSettings.botDifficulty === level ? "home-chip-active" : ""
                 }`}
               >
@@ -134,7 +134,7 @@ function RoomSettingsPanel({
               play("click");
               setRoomSettings((s) => ({ ...s, blindMode: "ORIGINAL_BLIND" }));
             }}
-            className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
+            className={`home-chip py-2.5 text-sm font-semibold ${
               roomSettings.blindMode === "ORIGINAL_BLIND" ? "home-chip-active" : ""
             }`}
           >
@@ -146,7 +146,7 @@ function RoomSettingsPanel({
               play("click");
               setRoomSettings((s) => ({ ...s, blindMode: "HIDDEN_CARDS_BLIND" }));
             }}
-            className={`home-chip rounded-xl py-2.5 text-sm font-semibold ${
+            className={`home-chip py-2.5 text-sm font-semibold ${
               roomSettings.blindMode === "HIDDEN_CARDS_BLIND" ? "home-chip-active" : ""
             }`}
           >
@@ -316,7 +316,7 @@ export default function HomeClient() {
           </header>
 
           <div className="mt-2 space-y-5">
-        <label className="home-panel-light block space-y-2 rounded-2xl p-4">
+        <label className="home-panel-light block space-y-2 p-4">
           <span className="text-sm font-medium text-slate-300">{translate("playerName")}</span>
           <input
             value={name}
@@ -325,11 +325,11 @@ export default function HomeClient() {
               if (error) setError("");
             }}
             placeholder={translate("playerNamePlaceholder")}
-            className="home-input w-full rounded-xl px-4 py-3.5 text-lg text-white outline-none"
+            className="home-input w-full px-4 py-3.5 text-lg text-white outline-none"
           />
         </label>
 
-        <div className="home-avatar-panel rounded-2xl p-1">
+        <div className="home-avatar-panel p-1">
           <AvatarPicker
             value={avatarId}
             onChange={(id) => {
@@ -340,24 +340,24 @@ export default function HomeClient() {
         </div>
 
         {inviteCode ? (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center text-sm text-slate-200">
+          <div className="home-alert-info p-4 text-center text-sm">
             <p className="font-semibold">{translate("invitedToRoom", { code: inviteCode })}</p>
           </div>
         ) : null}
 
         {!firebaseReady ? (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-center text-sm text-slate-300">
+          <div className="home-alert-info p-3 text-center text-sm">
             {translate("firebaseMissing")}
           </div>
         ) : null}
 
         {error ? (
-          <div className="rounded-2xl border border-red-400/25 bg-red-950/30 p-3 text-center text-sm text-red-200/90">
+          <div className="home-alert-error p-3 text-center text-sm">
             {error}
           </div>
         ) : null}
 
-        <div className="home-panel space-y-4 rounded-3xl p-5">
+        <div className="home-panel space-y-4 p-5">
           <form onSubmit={handleJoin} className="space-y-4">
             <label className="block space-y-2">
               <span className="text-sm text-slate-300">{translate("roomCode")}</span>
@@ -366,7 +366,7 @@ export default function HomeClient() {
                 onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                 placeholder={translate("roomCodePlaceholder")}
                 maxLength={6}
-                className="home-input w-full rounded-xl px-4 py-3.5 text-center text-xl tracking-[0.35em] text-white outline-none placeholder:tracking-[0.35em]"
+                className="home-input w-full px-4 py-3.5 text-center text-xl tracking-[0.35em] text-white outline-none placeholder:tracking-[0.35em]"
               />
             </label>
 
@@ -377,7 +377,7 @@ export default function HomeClient() {
                 resumeAudio();
                 play("click");
               }}
-              className="home-btn-join w-full rounded-xl py-3.5 text-base font-semibold disabled:opacity-50"
+              className="home-btn-join w-full py-3.5 text-base font-semibold disabled:opacity-50"
             >
               {loading
                 ? translate("wait")
@@ -394,7 +394,7 @@ export default function HomeClient() {
               type="button"
               disabled={loading || !firebaseReady}
               onClick={() => clickButton(() => setShowCreateSetup(true))}
-              className="home-btn-create w-full rounded-2xl py-3.5 text-base font-semibold disabled:opacity-50"
+              className="home-btn-create w-full py-3.5 text-base font-semibold disabled:opacity-50"
             >
               {translate("createRoom")}
             </button>
@@ -409,7 +409,7 @@ export default function HomeClient() {
                 type="button"
                 disabled={loading || !firebaseReady}
                 onClick={() => clickButton(() => void handleCreate())}
-                className="home-btn-start w-full rounded-xl py-3.5 text-base font-semibold disabled:opacity-50"
+                className="home-btn-start w-full py-3.5 text-base font-semibold disabled:opacity-50"
               >
                 {loading ? translate("wait") : translate("startRoom")}
               </button>

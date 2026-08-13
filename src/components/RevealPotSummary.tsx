@@ -33,12 +33,12 @@ export function RevealPotSummary({ result, bidCount }: RevealPotSummaryProps) {
         </p>
         <span className="text-slate-600">·</span>
         <p>
-          <span className="text-emerald-300/90">{translate("revealWinner")}: </span>
+          <span className="text-amber-200/90">{translate("revealWinner")}: </span>
           <span className="font-bold text-white">{winnerName}</span>
         </p>
       </div>
       {result.blindRevivalName ? (
-        <p className="text-[11px] text-violet-200/90">
+        <p className="text-[11px] text-amber-100/85">
           {translate("revealBlindRevival", {
             blind: result.blindRevivalName,
             opener: result.openerName,
