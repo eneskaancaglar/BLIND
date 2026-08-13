@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/context/LanguageContext";
-import { getOpponentSeatAnchors, getOpponentSeatPosition } from "@/lib/seatLayout";
+import { getOpponentSeatAnchors, getOpponentSeatPosition, getPlayerHandAnchor } from "@/lib/seatLayout";
 import { getHandDisplayCount, getBlindMode } from "@/lib/gameLogic";
 import { ChatMessage, Player, Rank, RevealResult, Room } from "@/lib/types";
 import { BidHistoryButton, BidHistoryPanel } from "./BidHistoryPanel";
@@ -62,6 +62,8 @@ export function GameTable({
     [opponents.length]
   );
   const handCount = me ? getHandDisplayCount(me, blindMode) : 0;
+
+  const playerHandAnchor = useMemo(() => getPlayerHandAnchor(), []);
   const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
   const isBiddingPhase = room.phase === "bidding";
   const handSize = isBiddingPhase ? "sm" : compactDock ? "sm" : "md";
@@ -174,15 +176,19 @@ export function GameTable({
 
     if (isBiddingPhase && room.currentBid) {
       return (
-        <CurrentBidDisplay bid={room.currentBid} strip />
+        <>
+          <p className="table-center-bid-label">{translate("currentBid")}</p>
+          <CurrentBidDisplay bid={room.currentBid} strip />
+        </>
       );
     }
 
     if (isBiddingPhase) {
       return (
-        <p className="text-[10px] font-semibold text-amber-50/90 drop-shadow-md">
-          {turnName ?? "..."}
-        </p>
+        <>
+          <p className="table-center-bid-label">{translate("statusBidding")}</p>
+          <p className="text-[11px] font-semibold text-amber-50/90">{turnName ?? "..."}</p>
+        </>
       );
     }
 
@@ -248,7 +254,7 @@ export function GameTable({
               alt=""
               fill
               priority
-              sizes="(max-width:640px) 92vw, 21rem"
+              sizes="(max-width:640px) 98vw, 26rem"
               className="table-felt-img"
               draggable={false}
               unoptimized
@@ -287,11 +293,22 @@ export function GameTable({
                 })}
               </div>
 
-              <div className="table-center-bid absolute left-1/2 top-[40%] z-20 -translate-x-1/2 -translate-y-1/2">
+              <div
+                className={`table-center-bid absolute left-1/2 z-20 -translate-x-1/2 -translate-y-1/2 ${
+                  isBiddingPhase ? "table-center-bid-panel" : ""
+                }`}
+                style={{ left: "50%", top: "42%" }}
+              >
                 {renderCenterPot()}
               </div>
 
-              <div className="table-player-hand absolute bottom-[18%] left-1/2 z-30 w-[min(66%,12.5rem)] -translate-x-1/2">
+              <div
+                className="table-player-hand absolute z-30 w-[min(56%,11rem)] -translate-x-1/2 -translate-y-1/2"
+                style={{
+                  left: `${playerHandAnchor.x}%`,
+                  top: `${playerHandAnchor.y}%`,
+                }}
+              >
                 {renderHand()}
               </div>
             </div>

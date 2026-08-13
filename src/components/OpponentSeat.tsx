@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { getHandDisplayCount } from "@/lib/gameLogic";
+import { getSeatOutwardVector } from "@/lib/seatLayout";
 import { BlindMode, ChatMessage, Player, Rank } from "@/lib/types";
 import type { SeatPosition } from "@/lib/seatLayout";
 import { getRecentReaction } from "./EmojiChat";
@@ -52,6 +53,15 @@ export function OpponentSeat({
       : translate("blindNoCards");
   const reaction = getRecentReaction(messages, player.id);
 
+  const outward = seatAnchor
+    ? getSeatOutwardVector(seatAnchor.x, seatAnchor.y)
+    : { x: 0, y: -1 };
+
+  const stackStyle = {
+    "--seat-out-x": outward.x.toFixed(3),
+    "--seat-out-y": outward.y.toFixed(3),
+  } as CSSProperties;
+
   const fanProps = {
     size: compact ? ("xs" as const) : ("sm" as const),
     spread: "tight" as const,
@@ -77,7 +87,7 @@ export function OpponentSeat({
 
   return (
     <div
-      className={`opponent-seat opponent-seat-${seatPosition} relative flex w-full min-w-0 flex-col items-center ${
+      className={`opponent-seat relative flex w-full min-w-0 flex-col items-center ${
         compact ? "opponent-seat-compact" : ""
       } ${isTurn ? "opponent-seat-turn" : ""}`}
     >
@@ -88,12 +98,18 @@ export function OpponentSeat({
       ) : null}
 
       {showName ? (
-        <p className="seat-name-tag" title={player.name}>
+        <p
+          className="seat-name-tag"
+          style={{
+            transform: `translate(calc(-50% + ${outward.x * 12}px), calc(${outward.y * 14}px - 1.1rem))`,
+          }}
+          title={player.name}
+        >
           {player.name}
         </p>
       ) : null}
 
-      <div className="seat-hand-stack">
+      <div className="seat-hand-stack" style={stackStyle}>
         <div className="seat-avatar-behind">
           <PlayerAvatar
             player={player}

@@ -383,7 +383,7 @@ button:disabled {
 
 .game-table-area {
   position: relative;
-  width: min(94vw, 21.5rem);
+  width: min(98vw, 25rem);
   height: 100%;
   max-height: 100%;
   aspect-ratio: 576 / 1024;
@@ -416,10 +416,32 @@ button:disabled {
 
 .table-center-bid {
   pointer-events: none;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.table-center-bid-panel {
+  background: rgba(0, 0, 0, 0.54);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: var(--radius-panel);
+  padding: 0.4rem 0.75rem 0.55rem;
+  min-width: 6.5rem;
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.table-center-bid-label {
+  margin-bottom: 0.2rem;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(212, 195, 150, 0.78);
 }
 
 .center-pot-table {
@@ -617,13 +639,21 @@ button:disabled {
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 4.75rem;
+  min-height: 4.5rem;
+  --seat-out-x: 0;
+  --seat-out-y: -1;
 }
 
 .seat-avatar-behind {
   position: absolute;
+  left: 50%;
+  top: 50%;
   z-index: 10;
   pointer-events: auto;
+  transform: translate(
+    calc(-50% + var(--seat-out-x) * 20px),
+    calc(-50% + var(--seat-out-y) * 20px)
+  );
 }
 
 .seat-avatar-row {
@@ -641,80 +671,32 @@ button:disabled {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  min-height: 4.5rem;
+  min-height: 4rem;
   perspective: 720px;
   margin-top: 0;
-}
-
-/* Avatar kartların kısa kenarının arkasında — masa merkezine bakan yüz */
-.opponent-seat-top .seat-avatar-behind {
-  top: 0;
-  left: 50%;
-  transform: translate(-50%, 15%);
-}
-
-.opponent-seat-top .opponent-seat-cards {
-  margin-top: 1.55rem;
-}
-
-.opponent-seat-top-left .seat-avatar-behind {
-  top: 18%;
-  left: 8%;
-  transform: translate(-20%, 0);
-}
-
-.opponent-seat-top-left .opponent-seat-cards {
-  margin-top: 1.35rem;
-  margin-left: 0.85rem;
-}
-
-.opponent-seat-top-right .seat-avatar-behind {
-  top: 18%;
-  right: 8%;
-  left: auto;
-  transform: translate(20%, 0);
-}
-
-.opponent-seat-top-right .opponent-seat-cards {
-  margin-top: 1.35rem;
-  margin-right: 0.85rem;
-}
-
-.opponent-seat-left .seat-avatar-behind {
-  left: -2%;
-  top: 50%;
-  transform: translate(-28%, -50%);
-}
-
-.opponent-seat-left .opponent-seat-cards {
-  margin-left: 1.45rem;
-}
-
-.opponent-seat-right .seat-avatar-behind {
-  right: -2%;
-  left: auto;
-  top: 50%;
-  transform: translate(28%, -50%);
-}
-
-.opponent-seat-right .opponent-seat-cards {
-  margin-right: 1.45rem;
+  transform: translate(
+    calc(var(--seat-out-x) * -10px),
+    calc(var(--seat-out-y) * -10px)
+  );
 }
 
 .opponent-seat-compact .seat-hand-stack {
-  min-height: 3.85rem;
+  min-height: 3.6rem;
 }
 
-.opponent-seat-compact.opponent-seat-top .opponent-seat-cards {
-  margin-top: 1.25rem;
+.opponent-seat-compact .seat-avatar-behind {
+  transform: translate(
+    calc(-50% + var(--seat-out-x) * 16px),
+    calc(-50% + var(--seat-out-y) * 16px)
+  );
 }
 
-.opponent-seat-compact.opponent-seat-left .opponent-seat-cards {
-  margin-left: 1.1rem;
-}
-
-.opponent-seat-compact.opponent-seat-right .opponent-seat-cards {
-  margin-right: 1.1rem;
+.opponent-seat-compact .opponent-seat-cards {
+  min-height: 3.5rem;
+  transform: translate(
+    calc(var(--seat-out-x) * -8px),
+    calc(var(--seat-out-y) * -8px)
+  );
 }
 
 .seat-name-tag {
@@ -1504,8 +1486,8 @@ button:disabled {
   position: absolute;
   transform: translate(-50%, -50%);
   z-index: 4;
-  width: min(32vw, 8.5rem);
-  max-width: min(32vw, 8.5rem);
+  width: min(30vw, 9rem);
+  max-width: min(30vw, 9rem);
   overflow: visible;
 }
 
@@ -1791,8 +1773,8 @@ button:disabled {
 
 @media (min-width: 640px) {
   .game-table-area {
-    width: min(92vw, 24rem);
-    max-height: min(68dvh, 40rem);
+    width: min(96vw, 28rem);
+    max-height: min(72dvh, 42rem);
   }
 
   .opponent-slot {

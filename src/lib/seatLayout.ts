@@ -1,13 +1,13 @@
 export type SeatPosition = "top" | "top-left" | "top-right" | "left" | "right" | "bottom";
 
-const TABLE_CENTER = { x: 50, y: 44 };
+export const TABLE_CENTER = { x: 50, y: 42 };
 
-/** Felt içi elips — rakipler bu sınırda eşit aralıklı */
-const TABLE_ELLIPSE = { cx: 50, cy: 46, rx: 20, ry: 21 };
+/** Felt içi oyun alanı elipsi */
+const TABLE_ELLIPSE = { cx: 50, cy: 42, rx: 17.5, ry: 19 };
 
-/** Alt (yerel oyuncu) hariç yay: sol → üst → sağ */
-const OPPONENT_ARC_START_DEG = 135;
-const OPPONENT_ARC_SPAN_DEG = 270;
+/** Alt oyuncu hariç: sol-üst → üst → sağ-üst (derece, 0=sağ, 90=alt) */
+const OPPONENT_ARC_START_DEG = 205;
+const OPPONENT_ARC_END_DEG = 335;
 
 export type SeatCardLayout = {
   containerRotate: number;
@@ -30,11 +30,11 @@ export function getSeatCardLayout(seat: SeatPosition): SeatCardLayout {
   return SEAT_CARD_LAYOUTS[seat];
 }
 
-/** Masa merkezine bakan fan rotasyonu (dinamik koltuklar). */
+/** Masa merkezine bakan fan rotasyonu. */
 export function getSeatLayoutFromAnchor(x: number, y: number): SeatCardLayout {
-  const dx = TABLE_CENTER.x - x;
-  const dy = TABLE_CENTER.y - y;
-  const angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
+  const toCenterX = TABLE_CENTER.x - x;
+  const toCenterY = TABLE_CENTER.y - y;
+  const angleDeg = (Math.atan2(toCenterY, toCenterX) * 180) / Math.PI;
   return {
     containerRotate: angleDeg + 90,
     pivotX: "50%",
@@ -44,21 +44,42 @@ export function getSeatLayoutFromAnchor(x: number, y: number): SeatCardLayout {
   };
 }
 
+/** Koltuktan dışarı (masa kenarına) birim vektör — avatar yerleşimi için. */
+export function getSeatOutwardVector(x: number, y: number): { x: number; y: number } {
+  const dx = x - TABLE_CENTER.x;
+  const dy = y - TABLE_CENTER.y;
+  const len = Math.hypot(dx, dy) || 1;
+  return { x: dx / len, y: dy / len };
+}
+
+export function getPlayerHandAnchor(): { x: number; y: number } {
+  return {
+    x: TABLE_ELLIPSE.cx,
+    y: TABLE_ELLIPSE.cy + TABLE_ELLIPSE.ry * 0.72,
+  };
+}
+
 export function getSeatAnchorPercent(_seat: SeatPosition): { x: number; y: number } {
   return getOpponentSeatAnchors(1)[0] ?? { x: 50, y: TABLE_ELLIPSE.cy - TABLE_ELLIPSE.ry };
 }
 
-/** Rakipleri masa elipsi üzerinde eşit aralıklı yerleştir. */
+/** Rakipleri felt elipsi üzerinde eşit aralıklı yerleştir (alt bölge hariç). */
 export function getOpponentSeatAnchors(count: number): Array<{ x: number; y: number }> {
   if (count <= 0) return [];
 
   if (count === 1) {
-    return [{ x: TABLE_ELLIPSE.cx, y: TABLE_ELLIPSE.cy - TABLE_ELLIPSE.ry }];
+    const rad = (270 * Math.PI) / 180;
+    return [
+      {
+        x: TABLE_ELLIPSE.cx + TABLE_ELLIPSE.rx * Math.cos(rad),
+        y: TABLE_ELLIPSE.cy + TABLE_ELLIPSE.ry * Math.sin(rad),
+      },
+    ];
   }
 
   return Array.from({ length: count }, (_, index) => {
     const t = index / (count - 1);
-    const deg = OPPONENT_ARC_START_DEG + OPPONENT_ARC_SPAN_DEG * t;
+    const deg = OPPONENT_ARC_START_DEG + t * (OPPONENT_ARC_END_DEG - OPPONENT_ARC_START_DEG);
     const rad = (deg * Math.PI) / 180;
     return {
       x: TABLE_ELLIPSE.cx + TABLE_ELLIPSE.rx * Math.cos(rad),
