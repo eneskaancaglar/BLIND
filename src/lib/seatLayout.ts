@@ -75,9 +75,9 @@ export function getSeatOutwardVector(x: number, y: number): { x: number; y: numb
   return { x: dx / len, y: dy / len };
 }
 
-/** Yerel oyuncu eli — felt içinde, alt orta. */
+/** Yerel oyuncu eli — felt içinde, alt orta (aşağıda). */
 export function getPlayerHandAnchor(): { x: number; y: number } {
-  return pointOnEllipse(FELT_ELLIPSE, LOCAL_SEAT_ANGLE_DEG, 0.52);
+  return pointOnEllipse(FELT_ELLIPSE, LOCAL_SEAT_ANGLE_DEG, 0.72);
 }
 
 export function getSeatAnchorPercent(_seat: SeatPosition): { x: number; y: number } {

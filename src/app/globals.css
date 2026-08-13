@@ -470,11 +470,21 @@ button:disabled {
   text-align: center;
 }
 
+.table-center-bid-box {
+  background: rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(212, 175, 55, 0.38);
+  border-radius: var(--radius-sharp);
+  padding: 0.35rem 0.7rem 0.45rem;
+  min-width: 6.25rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
 .table-center-bid-panel {
   background: rgba(0, 0, 0, 0.54);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(212, 175, 55, 0.22);
-  border-radius: var(--radius-panel);
+  border-radius: var(--radius-sharp);
   padding: 0.4rem 0.75rem 0.55rem;
   min-width: 6.5rem;
   box-shadow:
@@ -1514,11 +1524,9 @@ button:disabled {
 
 /* Rakip koltukları */
 .opponents-table {
-  position: relative;
-  width: 100%;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
   overflow: visible;
-  padding: 0.85rem 0.25rem 0.15rem;
 }
 
 .opponent-slot {

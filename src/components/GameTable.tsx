@@ -177,10 +177,10 @@ export function GameTable({
 
     if (isBiddingPhase && room.currentBid) {
       return (
-        <>
+        <div className="table-center-bid-box">
           <p className="table-center-bid-label">{translate("currentBid")}</p>
           <CurrentBidDisplay bid={room.currentBid} strip />
-        </>
+        </div>
       );
     }
 
@@ -288,9 +288,7 @@ export function GameTable({
               </div>
 
               <div
-                className={`table-center-bid absolute z-20 -translate-x-1/2 -translate-y-1/2 ${
-                  isBiddingPhase ? "table-center-bid-panel" : ""
-                }`}
+                className="table-center-bid absolute z-20 -translate-x-1/2 -translate-y-1/2"
                 style={{ left: `${tableCenter.x}%`, top: `${tableCenter.y}%` }}
               >
                 {renderCenterPot()}
