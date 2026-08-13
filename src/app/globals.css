@@ -367,6 +367,13 @@ button:disabled {
   align-items: center;
   justify-content: center;
   perspective: none;
+  min-height: min(72dvh, 40rem);
+}
+
+.table-felt-img {
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
 }
 
 .game-table-area {
@@ -380,14 +387,12 @@ button:disabled {
   isolation: isolate;
   transform: translateZ(0);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65);
-}
-
-.game-table-area-image {
   background: #050504;
 }
 
-.table-felt-image {
-  background: url("/table/table-felt.png") center center / cover no-repeat;
+/* legacy — artık kullanılmıyor */
+.table-felt {
+  display: none !important;
 }
 
 .table-play-surface {
@@ -416,27 +421,6 @@ button:disabled {
   justify-content: center;
   align-items: flex-end;
   min-height: 4.5rem;
-}
-
-.table-felt {
-  background:
-    radial-gradient(ellipse 68% 52% at 50% 32%, rgba(255, 255, 255, 0.16) 0%, transparent 58%),
-    radial-gradient(ellipse 95% 80% at 50% 55%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.32) 100%),
-    repeating-linear-gradient(
-      118deg,
-      rgba(255, 255, 255, 0.025) 0px,
-      rgba(255, 255, 255, 0.025) 1px,
-      transparent 1px,
-      transparent 5px
-    ),
-    repeating-linear-gradient(
-      28deg,
-      rgba(0, 0, 0, 0.04) 0px,
-      rgba(0, 0, 0, 0.04) 1px,
-      transparent 1px,
-      transparent 7px
-    ),
-    linear-gradient(168deg, #2da876 0%, #208f63 22%, #187652 48%, #105f42 78%, #0b4a34 100%);
 }
 
 .table-felt-grain {
@@ -924,8 +908,9 @@ button:disabled {
   background: #050504;
 }
 
-.home-room-bg {
-  background: url("/home/room-bg.jpg") center top / cover no-repeat;
+.home-room-bg-img {
+  z-index: 0;
+  pointer-events: none;
 }
 
 .home-room-overlay {

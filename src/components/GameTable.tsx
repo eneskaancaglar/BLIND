@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useLanguage } from "@/context/LanguageContext";
 import { getOpponentSeatPosition } from "@/lib/seatLayout";
 import { getHandDisplayCount, getBlindMode } from "@/lib/gameLogic";
@@ -253,8 +254,17 @@ export function GameTable({
 
       <div className="game-table-stage">
         <div className="game-table-perspective">
-          <div className="game-table-area game-table-area-image">
-            <div className="table-felt table-felt-image absolute inset-0" />
+          <div className="game-table-area">
+            <Image
+              src="/table/table-felt.png"
+              alt=""
+              fill
+              priority
+              sizes="(max-width:640px) 92vw, 21rem"
+              className="table-felt-img object-cover object-center"
+              draggable={false}
+              unoptimized
+            />
 
             <div className="table-play-surface relative z-10 h-full w-full">
               <div className="opponents-table relative h-full min-h-0">
