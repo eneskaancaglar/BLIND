@@ -3,12 +3,12 @@ export type SeatPosition = "top" | "top-left" | "top-right" | "left" | "right" |
 const TABLE_CENTER = { x: 50, y: 44 };
 
 const SEAT_ANCHORS: Record<SeatPosition, { x: number; y: number }> = {
-  top: { x: 50, y: 13 },
-  "top-left": { x: 24, y: 17 },
-  "top-right": { x: 76, y: 17 },
-  left: { x: 13, y: 46 },
-  right: { x: 87, y: 46 },
-  bottom: { x: 50, y: 78 },
+  top: { x: 50, y: 26 },
+  "top-left": { x: 34, y: 30 },
+  "top-right": { x: 66, y: 30 },
+  left: { x: 26, y: 46 },
+  right: { x: 74, y: 46 },
+  bottom: { x: 50, y: 68 },
 };
 
 export type SeatCardLayout = {

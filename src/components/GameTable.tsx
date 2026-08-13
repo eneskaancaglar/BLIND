@@ -170,31 +170,15 @@ export function GameTable({
 
     if (isBiddingPhase && room.currentBid) {
       return (
-        <div className="center-bid-display flex flex-col items-center gap-0.5">
-          <p className="text-[7px] font-semibold uppercase tracking-wider text-amber-100/90">
-            {translate("currentBid")}
-          </p>
-          <CurrentBidDisplay
-            bid={room.currentBid}
-            playerName={room.currentBid.playerName}
-            compact
-          />
-          <p className="text-[7px] text-amber-100/65">
-            {translate("turn")}:{" "}
-            <span className="font-medium text-amber-50">{turnName ?? "..."}</span>
-          </p>
-        </div>
+        <CurrentBidDisplay bid={room.currentBid} strip />
       );
     }
 
     if (isBiddingPhase) {
       return (
-        <>
-          <p className="text-[7px] font-medium uppercase tracking-wider text-amber-100/75">
-            {translate("turn")}
-          </p>
-          <p className="mt-0.5 truncate text-xs font-semibold text-amber-50">{turnName ?? "..."}</p>
-        </>
+        <p className="text-[10px] font-semibold text-amber-50/90 drop-shadow-md">
+          {turnName ?? "..."}
+        </p>
       );
     }
 
@@ -261,7 +245,7 @@ export function GameTable({
               fill
               priority
               sizes="(max-width:640px) 92vw, 21rem"
-              className="table-felt-img object-cover object-center"
+              className="table-felt-img"
               draggable={false}
               unoptimized
             />
@@ -290,13 +274,11 @@ export function GameTable({
                 })}
               </div>
 
-              <div className="table-center-bid pointer-events-none absolute left-1/2 top-[42%] z-20 w-[min(72%,9.5rem)] -translate-x-1/2 -translate-y-1/2">
-                <div className="center-pot center-pot-table rounded-xl px-2 py-1.5 text-center">
-                  {renderCenterPot()}
-                </div>
+              <div className="table-center-bid absolute left-1/2 top-[40%] z-20 -translate-x-1/2 -translate-y-1/2">
+                {renderCenterPot()}
               </div>
 
-              <div className="table-player-hand absolute bottom-[7%] left-1/2 z-30 w-[min(96%,18rem)] -translate-x-1/2">
+              <div className="table-player-hand absolute bottom-[16%] left-1/2 z-30 w-[min(72%,13.5rem)] -translate-x-1/2">
                 {renderHand()}
               </div>
             </div>
@@ -312,7 +294,7 @@ export function GameTable({
       />
 
       <div
-        className={`game-dock game-dock-area game-dock-controls-only ${isBiddingPhase ? "game-dock-compact" : compactDock ? "game-dock-compact" : ""} min-h-0 shrink-0 px-1 pb-1.5 pt-1 sm:pb-3`}
+        className={`game-dock game-dock-area game-dock-fixed ${isBiddingPhase ? "game-dock-compact" : compactDock ? "game-dock-compact" : ""} shrink-0 px-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1`}
       >
         {children ? <div className="game-dock-controls px-0.5">{children}</div> : null}
       </div>

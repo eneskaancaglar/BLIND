@@ -23,16 +23,20 @@ export function CurrentBidDisplay({
   const cardSize = strip ? "xs" : compact ? "sm" : "md";
 
   return (
-    <div className={`bid-display flex items-center ${strip ? "flex-row gap-2" : "flex-col gap-1"}`}>
+    <div className={`bid-display flex items-center ${strip ? "flex-row gap-1.5" : "flex-col gap-1"}`}>
       <div
-        className={`bid-display-row flex items-center justify-center ${strip ? "gap-1.5" : "gap-2 sm:gap-3"}`}
+        className={`bid-display-row flex items-center justify-center ${strip ? "gap-1" : "gap-2 sm:gap-3"}`}
       >
-        <PlayingCard card={{ rank: bid.rank, suit: demoSuit() }} size={cardSize} tilt="flat" />
-        <span className={`bid-display-count ${strip ? "bid-display-count-strip" : ""}`}>
+        <PlayingCard card={{ rank: bid.rank, suit: demoSuit() }} size={cardSize} />
+        <span
+          className={`bid-display-count font-bold text-amber-50 drop-shadow-md ${
+            strip ? "bid-display-count-strip text-xl" : ""
+          }`}
+        >
           ×{bid.count}
         </span>
       </div>
-      {playerName ? (
+      {playerName && !strip ? (
         <p
           className={`truncate text-slate-400 ${
             strip ? "max-w-[7rem] text-[10px]" : "max-w-[11rem] text-[11px]"

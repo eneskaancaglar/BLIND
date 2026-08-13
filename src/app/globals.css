@@ -350,44 +350,44 @@ button:disabled {
   position: relative;
   z-index: 5;
   display: flex;
-  flex-shrink: 0;
+  flex: 1 1 0;
   align-items: center;
   justify-content: center;
   width: 100%;
   min-height: 0;
-  flex: 1 1 auto;
-  padding: 0.15rem 0.5rem 0.25rem;
+  max-height: calc(100dvh - 11.5rem);
+  padding: 0.1rem 0.35rem 0.15rem;
   overflow: hidden;
 }
 
 .game-table-perspective {
   width: 100%;
   height: 100%;
+  max-height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   perspective: none;
-  min-height: min(72dvh, 40rem);
-}
-
-.table-felt-img {
-  z-index: 0;
-  pointer-events: none;
-  user-select: none;
+  min-height: 0;
 }
 
 .game-table-area {
   position: relative;
-  width: min(92vw, 21rem);
+  width: min(86vw, 18.5rem);
+  height: 100%;
+  max-height: 100%;
   aspect-ratio: 576 / 1024;
-  max-height: min(72dvh, 40rem);
-  height: auto;
-  border-radius: 1rem;
+  border-radius: 0.85rem;
   overflow: hidden;
   isolation: isolate;
   transform: translateZ(0);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
   background: #050504;
+}
+
+.table-felt-img {
+  object-fit: contain;
+  object-position: center center;
 }
 
 /* legacy — artık kullanılmıyor */
@@ -406,13 +406,22 @@ button:disabled {
 
 .table-center-bid {
   pointer-events: none;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
 }
 
 .center-pot-table {
-  background: rgba(8, 6, 4, 0.55);
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(6px);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 0;
+}
+
+.reveal-pot-summary {
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.85);
 }
 
 .table-player-hand {
@@ -1368,36 +1377,69 @@ button:disabled {
 
 .opponent-slot-top {
   left: 50%;
-  top: 18%;
+  top: 26%;
   transform: translateX(-50%);
 }
 
 .opponent-slot-top-left {
-  left: 22%;
-  top: 22%;
+  left: 34%;
+  top: 30%;
   transform: translateX(-50%);
 }
 
 .opponent-slot-top-right {
-  left: 78%;
-  top: 22%;
+  left: 66%;
+  top: 30%;
   transform: translateX(-50%);
 }
 
 .opponent-slot-left {
-  left: 10%;
-  top: 42%;
+  left: 26%;
+  top: 46%;
 }
 
 .opponent-slot-right {
-  left: 90%;
-  top: 42%;
+  left: 74%;
+  top: 46%;
 }
 
-.game-dock-controls-only {
-  border-top: 1px solid rgba(212, 175, 55, 0.14);
-  background: rgba(8, 6, 4, 0.92);
-  backdrop-filter: blur(10px);
+.game-dock-fixed {
+  position: sticky;
+  bottom: 0;
+  z-index: 40;
+  flex: 0 0 auto;
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(8, 6, 4, 0.96);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.game-layout.game-bidding {
+  --bid-dock-space: 10.5rem;
+}
+
+.game-layout.game-bidding .game-table-stage {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: calc(100dvh - var(--bid-dock-space) - 2.75rem);
+  overflow: hidden;
+  padding-bottom: 0.1rem;
+}
+
+.game-layout.game-bidding .game-dock-area {
+  flex: 0 0 auto;
+  min-height: var(--bid-dock-space);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.game-layout.game-bidding .game-dock-fixed {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  pointer-events: auto;
 }
 
 .game-dock {
@@ -1430,37 +1472,11 @@ button:disabled {
   min-height: unset;
 }
 
-.game-layout.game-bidding .game-table-stage {
-  flex: 1 1 auto;
-  height: auto;
-  min-height: 0;
-  max-height: none;
-  flex-shrink: 1;
-  overflow: hidden;
-}
-
-@media (max-width: 639px) {
-  .game-layout.game-bidding .game-table-stage {
-    flex: 1 1 auto;
-    height: auto;
-    min-height: 0;
-    max-height: none;
-    flex-shrink: 1;
-  }
-}
-
 .game-dock-area {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-}
-
-.game-layout.game-bidding .game-dock-area {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .game-bidding .opponents-table {
@@ -1484,31 +1500,27 @@ button:disabled {
 }
 
 .game-bidding .opponent-slot-top {
-  left: 50%;
-  top: 0.05rem;
-  transform: translateX(-50%);
+  top: 26%;
 }
 
 .game-bidding .opponent-slot-top-left {
-  left: 24%;
-  top: 0.2rem;
-  transform: translateX(-50%);
+  left: 34%;
+  top: 30%;
 }
 
 .game-bidding .opponent-slot-top-right {
-  left: 76%;
-  top: 0.2rem;
-  transform: translateX(-50%);
+  left: 66%;
+  top: 30%;
 }
 
 .game-bidding .opponent-slot-left {
-  left: 13%;
-  top: 48%;
+  left: 26%;
+  top: 46%;
 }
 
 .game-bidding .opponent-slot-right {
-  left: 87%;
-  top: 48%;
+  left: 74%;
+  top: 46%;
 }
 
 .bid-strip {
@@ -1590,9 +1602,15 @@ button:disabled {
 }
 
 .game-bidding .game-dock-controls {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.game-bidding .game-dock-fixed .home-panel-light {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0.35rem 0.25rem 0.25rem;
 }
 
 .bid-panel-compact {
