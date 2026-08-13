@@ -42,7 +42,7 @@ function CardImage({
   blindOverlay?: boolean;
 }) {
   return (
-    <div className={`card-body card-body-flat ${SIZE_CLASSES[size]}`}>
+    <div className={`card-body-flat ${SIZE_CLASSES[size]}`}>
       <Image
         src={src}
         alt={alt}
