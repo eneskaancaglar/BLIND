@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getSeatCardLayout, type SeatPosition } from "@/lib/seatLayout";
-import { Card as CardType, Rank } from "@/lib/types";
+import { Card as CardType, CardBackColor, Rank } from "@/lib/types";
 import { PlayingCard, CardSize } from "./PlayingCard";
 
 const CARD_WIDTH_PX: Record<CardSize, number> = {
@@ -21,6 +21,16 @@ const CARD_HEIGHT_PX: Record<CardSize, number> = {
   xl: 102,
 };
 
+
+function resolveBackColor(
+  index: number,
+  deckCount: 1 | 2,
+  card?: CardType
+): CardBackColor {
+  if (card?.backColor) return card.backColor;
+  if (deckCount === 2) return index % 2 === 0 ? "blue" : "red";
+  return "blue";
+}
 
 function computeFitOverlap(
   cardWidth: number,
@@ -100,7 +110,7 @@ export function CardFan({
   dealKey,
   highlightRank,
   className = "",
-  deckCount: _deckCount = 1,
+  deckCount = 1,
 }: CardFanProps) {
   const total = count ?? cards.length;
   const displayTotal = maxVisible ? Math.min(total, maxVisible) : total;
@@ -238,6 +248,7 @@ export function CardFan({
           >
             {items.slice(0, renderCount).map((item, i) => {
               const cardObj = isBack ? undefined : (item as { card: CardType }).card;
+              const backColor = resolveBackColor(i, deckCount, cardObj);
 
               return (
               <div
@@ -257,6 +268,7 @@ export function CardFan({
                   hidden={hidden && !blind && !faceDown}
                   blind={blind}
                   faceDown={faceDown}
+                  backColor={backColor}
                   size={size}
                   tilt={tilt}
                   highlightRank={highlightRank}
@@ -280,6 +292,7 @@ export function CardFan({
             const rotate = (i - center) * (maxRotate / Math.max(center, 1));
             const lift = Math.abs(i - center) * fanLift;
             const cardObj = isBack ? undefined : (item as { card: CardType }).card;
+            const backColor = resolveBackColor(i, deckCount, cardObj);
 
             return (
               <div
@@ -297,6 +310,7 @@ export function CardFan({
                   hidden={hidden && !blind && !faceDown}
                   blind={blind}
                   faceDown={faceDown}
+                  backColor={backColor}
                   size={size}
                   tilt={tilt}
                   highlightRank={highlightRank}

@@ -3,8 +3,8 @@
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import { cardMatchesBid } from "@/lib/gameLogic";
-import { CARD_BACK_IMAGE, getCardFaceImage } from "@/lib/cardAssets";
-import { Card, Rank, SUIT_SYMBOLS } from "@/lib/types";
+import { getCardBackImage, getCardFaceImage } from "@/lib/cardAssets";
+import { Card, CardBackColor, Rank } from "@/lib/types";
 
 export type CardSize = "xs" | "sm" | "md" | "lg" | "xl";
 
@@ -22,6 +22,7 @@ type PlayingCardProps = {
   blind?: boolean;
   size?: CardSize;
   faceDown?: boolean;
+  backColor?: CardBackColor;
   tilt?: "hand" | "table" | "flat";
   highlight?: boolean;
   highlightRank?: Rank;
@@ -40,13 +41,11 @@ function CardImage({
   alt,
   size,
   blindOverlay,
-  suitBadge,
 }: {
   src: string;
   alt: string;
   size: CardSize;
   blindOverlay?: boolean;
-  suitBadge?: string;
 }) {
   return (
     <div className={`card-body card-body-themed ${SIZE_CLASSES[size]}`}>
@@ -55,15 +54,10 @@ function CardImage({
         alt={alt}
         fill
         sizes="(max-width:640px) 80px, 120px"
-        className="card-themed-img object-cover"
+        className="card-themed-img object-contain"
         draggable={false}
         unoptimized
       />
-      {suitBadge ? (
-        <span className="card-suit-badge absolute left-0.5 top-0.5 rounded bg-black/55 px-0.5 text-[8px] font-bold text-white">
-          {suitBadge}
-        </span>
-      ) : null}
       {blindOverlay ? (
         <div className="absolute inset-0 flex items-center justify-center bg-black/45">
           <span className="text-xl font-light text-white">?</span>
@@ -79,6 +73,7 @@ export function PlayingCard({
   blind,
   size = "md",
   faceDown,
+  backColor,
   tilt = "hand",
   highlight = false,
   highlightRank,
@@ -86,11 +81,9 @@ export function PlayingCard({
   style,
 }: PlayingCardProps) {
   const showBack = hidden || blind || faceDown || !card;
+  const resolvedBack = backColor ?? card?.backColor ?? "blue";
   const isHighlighted =
     highlight || Boolean(card && highlightRank && cardMatchesBid(card, highlightRank));
-
-  const suitBadge =
-    card && card.suit !== "S" ? SUIT_SYMBOLS[card.suit] : undefined;
 
   return (
     <div
@@ -100,17 +93,16 @@ export function PlayingCard({
       <div className={TILT_CLASS[tilt]}>
         {showBack ? (
           <CardImage
-            src={CARD_BACK_IMAGE}
+            src={getCardBackImage(resolvedBack)}
             alt="Card back"
             size={size}
             blindOverlay={blind}
           />
         ) : card ? (
           <CardImage
-            src={getCardFaceImage(card.rank)}
-            alt={`${card.rank} of spades`}
+            src={getCardFaceImage(card.rank, card.suit)}
+            alt={`${card.rank} ${card.suit}`}
             size={size}
-            suitBadge={suitBadge}
           />
         ) : null}
       </div>

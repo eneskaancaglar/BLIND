@@ -9,6 +9,7 @@
     "lint": "next lint",
     "test": "vitest run",
     "slice-cards": "node scripts/slice-cards.mjs",
+    "import-cards": "node scripts/import-cards.mjs",
     "deploy:rules": "npx firebase-tools deploy --only firestore:rules --project blind-a5b04",
     "login:firebase": "npx firebase-tools login"
   },
