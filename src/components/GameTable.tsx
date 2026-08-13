@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/context/LanguageContext";
-import { getOpponentSeatPosition } from "@/lib/seatLayout";
+import { getOpponentSeatAnchors, getOpponentSeatPosition } from "@/lib/seatLayout";
 import { getHandDisplayCount, getBlindMode } from "@/lib/gameLogic";
 import { ChatMessage, Player, Rank, RevealResult, Room } from "@/lib/types";
 import { BidHistoryButton, BidHistoryPanel } from "./BidHistoryPanel";
@@ -57,6 +57,10 @@ export function GameTable({
   useEffect(() => {
     setShowBidHistory(false);
   }, [room.roundNumber, room.phase]);
+  const opponentAnchors = useMemo(
+    () => getOpponentSeatAnchors(opponents.length),
+    [opponents.length]
+  );
   const handCount = me ? getHandDisplayCount(me, blindMode) : 0;
   const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
   const isBiddingPhase = room.phase === "bidding";
@@ -253,12 +257,21 @@ export function GameTable({
             <div className="table-play-surface relative z-10 h-full w-full">
               <div className="opponents-table relative h-full min-h-0">
                 {opponents.map((player, index) => {
+                  const anchor = opponentAnchors[index] ?? { x: 50, y: 25 };
                   const seat = getOpponentSeatPosition(index, opponents.length);
                   return (
-                    <div key={player.id} className={`opponent-slot opponent-slot-${seat}`}>
+                    <div
+                      key={player.id}
+                      className="opponent-slot opponent-slot-dynamic"
+                      style={{
+                        left: `${anchor.x}%`,
+                        top: `${anchor.y}%`,
+                      }}
+                    >
                       <OpponentSeat
                         player={player}
                         seatPosition={seat}
+                        seatAnchor={anchor}
                         deckCount={deckCount}
                         isTurn={player.id === turnPlayerId}
                         showCards={showAllCards}

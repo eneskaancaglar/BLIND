@@ -12,6 +12,7 @@ import { PlayerAvatar } from "./PlayerAvatar";
 type OpponentSeatProps = {
   player: Player;
   seatPosition: SeatPosition;
+  seatAnchor?: { x: number; y: number };
   isTurn: boolean;
   showCards: boolean;
   deckCount?: 1 | 2;
@@ -26,6 +27,7 @@ type OpponentSeatProps = {
 export function OpponentSeat({
   player,
   seatPosition,
+  seatAnchor,
   isTurn,
   showCards,
   deckCount = 1,
@@ -56,6 +58,7 @@ export function OpponentSeat({
     tilt: "flat" as const,
     fanStyle: "classic" as const,
     seatPosition,
+    seatAnchor,
     fitAll: true,
     deckCount,
     animateDeal,

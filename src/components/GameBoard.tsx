@@ -362,6 +362,9 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
   const turnPlayerId = room?.turnOrder[room.currentTurnIndex] ?? undefined;
   const isMyTurn = turnPlayerId === playerId;
   const isHost = room?.hostId === playerId;
+  const hostPlayer = players.find((player) => player.id === room?.hostId);
+  const hostIsActive = Boolean(hostPlayer && !hostPlayer.isEliminated);
+  const canContinueReveal = isHost || !hostIsActive;
   const showAllCards = Boolean(
     room?.revealResult &&
       room.status !== "finished" &&
@@ -525,8 +528,10 @@ export function GameBoard({ roomCode, onLeave }: GameBoardProps) {
           result={room.revealResult}
           bidCount={room.currentBid?.count ?? 0}
           isHost={isHost}
+          canContinue={canContinueReveal}
           loading={loading}
           onContinue={handleContinue}
+          onLeave={handleLeave}
         />
       ) : null}
 

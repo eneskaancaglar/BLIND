@@ -10,17 +10,20 @@ import { BodyPortal } from "./BodyPortal";
 type RoundResultOverlayProps = {
   result: RevealResult;
   bidCount: number;
-  isHost: boolean;
+  isHost?: boolean;
+  canContinue: boolean;
   loading: boolean;
   onContinue: () => void;
+  onLeave: () => void;
 };
 
 export function RoundResultOverlay({
   result,
   bidCount,
-  isHost,
+  canContinue,
   loading,
   onContinue,
+  onLeave,
 }: RoundResultOverlayProps) {
   const { translate, language } = useLanguage();
   const { play } = useSound();
@@ -81,18 +84,30 @@ export function RoundResultOverlay({
             </div>
           ) : null}
 
-          {isHost ? (
+          <div className="grid grid-cols-2 gap-2">
+            {canContinue ? (
+              <button
+                type="button"
+                disabled={loading}
+                onClick={handleContinue}
+                className="home-btn-start col-span-2 py-3 text-sm font-semibold disabled:opacity-50 sm:py-3.5"
+              >
+                {loading ? translate("wait") : translate("revealNextRound")}
+              </button>
+            ) : (
+              <p className="col-span-2 text-center text-xs text-slate-400">
+                {translate("revealHostWait")}
+              </p>
+            )}
             <button
               type="button"
               disabled={loading}
-              onClick={handleContinue}
-              className="home-btn-start w-full py-3 text-sm font-semibold disabled:opacity-50 sm:py-3.5"
+              onClick={onLeave}
+              className="home-footer-btn col-span-2 py-2.5 text-xs font-semibold"
             >
-              {loading ? translate("wait") : translate("revealNextRound")}
+              {translate("backToHome")}
             </button>
-          ) : (
-            <p className="text-center text-xs text-slate-400">{translate("revealHostWait")}</p>
-          )}
+          </div>
         </div>
       </div>
     </BodyPortal>

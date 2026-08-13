@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { getSeatCardLayout, type SeatPosition } from "@/lib/seatLayout";
+import { getSeatCardLayout, getSeatLayoutFromAnchor, type SeatPosition } from "@/lib/seatLayout";
 import { Card as CardType, CardBackColor, Rank } from "@/lib/types";
 import { PlayingCard, CardSize } from "./PlayingCard";
 
@@ -53,17 +53,18 @@ function computeClassicSpread(count: number, maxSpread: number): number {
   return Math.min(maxSpread, 8 + count * (maxSpread / Math.max(count, 5)));
 }
 
-/** Asymmetric hand fan — heavy overlap, pinch at bottom center (photo reference). */
+/** Symmetric hand fan — pivot bottom center (reference photo). */
 function computePhotoFanAngles(count: number, spreadDeg: number): number[] {
   if (count <= 0) return [];
   if (count === 1) return [0];
-  const start = -spreadDeg * 0.72;
-  const end = spreadDeg * 0.28;
-  return Array.from({ length: count }, (_, i) => start + (i / (count - 1)) * (end - start));
+  const half = spreadDeg / 2;
+  return Array.from({ length: count }, (_, i) => -half + (i / (count - 1)) * spreadDeg);
 }
 
-function computePhotoFanNudge(index: number, cardWidth: number): number {
-  return index * cardWidth * 0.07;
+function computePhotoFanOffset(index: number, count: number, cardWidth: number): number {
+  if (count <= 1) return 0;
+  const center = (count - 1) / 2;
+  return (index - center) * cardWidth * 0.16;
 }
 
 function estimateClassicWidth(cardWidth: number, cardHeight: number, spreadDeg: number): number {
@@ -82,6 +83,7 @@ type CardFanProps = {
   tilt?: "hand" | "table" | "flat";
   fanStyle?: "classic" | "overlap";
   seatPosition?: SeatPosition;
+  seatAnchor?: { x: number; y: number };
   showCountBadge?: boolean;
   maxVisible?: number;
   fitAll?: boolean;
@@ -103,6 +105,7 @@ export function CardFan({
   tilt = "hand",
   fanStyle,
   seatPosition,
+  seatAnchor,
   showCountBadge = false,
   maxVisible,
   fitAll = false,
@@ -123,7 +126,11 @@ export function CardFan({
     (fanStyle !== "overlap" &&
       ((tilt === "table" && displayTotal >= 2) || (tilt === "hand" && displayTotal >= 2)));
 
-  const seatLayout = seatPosition ? getSeatCardLayout(seatPosition) : null;
+  const seatLayout = seatAnchor
+    ? getSeatLayoutFromAnchor(seatAnchor.x, seatAnchor.y)
+    : seatPosition
+      ? getSeatCardLayout(seatPosition)
+      : null;
 
   useLayoutEffect(() => {
     if (!fitAll) {
@@ -253,9 +260,9 @@ export function CardFan({
               return (
               <div
                 key={isBack ? `wrap-${i}` : `wrap-${(item as { index: number }).index}`}
-                className={`absolute bottom-0 left-0 ${animateDeal ? "card-deal-in" : ""}`}
+                className={`absolute bottom-0 left-1/2 ${animateDeal ? "card-deal-in" : ""}`}
                 style={{
-                  transform: `translateX(${computePhotoFanNudge(i, cardWidth)}px) rotate(${classicAngles[i] ?? 0}deg)`,
+                  transform: `translateX(calc(-50% + ${computePhotoFanOffset(i, displayTotal, cardWidth)}px)) rotate(${classicAngles[i] ?? 0}deg)`,
                   transformOrigin: `${pivotX} ${pivotY}`,
                   zIndex: i + 1,
                   animationDelay: animateDeal ? `${i * 0.07}s` : undefined,

@@ -683,8 +683,10 @@ export async function continueAfterReveal(roomCode: string, actorId: string): Pr
     }
 
     if (room.hostId !== actorId) {
+      const hostPlayer = players.find((player) => player.id === room.hostId);
+      const hostIsActive = Boolean(hostPlayer && !hostPlayer.isEliminated);
       const wouldEndGame = predictGameEndsAfterReveal(players, room.revealResult, room);
-      if (!wouldEndGame) {
+      if (hostIsActive && !wouldEndGame) {
         throw new Error("Sadece oda kurucusu devam ettirebilir.");
       }
     }
@@ -776,11 +778,13 @@ export async function leaveGame(roomCode: string, playerId: string): Promise<voi
   }
 
   const roomUpdates: Partial<Room> = {};
+  let continueActorId: string | null = null;
 
   if (room.hostId === playerId) {
     const newHost = active[0];
     if (newHost) {
       roomUpdates.hostId = newHost.id;
+      continueActorId = newHost.id;
       await updateDoc(doc(getDb(), ROOMS, roomCode, PLAYERS, newHost.id), { isHost: true });
     }
   }
@@ -803,11 +807,14 @@ export async function leaveGame(roomCode: string, playerId: string): Promise<voi
     await updateDoc(roomRef, touchRoom(roomUpdates));
   }
 
-  if (room.phase === "revealed" && room.revealResult && active[0]) {
-    try {
-      await continueAfterReveal(roomCode, active[0].id);
-    } catch {
-      // Remaining players can continue manually.
+  if (room.phase === "revealed" && room.revealResult) {
+    const actorId = continueActorId ?? active[0]?.id;
+    if (actorId) {
+      try {
+        await continueAfterReveal(roomCode, actorId);
+      } catch {
+        // Remaining players can continue manually or leave.
+      }
     }
   }
 
