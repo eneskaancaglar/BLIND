@@ -219,7 +219,7 @@ export function CardFan({
 
   const pivotX = seatLayout?.pivotX ?? "50%";
   const pivotY = seatLayout?.pivotY ?? "100%";
-  const tiltX = seatLayout?.tiltX ?? (tilt === "table" ? 40 : 14);
+  const tiltX = tilt === "flat" ? 0 : seatLayout?.tiltX ?? (tilt === "table" ? 40 : 14);
 
   const classicContainerWidth = estimateClassicWidth(cardWidth, cardHeight, classicSpread);
 

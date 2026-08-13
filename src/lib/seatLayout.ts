@@ -8,7 +8,7 @@ const SEAT_ANCHORS: Record<SeatPosition, { x: number; y: number }> = {
   "top-right": { x: 76, y: 17 },
   left: { x: 13, y: 46 },
   right: { x: 87, y: 46 },
-  bottom: { x: 50, y: 82 },
+  bottom: { x: 50, y: 78 },
 };
 
 export type SeatCardLayout = {

@@ -355,7 +355,8 @@ button:disabled {
   justify-content: center;
   width: 100%;
   min-height: 0;
-  padding: 0.25rem 0.5rem 0.15rem;
+  flex: 1 1 auto;
+  padding: 0.15rem 0.5rem 0.25rem;
   overflow: hidden;
 }
 
@@ -370,38 +371,51 @@ button:disabled {
 
 .game-table-area {
   position: relative;
-  width: min(88vw, 20.5rem);
+  width: min(92vw, 21rem);
   aspect-ratio: 576 / 1024;
-  max-height: min(62dvh, 36rem);
+  max-height: min(72dvh, 40rem);
   height: auto;
-  border-radius: 1.35rem;
+  border-radius: 1rem;
   overflow: hidden;
   isolation: isolate;
   transform: translateZ(0);
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  box-shadow:
-    0 0 0 1px rgba(212, 175, 55, 0.22),
-    0 0 32px rgba(212, 175, 55, 0.12),
-    0 22px 56px rgba(0, 0, 0, 0.72);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65);
 }
 
 .game-table-area-image {
-  background: #0a0908;
+  background: #050504;
 }
 
 .table-felt-image {
-  background:
-    url("/table/table-felt.png") center center / cover no-repeat,
-    #0c0a09;
+  background: url("/table/table-felt.png") center center / cover no-repeat;
 }
 
-.table-felt-vignette {
-  border-radius: inherit;
-  background:
-    radial-gradient(ellipse 88% 78% at 50% 45%, transparent 52%, rgba(0, 0, 0, 0.38) 100%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, transparent 18%, transparent 82%, rgba(0, 0, 0, 0.22) 100%);
+.table-play-surface {
   pointer-events: none;
+}
+
+.table-play-surface .opponent-seat,
+.table-play-surface .player-avatar-btn {
+  pointer-events: auto;
+}
+
+.table-center-bid {
+  pointer-events: none;
+}
+
+.center-pot-table {
+  background: rgba(8, 6, 4, 0.55);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.table-player-hand {
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  min-height: 4.5rem;
 }
 
 .table-felt {
@@ -668,17 +682,28 @@ button:disabled {
   transform: translateZ(10px);
 }
 
-.card-body-themed {
+.card-body-flat {
   position: relative;
-  overflow: hidden;
-  border-radius: 0.3rem;
-  border: 1px solid rgba(0, 0, 0, 0.75);
-  background: #1a1410;
+  overflow: visible;
+  background: transparent;
+  border: none;
   box-shadow: none;
 }
 
-.card-themed-img {
+.card-flat-img {
   image-rendering: auto;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+}
+
+.card-scene-flat {
+  filter: none;
+  background: transparent;
+}
+
+.card-bid-highlight.card-scene-flat {
+  outline: 2px solid rgba(251, 191, 36, 0.95);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
 }
 
 .card-suit-badge {
@@ -892,14 +917,20 @@ button:disabled {
   }
 }
 
-/* Ana sayfa — siyah & altın tema */
+/* Ana sayfa — salon arka planı */
 .home-shell {
   position: relative;
   overflow: hidden;
+  background: #050504;
+}
+
+.home-room-bg {
+  background: url("/home/room-bg.jpg") center top / cover no-repeat;
+}
+
+.home-room-overlay {
   background:
-    radial-gradient(ellipse at 50% -10%, rgba(212, 175, 55, 0.14) 0%, transparent 52%),
-    radial-gradient(ellipse at 80% 100%, rgba(120, 80, 30, 0.12) 0%, transparent 45%),
-    linear-gradient(165deg, #12100e 0%, #0a0908 42%, #050504 100%);
+    linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.55) 38%, rgba(0, 0, 0, 0.82) 100%);
 }
 
 .home-avatar-panel {
@@ -1351,30 +1382,36 @@ button:disabled {
 
 .opponent-slot-top {
   left: 50%;
-  top: 14%;
+  top: 18%;
   transform: translateX(-50%);
 }
 
 .opponent-slot-top-left {
-  left: 24%;
-  top: 17%;
+  left: 22%;
+  top: 22%;
   transform: translateX(-50%);
 }
 
 .opponent-slot-top-right {
-  left: 76%;
-  top: 17%;
+  left: 78%;
+  top: 22%;
   transform: translateX(-50%);
 }
 
 .opponent-slot-left {
-  left: 13%;
-  top: 46%;
+  left: 10%;
+  top: 42%;
 }
 
 .opponent-slot-right {
-  left: 87%;
-  top: 46%;
+  left: 90%;
+  top: 42%;
+}
+
+.game-dock-controls-only {
+  border-top: 1px solid rgba(212, 175, 55, 0.14);
+  background: rgba(8, 6, 4, 0.92);
+  backdrop-filter: blur(10px);
 }
 
 .game-dock {
@@ -1396,9 +1433,9 @@ button:disabled {
 }
 
 .game-layout .game-table-stage {
-  flex: 0 1 58dvh;
-  max-height: 58dvh;
-  min-height: 34dvh;
+  flex: 1 1 auto;
+  max-height: none;
+  min-height: 0;
 }
 
 .game-layout .game-table-area {
@@ -1408,21 +1445,21 @@ button:disabled {
 }
 
 .game-layout.game-bidding .game-table-stage {
-  flex: 0 0 58dvh;
-  height: 58dvh;
-  min-height: 58dvh;
-  max-height: 58dvh;
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  flex-shrink: 1;
   overflow: hidden;
 }
 
 @media (max-width: 639px) {
   .game-layout.game-bidding .game-table-stage {
-    flex: 0 0 62dvh;
-    height: 62dvh;
-    min-height: 62dvh;
-    max-height: 62dvh;
-    flex-shrink: 0;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    flex-shrink: 1;
   }
 }
 
@@ -1675,11 +1712,8 @@ button:disabled {
   filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.75));
 }
 
-.card-bid-highlight .card-body {
-  box-shadow:
-    0 0 0 2px rgba(251, 191, 36, 0.95),
-    0 0 16px rgba(251, 191, 36, 0.55),
-    0 0 28px rgba(251, 191, 36, 0.25);
+.card-bid-highlight .card-body-flat {
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.65));
   animation: card-gold-pulse 1.5s ease-in-out infinite;
 }
 

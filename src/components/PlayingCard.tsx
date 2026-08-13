@@ -30,12 +30,6 @@ type PlayingCardProps = {
   style?: CSSProperties;
 };
 
-const TILT_CLASS = {
-  hand: "card-tilt-hand",
-  table: "card-tilt-table",
-  flat: "card-tilt-flat",
-};
-
 function CardImage({
   src,
   alt,
@@ -48,18 +42,18 @@ function CardImage({
   blindOverlay?: boolean;
 }) {
   return (
-    <div className={`card-body card-body-themed ${SIZE_CLASSES[size]}`}>
+    <div className={`card-body card-body-flat ${SIZE_CLASSES[size]}`}>
       <Image
         src={src}
         alt={alt}
         fill
         sizes="(max-width:640px) 80px, 120px"
-        className="card-themed-img object-contain"
+        className="card-flat-img object-contain"
         draggable={false}
         unoptimized
       />
       {blindOverlay ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/45">
+        <div className="absolute inset-0 flex items-center justify-center rounded-md bg-black/35">
           <span className="text-xl font-light text-white">?</span>
         </div>
       ) : null}
@@ -74,7 +68,6 @@ export function PlayingCard({
   size = "md",
   faceDown,
   backColor,
-  tilt = "hand",
   highlight = false,
   highlightRank,
   className = "",
@@ -87,25 +80,23 @@ export function PlayingCard({
 
   return (
     <div
-      className={`card-scene ${isHighlighted ? "card-bid-highlight" : ""} ${className}`}
+      className={`card-scene card-scene-flat ${isHighlighted ? "card-bid-highlight" : ""} ${className}`}
       style={style}
     >
-      <div className={TILT_CLASS[tilt]}>
-        {showBack ? (
-          <CardImage
-            src={getCardBackImage(resolvedBack)}
-            alt="Card back"
-            size={size}
-            blindOverlay={blind}
-          />
-        ) : card ? (
-          <CardImage
-            src={getCardFaceImage(card.rank, card.suit)}
-            alt={`${card.rank} ${card.suit}`}
-            size={size}
-          />
-        ) : null}
-      </div>
+      {showBack ? (
+        <CardImage
+          src={getCardBackImage(resolvedBack)}
+          alt="Card back"
+          size={size}
+          blindOverlay={blind}
+        />
+      ) : card ? (
+        <CardImage
+          src={getCardFaceImage(card.rank, card.suit)}
+          alt={`${card.rank} ${card.suit}`}
+          size={size}
+        />
+      ) : null}
     </div>
   );
 }

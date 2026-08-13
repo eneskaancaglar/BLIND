@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { HomeFloatingCards } from "@/components/HomeFloatingCards";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SoundToggle } from "@/components/SoundToggle";
@@ -278,8 +277,9 @@ export default function HomeClient() {
   if (!mounted || restoring) {
     return (
       <main className="home-shell relative flex min-h-[100dvh] items-center justify-center px-4">
-        <HomeFloatingCards />
-        <p className="relative z-10 text-violet-200/60">{translate("loading")}</p>
+        <div className="home-room-bg pointer-events-none absolute inset-0" aria-hidden />
+        <div className="home-room-overlay pointer-events-none absolute inset-0" aria-hidden />
+        <p className="relative z-10 text-amber-100/70">{translate("loading")}</p>
       </main>
     );
   }
@@ -289,7 +289,8 @@ export default function HomeClient() {
       <HowToPlayModal open={showRules} onClose={() => setShowRules(false)} />
 
       <main className="home-shell relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-0 pt-10">
-        <HomeFloatingCards />
+        <div className="home-room-bg pointer-events-none absolute inset-0" aria-hidden />
+        <div className="home-room-overlay pointer-events-none absolute inset-0" aria-hidden />
 
         <div className="relative z-10 flex flex-1 flex-col gap-5">
           <header className="home-brand-wrap">

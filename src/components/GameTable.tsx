@@ -12,7 +12,6 @@ import { EmojiChat } from "./EmojiChat";
 import { OpponentSeat } from "./OpponentSeat";
 import { RevealPotSummary } from "./RevealPotSummary";
 import { SoundToggle } from "./SoundToggle";
-import { GameRoomAmbience } from "./GameRoomAmbience";
 import { PlayerAvatar } from "./PlayerAvatar";
 
 type GameTableProps = {
@@ -60,7 +59,7 @@ export function GameTable({
   const handCount = me ? getHandDisplayCount(me, blindMode) : 0;
   const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
   const isBiddingPhase = room.phase === "bidding";
-  const handSize = isBiddingPhase ? "md" : compactDock ? "sm" : "md";
+  const handSize = isBiddingPhase ? "sm" : compactDock ? "sm" : "md";
   const handSpread = "tight";
   const handMaxVisible = isBiddingPhase ? 7 : undefined;
   const isMyTurn = turnPlayerId === playerId;
@@ -79,10 +78,10 @@ export function GameTable({
 
   function renderHand() {
     if (!me) {
-      return <p className="text-center text-xs text-slate-500">{translate("playerNotFound")}</p>;
+      return null;
     }
     if (me.isEliminated) {
-      return <p className="text-center text-xs text-slate-500">{translate("eliminated")}</p>;
+      return <p className="text-center text-[10px] text-amber-100/70">{translate("eliminated")}</p>;
     }
     if (seesOwnCards || (showAllCards && me.cards.length > 0)) {
       return (
@@ -90,7 +89,7 @@ export function GameTable({
           cards={me.cards}
           size={handSize}
           spread={handSpread}
-          tilt="hand"
+          tilt="flat"
           fanStyle="classic"
           seatPosition="bottom"
           deckCount={deckCount}
@@ -108,7 +107,7 @@ export function GameTable({
           blind
           size={handSize}
           spread={handSpread}
-          tilt="hand"
+          tilt="flat"
           fanStyle="classic"
           seatPosition="bottom"
           deckCount={deckCount}
@@ -124,7 +123,7 @@ export function GameTable({
           cards={me.cards}
           size={handSize}
           spread={handSpread}
-          tilt="hand"
+          tilt="flat"
           fanStyle="classic"
           seatPosition="bottom"
           deckCount={deckCount}
@@ -135,7 +134,7 @@ export function GameTable({
     }
     if (me.isBlind) {
       return (
-        <p className="text-center text-[11px] text-slate-400">
+        <p className="text-center text-[10px] text-amber-100/75">
           {blindMode === "HIDDEN_CARDS_BLIND"
             ? translate("blindHiddenCards")
             : translate("blindNoCards")}
@@ -147,7 +146,7 @@ export function GameTable({
         cards={me.cards}
         size={handSize}
         spread={handSpread}
-        tilt="hand"
+        tilt="flat"
         fanStyle="classic"
         seatPosition="bottom"
         maxVisible={handMaxVisible}
@@ -170,8 +169,8 @@ export function GameTable({
 
     if (isBiddingPhase && room.currentBid) {
       return (
-        <div className="center-bid-display flex flex-col items-center gap-1">
-          <p className="text-[8px] font-semibold uppercase tracking-wider text-amber-200/80">
+        <div className="center-bid-display flex flex-col items-center gap-0.5">
+          <p className="text-[7px] font-semibold uppercase tracking-wider text-amber-100/90">
             {translate("currentBid")}
           </p>
           <CurrentBidDisplay
@@ -179,9 +178,9 @@ export function GameTable({
             playerName={room.currentBid.playerName}
             compact
           />
-          <p className="mt-0.5 text-[8px] text-slate-400">
+          <p className="text-[7px] text-amber-100/65">
             {translate("turn")}:{" "}
-            <span className="font-medium text-slate-200">{turnName ?? "..."}</span>
+            <span className="font-medium text-amber-50">{turnName ?? "..."}</span>
           </p>
         </div>
       );
@@ -190,18 +189,18 @@ export function GameTable({
     if (isBiddingPhase) {
       return (
         <>
-          <p className="text-[8px] font-medium uppercase tracking-wider text-slate-400">
+          <p className="text-[7px] font-medium uppercase tracking-wider text-amber-100/75">
             {translate("turn")}
           </p>
-          <p className="mt-0.5 truncate text-sm font-medium text-white">{turnName ?? "..."}</p>
+          <p className="mt-0.5 truncate text-xs font-semibold text-amber-50">{turnName ?? "..."}</p>
         </>
       );
     }
 
     return (
       <>
-        <p className="text-[9px] font-medium uppercase tracking-wider text-slate-400">{phaseLabel}</p>
-        <p className="mt-0.5 truncate text-base font-medium text-white sm:text-lg">
+        <p className="text-[8px] font-medium uppercase tracking-wider text-amber-100/75">{phaseLabel}</p>
+        <p className="mt-0.5 truncate text-sm font-semibold text-amber-50">
           {turnName ?? "..."}
         </p>
       </>
@@ -214,8 +213,6 @@ export function GameTable({
         isBiddingPhase ? "game-bidding" : ""
       }`}
     >
-      <GameRoomAmbience />
-
       <header className="game-header relative z-20 flex shrink-0 items-center justify-between gap-1.5 px-2 py-1 sm:px-4 sm:py-1.5">
         <div className="min-w-0 flex-1">
           <p className="truncate text-[11px] font-medium text-slate-200 sm:text-sm">
@@ -258,38 +255,41 @@ export function GameTable({
         <div className="game-table-perspective">
           <div className="game-table-area game-table-area-image">
             <div className="table-felt table-felt-image absolute inset-0" />
-            <div className="table-felt-vignette pointer-events-none absolute inset-0" />
 
-          <div className="relative z-10 flex h-full min-h-0 flex-col p-1 sm:p-2">
-            <div className="opponents-table relative min-h-0 flex-1 overflow-hidden">
-            {opponents.map((player, index) => {
-              const seat = getOpponentSeatPosition(index, opponents.length);
-              return (
-                <div key={player.id} className={`opponent-slot opponent-slot-${seat}`}>
-                  <OpponentSeat
-                    player={player}
-                    seatPosition={seat}
-                    deckCount={deckCount}
-                    isTurn={player.id === turnPlayerId}
-                    showCards={showAllCards}
-                    blindMode={blindMode}
-                    highlightRank={highlightRank ?? undefined}
-                    compact={isBiddingPhase}
-                    animateDeal={animateDeal}
-                    dealKey={dealKey}
-                    messages={messages}
-                  />
+            <div className="table-play-surface relative z-10 h-full w-full">
+              <div className="opponents-table relative h-full min-h-0">
+                {opponents.map((player, index) => {
+                  const seat = getOpponentSeatPosition(index, opponents.length);
+                  return (
+                    <div key={player.id} className={`opponent-slot opponent-slot-${seat}`}>
+                      <OpponentSeat
+                        player={player}
+                        seatPosition={seat}
+                        deckCount={deckCount}
+                        isTurn={player.id === turnPlayerId}
+                        showCards={showAllCards}
+                        blindMode={blindMode}
+                        highlightRank={highlightRank ?? undefined}
+                        compact={isBiddingPhase}
+                        animateDeal={animateDeal}
+                        dealKey={dealKey}
+                        messages={messages}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="table-center-bid pointer-events-none absolute left-1/2 top-[42%] z-20 w-[min(72%,9.5rem)] -translate-x-1/2 -translate-y-1/2">
+                <div className="center-pot center-pot-table rounded-xl px-2 py-1.5 text-center">
+                  {renderCenterPot()}
                 </div>
-              );
-            })}
-          </div>
+              </div>
 
-          <div className="mx-auto w-full max-w-[16rem] shrink-0 px-0.5">
-            <div className="center-pot center-pot-compact rounded-lg px-2 py-1.5 text-center sm:rounded-2xl sm:px-4 sm:py-3">
-              {renderCenterPot()}
+              <div className="table-player-hand absolute bottom-[7%] left-1/2 z-30 w-[min(96%,18rem)] -translate-x-1/2">
+                {renderHand()}
+              </div>
             </div>
-          </div>
-          </div>
           </div>
         </div>
       </div>
@@ -302,11 +302,9 @@ export function GameTable({
       />
 
       <div
-        className={`game-dock game-dock-area ${isBiddingPhase ? "game-dock-compact" : compactDock ? "game-dock-compact" : ""} min-h-0 shrink-0 px-1 pb-1.5 pt-1 sm:pb-3`}
+        className={`game-dock game-dock-area game-dock-controls-only ${isBiddingPhase ? "game-dock-compact" : compactDock ? "game-dock-compact" : ""} min-h-0 shrink-0 px-1 pb-1.5 pt-1 sm:pb-3`}
       >
-        <div className="game-dock-hand flex w-full shrink-0 justify-center">{renderHand()}</div>
-
-        {children ? <div className="game-dock-controls mt-1 shrink-0 px-0.5">{children}</div> : null}
+        {children ? <div className="game-dock-controls px-0.5">{children}</div> : null}
       </div>
     </div>
   );

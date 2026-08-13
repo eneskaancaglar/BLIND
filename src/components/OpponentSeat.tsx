@@ -51,9 +51,9 @@ export function OpponentSeat({
   const reaction = getRecentReaction(messages, player.id);
 
   const fanProps = {
-    size: compact ? ("sm" as const) : ("md" as const),
+    size: compact ? ("xs" as const) : ("sm" as const),
     spread: "tight" as const,
-    tilt: "table" as const,
+    tilt: "flat" as const,
     fanStyle: "classic" as const,
     seatPosition,
     fitAll: true,
