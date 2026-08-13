@@ -1,13 +1,13 @@
 export type SeatPosition = "top" | "top-left" | "top-right" | "left" | "right" | "bottom";
 
-export const TABLE_CENTER = { x: 50, y: 42 };
+/** Maça sembolü / idda merkezi */
+export const TABLE_CENTER = { x: 50, y: 44 };
 
-/** Felt içi oyun alanı elipsi */
-const TABLE_ELLIPSE = { cx: 50, cy: 42, rx: 17.5, ry: 19 };
+/** Felt içi elips — avatarlar altın çizgi / rim hizasında */
+const TABLE_ELLIPSE = { cx: 50, cy: 44, rx: 23.5, ry: 27.5 };
 
-/** Alt oyuncu hariç: sol-üst → üst → sağ-üst (derece, 0=sağ, 90=alt) */
-const OPPONENT_ARC_START_DEG = 205;
-const OPPONENT_ARC_END_DEG = 335;
+/** Yerel oyuncu (alt, 6 o'clock) */
+const LOCAL_SEAT_ANGLE_DEG = 90;
 
 export type SeatCardLayout = {
   containerRotate: number;
@@ -44,7 +44,7 @@ export function getSeatLayoutFromAnchor(x: number, y: number): SeatCardLayout {
   };
 }
 
-/** Koltuktan dışarı (masa kenarına) birim vektör — avatar yerleşimi için. */
+/** Koltuktan dışarı (rim) birim vektör. */
 export function getSeatOutwardVector(x: number, y: number): { x: number; y: number } {
   const dx = x - TABLE_CENTER.x;
   const dy = y - TABLE_CENTER.y;
@@ -52,34 +52,37 @@ export function getSeatOutwardVector(x: number, y: number): { x: number; y: numb
   return { x: dx / len, y: dy / len };
 }
 
+/** Yerel oyuncu eli — alt orta, felt içinde. */
 export function getPlayerHandAnchor(): { x: number; y: number } {
+  const rad = (LOCAL_SEAT_ANGLE_DEG * Math.PI) / 180;
+  const cardInset = 0.62;
   return {
-    x: TABLE_ELLIPSE.cx,
-    y: TABLE_ELLIPSE.cy + TABLE_ELLIPSE.ry * 0.72,
+    x: TABLE_ELLIPSE.cx + TABLE_ELLIPSE.rx * Math.cos(rad) * cardInset,
+    y: TABLE_ELLIPSE.cy + TABLE_ELLIPSE.ry * Math.sin(rad) * cardInset,
   };
 }
 
 export function getSeatAnchorPercent(_seat: SeatPosition): { x: number; y: number } {
-  return getOpponentSeatAnchors(1)[0] ?? { x: 50, y: TABLE_ELLIPSE.cy - TABLE_ELLIPSE.ry };
+  const rad = (270 * Math.PI) / 180;
+  return {
+    x: TABLE_ELLIPSE.cx + TABLE_ELLIPSE.rx * Math.cos(rad),
+    y: TABLE_ELLIPSE.cy + TABLE_ELLIPSE.ry * Math.sin(rad),
+  };
 }
 
-/** Rakipleri felt elipsi üzerinde eşit aralıklı yerleştir (alt bölge hariç). */
-export function getOpponentSeatAnchors(count: number): Array<{ x: number; y: number }> {
-  if (count <= 0) return [];
+/**
+ * Rakipleri masada eşit aralıklı yerleştir (referans: 6 kişilik daire).
+ * Yerel oyuncu altta; rakipler saat yönünde eşit dağılır.
+ */
+export function getOpponentSeatAnchors(opponentCount: number): Array<{ x: number; y: number }> {
+  if (opponentCount <= 0) return [];
 
-  if (count === 1) {
-    const rad = (270 * Math.PI) / 180;
-    return [
-      {
-        x: TABLE_ELLIPSE.cx + TABLE_ELLIPSE.rx * Math.cos(rad),
-        y: TABLE_ELLIPSE.cy + TABLE_ELLIPSE.ry * Math.sin(rad),
-      },
-    ];
-  }
+  const totalSeats = opponentCount + 1;
+  const stepDeg = 360 / totalSeats;
 
-  return Array.from({ length: count }, (_, index) => {
-    const t = index / (count - 1);
-    const deg = OPPONENT_ARC_START_DEG + t * (OPPONENT_ARC_END_DEG - OPPONENT_ARC_START_DEG);
+  return Array.from({ length: opponentCount }, (_, index) => {
+    const seatIndex = index + 1;
+    const deg = LOCAL_SEAT_ANGLE_DEG - seatIndex * stepDeg;
     const rad = (deg * Math.PI) / 180;
     return {
       x: TABLE_ELLIPSE.cx + TABLE_ELLIPSE.rx * Math.cos(rad),
@@ -116,4 +119,8 @@ export function getOpponentSeatPosition(index: number, total: number): SeatPosit
   const anchor = anchors[index];
   if (!anchor) return "top";
   return getSeatPositionFromAnchor(anchor.x, anchor.y);
+}
+
+export function getTableCenterPercent(): { x: number; y: number } {
+  return { ...TABLE_CENTER };
 }

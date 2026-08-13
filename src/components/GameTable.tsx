@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/context/LanguageContext";
-import { getOpponentSeatAnchors, getOpponentSeatPosition, getPlayerHandAnchor } from "@/lib/seatLayout";
+import { getOpponentSeatAnchors, getOpponentSeatPosition, getPlayerHandAnchor, getTableCenterPercent } from "@/lib/seatLayout";
 import { getHandDisplayCount, getBlindMode } from "@/lib/gameLogic";
 import { ChatMessage, Player, Rank, RevealResult, Room } from "@/lib/types";
 import { BidHistoryButton, BidHistoryPanel } from "./BidHistoryPanel";
@@ -64,6 +64,7 @@ export function GameTable({
   const handCount = me ? getHandDisplayCount(me, blindMode) : 0;
 
   const playerHandAnchor = useMemo(() => getPlayerHandAnchor(), []);
+  const tableCenter = useMemo(() => getTableCenterPercent(), []);
   const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
   const isBiddingPhase = room.phase === "bidding";
   const handSize = isBiddingPhase ? "sm" : compactDock ? "sm" : "md";
@@ -294,16 +295,16 @@ export function GameTable({
               </div>
 
               <div
-                className={`table-center-bid absolute left-1/2 z-20 -translate-x-1/2 -translate-y-1/2 ${
+                className={`table-center-bid absolute z-20 -translate-x-1/2 -translate-y-1/2 ${
                   isBiddingPhase ? "table-center-bid-panel" : ""
                 }`}
-                style={{ left: "50%", top: "42%" }}
+                style={{ left: `${tableCenter.x}%`, top: `${tableCenter.y}%` }}
               >
                 {renderCenterPot()}
               </div>
 
               <div
-                className="table-player-hand absolute z-30 w-[min(56%,11rem)] -translate-x-1/2 -translate-y-1/2"
+                className="table-player-hand absolute z-30 -translate-x-1/2 -translate-y-1/2"
                 style={{
                   left: `${playerHandAnchor.x}%`,
                   top: `${playerHandAnchor.y}%`,
