@@ -3,11 +3,18 @@ export type SeatPosition = "top" | "top-left" | "top-right" | "left" | "right" |
 /** Maça sembolü / idda merkezi */
 export const TABLE_CENTER = { x: 50, y: 44 };
 
-/** Felt içi elips — avatarlar altın çizgi / rim hizasında */
-const TABLE_ELLIPSE = { cx: 50, cy: 44, rx: 23.5, ry: 27.5 };
+/** Kartlar — felt içi */
+const FELT_ELLIPSE = { cx: 50, cy: 44, rx: 18.5, ry: 22 };
 
-/** Yerel oyuncu (alt, 6 o'clock) */
+/** Avatarlar — masa dışı / ahşap rim */
+const AVATAR_ELLIPSE = { cx: 50, cy: 44, rx: 27, ry: 31 };
+
 const LOCAL_SEAT_ANGLE_DEG = 90;
+
+export type OpponentSeatLayout = {
+  avatar: { x: number; y: number };
+  cards: { x: number; y: number };
+};
 
 export type SeatCardLayout = {
   containerRotate: number;
@@ -26,11 +33,28 @@ const SEAT_CARD_LAYOUTS: Record<SeatPosition, SeatCardLayout> = {
   "top-right": { containerRotate: -135, pivotX: "50%", pivotY: "100%", maxSpreadDeg: 46, tiltX: 0 },
 };
 
+function seatAngleDeg(index: number, opponentCount: number): number {
+  const totalSeats = opponentCount + 1;
+  const stepDeg = 360 / totalSeats;
+  return LOCAL_SEAT_ANGLE_DEG - (index + 1) * stepDeg;
+}
+
+function pointOnEllipse(
+  ellipse: { cx: number; cy: number; rx: number; ry: number },
+  deg: number,
+  scale = 1
+): { x: number; y: number } {
+  const rad = (deg * Math.PI) / 180;
+  return {
+    x: ellipse.cx + ellipse.rx * scale * Math.cos(rad),
+    y: ellipse.cy + ellipse.ry * scale * Math.sin(rad),
+  };
+}
+
 export function getSeatCardLayout(seat: SeatPosition): SeatCardLayout {
   return SEAT_CARD_LAYOUTS[seat];
 }
 
-/** Masa merkezine bakan fan rotasyonu. */
 export function getSeatLayoutFromAnchor(x: number, y: number): SeatCardLayout {
   const toCenterX = TABLE_CENTER.x - x;
   const toCenterY = TABLE_CENTER.y - y;
@@ -44,7 +68,6 @@ export function getSeatLayoutFromAnchor(x: number, y: number): SeatCardLayout {
   };
 }
 
-/** Koltuktan dışarı (rim) birim vektör. */
 export function getSeatOutwardVector(x: number, y: number): { x: number; y: number } {
   const dx = x - TABLE_CENTER.x;
   const dy = y - TABLE_CENTER.y;
@@ -52,43 +75,31 @@ export function getSeatOutwardVector(x: number, y: number): { x: number; y: numb
   return { x: dx / len, y: dy / len };
 }
 
-/** Yerel oyuncu eli — alt orta, felt içinde. */
+/** Yerel oyuncu eli — felt içinde, alt orta. */
 export function getPlayerHandAnchor(): { x: number; y: number } {
-  const rad = (LOCAL_SEAT_ANGLE_DEG * Math.PI) / 180;
-  const cardInset = 0.62;
-  return {
-    x: TABLE_ELLIPSE.cx + TABLE_ELLIPSE.rx * Math.cos(rad) * cardInset,
-    y: TABLE_ELLIPSE.cy + TABLE_ELLIPSE.ry * Math.sin(rad) * cardInset,
-  };
+  return pointOnEllipse(FELT_ELLIPSE, LOCAL_SEAT_ANGLE_DEG, 0.52);
 }
 
 export function getSeatAnchorPercent(_seat: SeatPosition): { x: number; y: number } {
-  const rad = (270 * Math.PI) / 180;
-  return {
-    x: TABLE_ELLIPSE.cx + TABLE_ELLIPSE.rx * Math.cos(rad),
-    y: TABLE_ELLIPSE.cy + TABLE_ELLIPSE.ry * Math.sin(rad),
-  };
+  return pointOnEllipse(AVATAR_ELLIPSE, 270);
 }
 
-/**
- * Rakipleri masada eşit aralıklı yerleştir (referans: 6 kişilik daire).
- * Yerel oyuncu altta; rakipler saat yönünde eşit dağılır.
- */
-export function getOpponentSeatAnchors(opponentCount: number): Array<{ x: number; y: number }> {
+/** Avatar dış elips, kartlar iç elips — aynı açıda eşit aralık. */
+export function getOpponentSeatLayouts(opponentCount: number): OpponentSeatLayout[] {
   if (opponentCount <= 0) return [];
 
-  const totalSeats = opponentCount + 1;
-  const stepDeg = 360 / totalSeats;
-
   return Array.from({ length: opponentCount }, (_, index) => {
-    const seatIndex = index + 1;
-    const deg = LOCAL_SEAT_ANGLE_DEG - seatIndex * stepDeg;
-    const rad = (deg * Math.PI) / 180;
+    const deg = seatAngleDeg(index, opponentCount);
     return {
-      x: TABLE_ELLIPSE.cx + TABLE_ELLIPSE.rx * Math.cos(rad),
-      y: TABLE_ELLIPSE.cy + TABLE_ELLIPSE.ry * Math.sin(rad),
+      avatar: pointOnEllipse(AVATAR_ELLIPSE, deg),
+      cards: pointOnEllipse(FELT_ELLIPSE, deg, 0.9),
     };
   });
+}
+
+/** @deprecated use getOpponentSeatLayouts */
+export function getOpponentSeatAnchors(opponentCount: number): Array<{ x: number; y: number }> {
+  return getOpponentSeatLayouts(opponentCount).map((layout) => layout.avatar);
 }
 
 export function getSeatPositionFromAnchor(x: number, y: number): SeatPosition {
@@ -115,10 +126,10 @@ export function getArrowAnchorPercent(seat: SeatPosition): { x: number; y: numbe
 }
 
 export function getOpponentSeatPosition(index: number, total: number): SeatPosition {
-  const anchors = getOpponentSeatAnchors(total);
-  const anchor = anchors[index];
-  if (!anchor) return "top";
-  return getSeatPositionFromAnchor(anchor.x, anchor.y);
+  const layouts = getOpponentSeatLayouts(total);
+  const layout = layouts[index];
+  if (!layout) return "top";
+  return getSeatPositionFromAnchor(layout.cards.x, layout.cards.y);
 }
 
 export function getTableCenterPercent(): { x: number; y: number } {

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { getHandDisplayCount } from "@/lib/gameLogic";
-import { getSeatOutwardVector } from "@/lib/seatLayout";
+import { getSeatOutwardVector, type OpponentSeatLayout } from "@/lib/seatLayout";
 import { BlindMode, ChatMessage, Player, Rank } from "@/lib/types";
 import type { SeatPosition } from "@/lib/seatLayout";
 import { getRecentReaction } from "./EmojiChat";
@@ -12,8 +12,8 @@ import { PlayerAvatar } from "./PlayerAvatar";
 
 type OpponentSeatProps = {
   player: Player;
+  layout: OpponentSeatLayout;
   seatPosition: SeatPosition;
-  seatAnchor?: { x: number; y: number };
   isTurn: boolean;
   showCards: boolean;
   deckCount?: 1 | 2;
@@ -27,8 +27,8 @@ type OpponentSeatProps = {
 
 export function OpponentSeat({
   player,
+  layout,
   seatPosition,
-  seatAnchor,
   isTurn,
   showCards,
   deckCount = 1,
@@ -53,14 +53,7 @@ export function OpponentSeat({
       : translate("blindNoCards");
   const reaction = getRecentReaction(messages, player.id);
 
-  const outward = seatAnchor
-    ? getSeatOutwardVector(seatAnchor.x, seatAnchor.y)
-    : { x: 0, y: -1 };
-
-  const stackStyle = {
-    "--seat-out-x": outward.x.toFixed(3),
-    "--seat-out-y": outward.y.toFixed(3),
-  } as CSSProperties;
+  const outward = getSeatOutwardVector(layout.avatar.x, layout.avatar.y);
 
   const fanProps = {
     size: compact ? ("xs" as const) : ("sm" as const),
@@ -68,7 +61,7 @@ export function OpponentSeat({
     tilt: "flat" as const,
     fanStyle: "classic" as const,
     seatPosition,
-    seatAnchor,
+    seatAnchor: layout.cards,
     fitAll: true,
     deckCount,
     animateDeal,
@@ -77,31 +70,37 @@ export function OpponentSeat({
 
   if (player.isEliminated) {
     return (
-      <div className="opponent-seat opponent-seat-eliminated flex flex-col items-center opacity-40">
+      <div
+        className="seat-avatar-on-table opponent-seat-eliminated opacity-40"
+        style={{ left: `${layout.avatar.x}%`, top: `${layout.avatar.y}%` }}
+      >
         <PlayerAvatar player={player} size="md" />
         {showName ? <p className="seat-name-tag seat-name-tag-static mt-1">{player.name}</p> : null}
-        <span className="mt-0.5 text-[9px] text-slate-400">{translate("eliminated")}</span>
+        <span className="mt-0.5 block text-center text-[9px] text-slate-400">{translate("eliminated")}</span>
       </div>
     );
   }
 
   return (
-    <div
-      className={`opponent-seat relative flex w-full min-w-0 flex-col items-center ${
-        compact ? "opponent-seat-compact" : ""
-      } ${isTurn ? "opponent-seat-turn" : ""}`}
-    >
+    <>
       {reaction ? (
-        <span key={reaction.id} className="seat-emoji-bubble absolute -top-2 z-40 text-base" aria-hidden>
+        <span
+          key={reaction.id}
+          className="seat-emoji-on-table text-base"
+          style={{ left: `${layout.avatar.x}%`, top: `${layout.avatar.y}%` }}
+          aria-hidden
+        >
           {reaction.emoji}
         </span>
       ) : null}
 
       {showName ? (
         <p
-          className="seat-name-tag"
+          className="seat-name-on-table seat-name-tag"
           style={{
-            transform: `translate(calc(-50% + ${outward.x * 12}px), calc(${outward.y * 14}px - 1.1rem))`,
+            left: `${layout.avatar.x}%`,
+            top: `${layout.avatar.y}%`,
+            transform: `translate(calc(-50% + ${outward.x * 10}px), calc(-50% + ${outward.y * 18}px))`,
           }}
           title={player.name}
         >
@@ -109,42 +108,46 @@ export function OpponentSeat({
         </p>
       ) : null}
 
-      <div className="seat-hand-stack" style={stackStyle}>
-        <div className="seat-avatar-behind">
-          <PlayerAvatar
-            player={player}
-            size={compact ? "md" : "lg"}
-            isTurn={isTurn}
-            onClick={() => setNamePinned((prev) => !prev)}
-            title={player.name}
-          />
-          {displayCount > 0 ? (
-            <span className="seat-card-count" aria-label={`${displayCount} cards`}>
-              {displayCount}
-            </span>
-          ) : null}
-        </div>
-
-        <div className="opponent-seat-cards">
-          {showCards && player.cards.length > 0 ? (
-            <CardFan cards={player.cards} highlightRank={highlightRank} {...fanProps} />
-          ) : showCards && player.isBlind ? (
-            <span className="block text-center text-[8px] text-slate-300">{blindStatusText}</span>
-          ) : player.isBlind && displayCount > 0 ? (
-            <CardFan count={displayCount} faceDown {...fanProps} />
-          ) : player.isBlind ? (
-            <span className="block text-center text-[8px] text-slate-300">{blindStatusText}</span>
-          ) : displayCount > 0 ? (
-            <CardFan count={displayCount} faceDown {...fanProps} />
-          ) : null}
-        </div>
+      <div
+        className={`seat-avatar-on-table ${isTurn ? "opponent-seat-turn" : ""}`}
+        style={{ left: `${layout.avatar.x}%`, top: `${layout.avatar.y}%` }}
+      >
+        <PlayerAvatar
+          player={player}
+          size={compact ? "md" : "lg"}
+          isTurn={isTurn}
+          onClick={() => setNamePinned((prev) => !prev)}
+          title={player.name}
+        />
+        {displayCount > 0 ? (
+          <span className="seat-card-count" aria-label={`${displayCount} cards`}>
+            {displayCount}
+          </span>
+        ) : null}
       </div>
 
-      {player.isBlind && !showCards ? (
-        <span className="relative z-30 mt-0.5 text-center text-[8px] font-semibold uppercase tracking-wide text-amber-100/70">
-          {translate("blind")}
-        </span>
-      ) : null}
-    </div>
+      <div
+        className={`seat-cards-on-table ${compact ? "seat-cards-on-table-compact" : ""}`}
+        style={{ left: `${layout.cards.x}%`, top: `${layout.cards.y}%` }}
+      >
+        {showCards && player.cards.length > 0 ? (
+          <CardFan cards={player.cards} highlightRank={highlightRank} {...fanProps} />
+        ) : showCards && player.isBlind ? (
+          <span className="block text-center text-[8px] text-slate-300">{blindStatusText}</span>
+        ) : player.isBlind && displayCount > 0 ? (
+          <CardFan count={displayCount} faceDown {...fanProps} />
+        ) : player.isBlind ? (
+          <span className="block text-center text-[8px] text-slate-300">{blindStatusText}</span>
+        ) : displayCount > 0 ? (
+          <CardFan count={displayCount} faceDown {...fanProps} />
+        ) : null}
+
+        {player.isBlind && !showCards ? (
+          <span className="mt-0.5 block text-center text-[8px] font-semibold uppercase tracking-wide text-amber-100/70">
+            {translate("blind")}
+          </span>
+        ) : null}
+      </div>
+    </>
   );
 }

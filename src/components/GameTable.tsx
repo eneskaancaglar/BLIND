@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/context/LanguageContext";
-import { getOpponentSeatAnchors, getOpponentSeatPosition, getPlayerHandAnchor, getTableCenterPercent } from "@/lib/seatLayout";
+import { getOpponentSeatLayouts, getOpponentSeatPosition, getPlayerHandAnchor, getTableCenterPercent } from "@/lib/seatLayout";
 import { getHandDisplayCount, getBlindMode } from "@/lib/gameLogic";
 import { ChatMessage, Player, Rank, RevealResult, Room } from "@/lib/types";
 import { BidHistoryButton, BidHistoryPanel } from "./BidHistoryPanel";
@@ -57,8 +57,8 @@ export function GameTable({
   useEffect(() => {
     setShowBidHistory(false);
   }, [room.roundNumber, room.phase]);
-  const opponentAnchors = useMemo(
-    () => getOpponentSeatAnchors(opponents.length),
+  const opponentLayouts = useMemo(
+    () => getOpponentSeatLayouts(opponents.length),
     [opponents.length]
   );
   const handCount = me ? getHandDisplayCount(me, blindMode) : 0;
@@ -264,32 +264,25 @@ export function GameTable({
             <div className="table-play-surface relative z-10 h-full w-full">
               <div className="opponents-table relative h-full min-h-0">
                 {opponents.map((player, index) => {
-                  const anchor = opponentAnchors[index] ?? { x: 50, y: 25 };
+                  const layout = opponentLayouts[index];
+                  if (!layout) return null;
                   const seat = getOpponentSeatPosition(index, opponents.length);
                   return (
-                    <div
+                    <OpponentSeat
                       key={player.id}
-                      className="opponent-slot opponent-slot-dynamic"
-                      style={{
-                        left: `${anchor.x}%`,
-                        top: `${anchor.y}%`,
-                      }}
-                    >
-                      <OpponentSeat
-                        player={player}
-                        seatPosition={seat}
-                        seatAnchor={anchor}
-                        deckCount={deckCount}
-                        isTurn={player.id === turnPlayerId}
-                        showCards={showAllCards}
-                        blindMode={blindMode}
-                        highlightRank={highlightRank ?? undefined}
-                        compact={isBiddingPhase}
-                        animateDeal={animateDeal}
-                        dealKey={dealKey}
-                        messages={messages}
-                      />
-                    </div>
+                      player={player}
+                      layout={layout}
+                      seatPosition={seat}
+                      deckCount={deckCount}
+                      isTurn={player.id === turnPlayerId}
+                      showCards={showAllCards}
+                      blindMode={blindMode}
+                      highlightRank={highlightRank ?? undefined}
+                      compact={isBiddingPhase}
+                      animateDeal={animateDeal}
+                      dealKey={dealKey}
+                      messages={messages}
+                    />
                   );
                 })}
               </div>

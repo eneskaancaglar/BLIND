@@ -410,8 +410,55 @@ button:disabled {
 }
 
 .table-play-surface .opponent-seat,
-.table-play-surface .player-avatar-btn {
+.table-play-surface .player-avatar-btn,
+.table-play-surface .seat-avatar-on-table {
   pointer-events: auto;
+}
+
+.seat-avatar-on-table {
+  position: absolute;
+  z-index: 11;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.seat-cards-on-table {
+  position: absolute;
+  z-index: 15;
+  width: min(26vw, 7.25rem);
+  max-width: min(26vw, 7.25rem);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 3.75rem;
+  perspective: 720px;
+}
+
+.seat-cards-on-table-compact {
+  width: min(24vw, 6.5rem);
+  max-width: min(24vw, 6.5rem);
+  min-height: 3.25rem;
+}
+
+.seat-name-on-table {
+  position: absolute;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.seat-emoji-on-table {
+  position: absolute;
+  z-index: 21;
+  transform: translate(-50%, -130%);
+  pointer-events: none;
+}
+
+.opponents-table {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
 }
 
 .table-center-bid {
@@ -860,12 +907,12 @@ button:disabled {
   overflow: visible;
 }
 
-.game-bidding .opponent-seat-cards .card-fan-classic-wrap {
+.game-bidding .seat-cards-on-table .card-fan-classic-wrap {
   min-height: 4.5rem !important;
 }
 
-.game-bidding .opponent-seat-cards {
-  min-height: 4.25rem;
+.game-bidding .seat-cards-on-table {
+  min-height: 3.5rem;
   max-height: none;
   overflow: visible;
 }
@@ -1678,20 +1725,16 @@ button:disabled {
   letter-spacing: 0.04em;
 }
 
-.game-bidding .opponent-seat-cards .card-fan-classic-wrap {
+.game-bidding .seat-cards-on-table .card-fan-classic-wrap {
   min-height: 5.5rem !important;
 }
 
-.game-bidding .opponent-seat-cards .card-fan-row {
+.game-bidding .seat-cards-on-table .card-fan-row {
   min-height: 4.5rem !important;
   transform: none;
 }
 
-.game-bidding .opponent-seat {
-  overflow: visible;
-}
-
-.game-bidding .opponent-seat-cards {
+.game-bidding .seat-cards-on-table {
   min-height: 5rem;
   max-height: none;
   overflow: visible;
