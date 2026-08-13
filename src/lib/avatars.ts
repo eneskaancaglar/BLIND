@@ -4,58 +4,16 @@ export type AvatarDef = {
   label: string;
 };
 
-/** DiceBear avatars — free, stable CDN portraits */
+/** Custom Blind avatar portraits (local assets) */
 export const PLAYER_AVATARS: AvatarDef[] = [
-  {
-    id: "amber",
-    label: "Amber",
-    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=amber&size=128",
-  },
-  {
-    id: "blaze",
-    label: "Blaze",
-    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=blaze&size=128",
-  },
-  {
-    id: "coral",
-    label: "Coral",
-    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=coral&size=128",
-  },
-  {
-    id: "dusk",
-    label: "Dusk",
-    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=dusk&size=128",
-  },
-  {
-    id: "ember",
-    label: "Ember",
-    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=ember&size=128",
-  },
-  {
-    id: "frost",
-    label: "Frost",
-    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=frost&size=128",
-  },
-  {
-    id: "grove",
-    label: "Grove",
-    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=grove&size=128",
-  },
-  {
-    id: "haze",
-    label: "Haze",
-    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=haze&size=128",
-  },
-  {
-    id: "iris",
-    label: "Iris",
-    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=iris&size=128",
-  },
-  {
-    id: "jade",
-    label: "Jade",
-    imageUrl: "https://api.dicebear.com/7.x/adventurer/png?seed=jade&size=128",
-  },
+  { id: "1", label: "Oracle", imageUrl: "/avatars/1.png" },
+  { id: "2", label: "Seer", imageUrl: "/avatars/2.png" },
+  { id: "3", label: "Warden", imageUrl: "/avatars/3.png" },
+  { id: "4", label: "Mystic", imageUrl: "/avatars/4.png" },
+  { id: "5", label: "Raven", imageUrl: "/avatars/5.png" },
+  { id: "6", label: "Phantom", imageUrl: "/avatars/6.png" },
+  { id: "7", label: "Sage", imageUrl: "/avatars/7.png" },
+  { id: "8", label: "Empress", imageUrl: "/avatars/8.png" },
 ];
 
 export const BOT_AVATAR_ID = "bot";
@@ -63,11 +21,11 @@ export const BOT_AVATAR_ID = "bot";
 export const BOT_AVATAR: AvatarDef = {
   id: BOT_AVATAR_ID,
   label: "Bot",
-  imageUrl: "https://api.dicebear.com/7.x/bottts/png?seed=blind-bot&size=128",
+  imageUrl: "/avatars/bot.png",
 };
 
 const STORAGE_KEY = "blind_avatar_id";
-const DEFAULT_AVATAR_ID = "amber";
+const DEFAULT_AVATAR_ID = "1";
 
 export function getAvatarById(id?: string | null): AvatarDef {
   if (id === BOT_AVATAR_ID) return BOT_AVATAR;
@@ -80,7 +38,11 @@ export function getBotAvatarId(): string {
 
 export function getStoredAvatarId(): string {
   if (typeof window === "undefined") return DEFAULT_AVATAR_ID;
-  return localStorage.getItem(STORAGE_KEY) ?? DEFAULT_AVATAR_ID;
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored && (stored === BOT_AVATAR_ID || PLAYER_AVATARS.some((a) => a.id === stored))) {
+    return stored;
+  }
+  return DEFAULT_AVATAR_ID;
 }
 
 export function setStoredAvatarId(id: string): void {
@@ -95,6 +57,8 @@ export function resolvePlayerAvatarId(player: {
   name?: string;
 }): string {
   if (player.isBot) return BOT_AVATAR_ID;
-  if (player.avatarId) return player.avatarId;
+  if (player.avatarId && PLAYER_AVATARS.some((a) => a.id === player.avatarId)) {
+    return player.avatarId;
+  }
   return DEFAULT_AVATAR_ID;
 }

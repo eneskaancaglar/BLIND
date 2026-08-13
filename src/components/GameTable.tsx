@@ -256,15 +256,9 @@ export function GameTable({
 
       <div className="game-table-stage">
         <div className="game-table-perspective">
-          <div className="game-table-area">
-            <div className="table-felt absolute inset-0" />
-            <div className="table-felt-grain pointer-events-none absolute inset-0" />
-            <div className="table-spotlight pointer-events-none absolute inset-0" />
-            <div className="table-rail pointer-events-none absolute inset-0" />
-            <div className="table-rim pointer-events-none absolute inset-0" />
-            <div className="table-glow pointer-events-none absolute inset-0" />
-            <div className="table-edge-shine pointer-events-none absolute inset-0" />
-            <p className="table-brand pointer-events-none absolute z-[2]">BLIND</p>
+          <div className="game-table-area game-table-area-image">
+            <div className="table-felt table-felt-image absolute inset-0" />
+            <div className="table-felt-vignette pointer-events-none absolute inset-0" />
 
           <div className="relative z-10 flex h-full min-h-0 flex-col p-1 sm:p-2">
             <div className="opponents-table relative min-h-0 flex-1 overflow-hidden">

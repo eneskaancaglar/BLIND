@@ -28,7 +28,7 @@ export function PlayerAvatar({
   className = "",
   title,
 }: PlayerAvatarProps) {
-  const resolvedId = avatarId ?? (player ? resolvePlayerAvatarId(player) : "amber");
+  const resolvedId = avatarId ?? (player ? resolvePlayerAvatarId(player) : "1");
   const avatar = getAvatarById(resolvedId);
   const dim = SIZE_PX[size];
 

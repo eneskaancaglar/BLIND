@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { PLAYER_AVATARS, getAvatarById } from "@/lib/avatars";
 import { useLanguage } from "@/context/LanguageContext";
@@ -15,64 +15,97 @@ export function AvatarPicker({ value, onChange }: AvatarPickerProps) {
   const [open, setOpen] = useState(false);
   const selected = getAvatarById(value);
 
-  return (
-    <div className="space-y-2">
-      <p className="text-sm font-medium text-slate-300">{translate("chooseAvatar")}</p>
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
-      <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 p-3">
-        <div
-          className="avatar-pick-preview shrink-0 overflow-hidden rounded-full border-2 border-amber-200/40"
-          style={{ width: "4rem", height: "4rem" }}
-        >
+  return (
+    <div className="avatar-picker">
+      <div className="avatar-picker-header">
+        <p className="avatar-picker-title">{translate("chooseAvatar")}</p>
+        <p className="avatar-picker-sub">{translate("avatarPickerHint")}</p>
+      </div>
+
+      <button
+        type="button"
+        className="avatar-picker-hero"
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+      >
+        <span className="avatar-picker-ring" aria-hidden />
+        <span className="avatar-picker-preview">
           <Image
             src={selected.imageUrl}
             alt={selected.label}
-            width={128}
-            height={128}
-            className="h-full w-full object-cover"
+            width={256}
+            height={256}
+            className="avatar-picker-preview-img"
             unoptimized
           />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-white">{selected.label}</p>
-          <button
-            type="button"
-            onClick={() => setOpen((prev) => !prev)}
-            className="mt-1 rounded-lg border border-amber-300/30 bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-100 transition hover:bg-amber-500/25"
-          >
-            {translate("selectAvatar")}
-          </button>
-        </div>
-      </div>
+        </span>
+        <span className="avatar-picker-meta">
+          <span className="avatar-picker-name">{selected.label}</span>
+          <span className="avatar-picker-action">{translate("selectAvatar")}</span>
+        </span>
+      </button>
 
       {open ? (
-        <div className="avatar-pick-panel grid grid-cols-5 gap-2 rounded-xl border border-white/10 bg-black/30 p-2.5">
-          {PLAYER_AVATARS.map((avatar) => {
-            const isSelected = value === avatar.id;
-            return (
+        <div
+          className="avatar-picker-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label={translate("chooseAvatar")}
+          onClick={() => setOpen(false)}
+        >
+          <div className="avatar-picker-sheet" onClick={(event) => event.stopPropagation()}>
+            <div className="avatar-picker-sheet-head">
+              <p className="avatar-picker-sheet-title">{translate("chooseAvatar")}</p>
               <button
-                key={avatar.id}
                 type="button"
-                title={avatar.label}
-                aria-label={avatar.label}
-                aria-pressed={isSelected}
-                onClick={() => {
-                  onChange(avatar.id);
-                  setOpen(false);
-                }}
-                className={`avatar-pick-btn overflow-hidden ${isSelected ? "avatar-pick-btn-active" : ""}`}
+                className="avatar-picker-close"
+                onClick={() => setOpen(false)}
+                aria-label={translate("close")}
               >
-                <Image
-                  src={avatar.imageUrl}
-                  alt={avatar.label}
-                  width={96}
-                  height={96}
-                  className="h-full w-full object-cover"
-                  unoptimized
-                />
+                ×
               </button>
-            );
-          })}
+            </div>
+
+            <div className="avatar-picker-grid">
+              {PLAYER_AVATARS.map((avatar) => {
+                const isSelected = value === avatar.id;
+                return (
+                  <button
+                    key={avatar.id}
+                    type="button"
+                    title={avatar.label}
+                    aria-label={avatar.label}
+                    aria-pressed={isSelected}
+                    onClick={() => {
+                      onChange(avatar.id);
+                      setOpen(false);
+                    }}
+                    className={`avatar-picker-option ${isSelected ? "avatar-picker-option-active" : ""}`}
+                  >
+                    <Image
+                      src={avatar.imageUrl}
+                      alt={avatar.label}
+                      width={128}
+                      height={128}
+                      className="avatar-picker-option-img"
+                      unoptimized
+                    />
+                    <span className="avatar-picker-option-label">{avatar.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       ) : null}
     </div>

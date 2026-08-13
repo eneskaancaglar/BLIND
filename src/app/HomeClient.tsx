@@ -174,7 +174,7 @@ export default function HomeClient() {
   const [showRules, setShowRules] = useState(false);
   const [showCreateSetup, setShowCreateSetup] = useState(false);
   const [roomSettings, setRoomSettings] = useState<RoomSettings>(DEFAULT_ROOM_SETTINGS);
-  const [avatarId, setAvatarId] = useState("amber");
+  const [avatarId, setAvatarId] = useState("1");
   const [restoring, setRestoring] = useState(true);
 
   useEffect(() => {
@@ -313,7 +313,7 @@ export default function HomeClient() {
           />
         </label>
 
-        <div className="home-panel-light rounded-2xl p-4">
+        <div className="home-avatar-panel rounded-2xl p-1">
           <AvatarPicker
             value={avatarId}
             onChange={(id) => {
