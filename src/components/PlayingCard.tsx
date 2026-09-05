@@ -8,12 +8,12 @@ import { Card, CardBackColor, Rank } from "@/lib/types";
 
 export type CardSize = "xs" | "sm" | "md" | "lg" | "xl";
 
-const SIZE_CLASSES: Record<CardSize, string> = {
-  xs: "h-[3.35rem] w-[2.35rem]",
-  sm: "h-[4.1rem] w-[2.9rem]",
-  md: "h-[5rem] w-[3.55rem]",
-  lg: "h-[5.85rem] w-[4.15rem]",
-  xl: "h-[6.5rem] w-[4.6rem] sm:h-[7.1rem] sm:w-[5rem]",
+export const CARD_DIMENSIONS: Record<CardSize, { width: number; height: number }> = {
+  xs: { width: 38, height: 54 },
+  sm: { width: 46, height: 66 },
+  md: { width: 57, height: 80 },
+  lg: { width: 66, height: 94 },
+  xl: { width: 80, height: 114 },
 };
 
 type PlayingCardProps = {
@@ -42,7 +42,7 @@ function CardImage({
   blindOverlay?: boolean;
 }) {
   return (
-    <div className={`card-body-flat ${SIZE_CLASSES[size]}`}>
+    <div className="card-body-flat" style={CARD_DIMENSIONS[size]}>
       <Image
         src={src}
         alt={alt}

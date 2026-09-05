@@ -366,8 +366,8 @@ button:disabled {
   width: 100%;
   min-height: 0;
   max-height: calc(100dvh - 11.5rem);
-  padding: 0.1rem 0.35rem 0.15rem;
-  overflow: hidden;
+  padding: 0.35rem 0.35rem 0.15rem;
+  overflow: visible;
 }
 
 .game-table-perspective {
@@ -379,20 +379,36 @@ button:disabled {
   justify-content: center;
   perspective: none;
   min-height: 0;
+  overflow: visible;
+}
+
+.game-table-frame {
+  position: relative;
+  width: min(98vw, 27rem);
+  max-height: 100%;
+  padding: 3rem 1.65rem 2.35rem;
+  box-sizing: border-box;
+  flex-shrink: 1;
+  min-height: 0;
 }
 
 .game-table-area {
   position: relative;
-  width: min(98vw, 25.5rem);
-  height: 100%;
-  max-height: 100%;
+  width: 100%;
+  height: auto;
+  max-height: min(54dvh, 31rem);
   aspect-ratio: 822 / 1024;
   border-radius: var(--radius-panel);
   overflow: hidden;
   isolation: isolate;
   transform: translateZ(0);
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
-  background: #050504;
+  background: transparent;
+}
+
+.table-felt-clip {
+  border-radius: inherit;
+  z-index: 0;
 }
 
 .table-felt-img {
@@ -418,8 +434,8 @@ button:disabled {
 .seat-avatar-on-table {
   position: absolute;
   z-index: 11;
-  transform: translate(-50%, -50%);
   pointer-events: auto;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
 }
 
 .seat-cards-on-table {
@@ -459,6 +475,20 @@ button:disabled {
   position: absolute;
   inset: 0;
   overflow: visible;
+}
+
+.opponents-avatar-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.opponents-avatar-ring .seat-avatar-on-table,
+.opponents-avatar-ring .seat-name-on-table,
+.opponents-avatar-ring .seat-emoji-on-table {
+  pointer-events: auto;
 }
 
 .table-center-bid {
@@ -518,8 +548,9 @@ button:disabled {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  min-height: 4.75rem;
-  width: min(52%, 10.5rem);
+  min-height: 5.75rem;
+  width: min(78%, 17.5rem);
+  z-index: 30;
 }
 
 .table-felt-grain {
@@ -1588,7 +1619,7 @@ button:disabled {
   flex: 1 1 0;
   min-height: 0;
   max-height: calc(100dvh - var(--bid-dock-space) - 2.75rem);
-  overflow: hidden;
+  overflow: visible;
   padding-bottom: 0.1rem;
 }
 
@@ -1824,9 +1855,13 @@ button:disabled {
 }
 
 @media (min-width: 640px) {
+  .game-table-frame {
+    width: min(96vw, 30rem);
+    padding: 3.25rem 1.85rem 2.5rem;
+  }
+
   .game-table-area {
-    width: min(96vw, 28rem);
-    max-height: min(72dvh, 42rem);
+    max-height: min(58dvh, 34rem);
   }
 
   .opponent-slot {
@@ -2056,3 +2091,40 @@ button:disabled {
       rotate(calc(var(--rot, 0deg) + 9deg));
   }
 }
+
+/* One measured stage keeps artwork, hands and avatar positions identical in every phase. */
+.game-shell.game-layout { display: grid; grid-template-rows: auto minmax(0, 1fr) 214px; padding-top: env(safe-area-inset-top); }
+.game-shell.game-layout .game-table-stage { position: relative; height: 100%; min-height: 0; max-height: none; padding: 0; overflow: hidden; }
+.game-shell .game-table-perspective { position: absolute; inset: 0; }
+.game-shell .game-table-frame { position: absolute; left: 50%; top: 50%; width: 440px; height: 590px; max-height: none; padding: 70px 46px 0; transform-origin: center; }
+.game-shell.game-layout .game-table-area { width: 348px; height: 433.52px; min-height: 433.52px; max-height: none; aspect-ratio: 822 / 1024; box-shadow: none; }
+.game-shell .opponents-table { padding: 0; }
+.game-shell .seat-cards-on-table { width: 100px; max-width: 100px; min-height: 0; }
+.game-shell.game-bidding .seat-cards-on-table .card-fan-classic-wrap { min-height: 0 !important; }
+.game-shell .table-player-hand { width: 240px; min-height: 0; }
+.game-shell .seat-avatar-on-table { filter: none; }
+.game-shell .seat-name-on-table { white-space: nowrap; max-width: 84px; overflow: hidden; text-overflow: ellipsis; color: #f3e5bc; font-size: 11px; }
+.game-shell.game-layout .game-dock-fixed { position: relative; inset: auto; width: 100%; min-height: 0; height: 214px; overflow-y: auto; pointer-events: auto; padding-bottom: max(8px, env(safe-area-inset-bottom)); background: linear-gradient(180deg, #171d24, #0a0e13); }
+.game-shell .game-dock-controls { width: min(100%, 560px); margin-inline: auto; }
+.game-shell .table-center-bid-box { background: rgba(9,14,20,.65); border-color: rgba(212,175,55,.38); backdrop-filter: none; box-shadow: none; }
+@media (prefers-reduced-motion: reduce) { .card-deal-in, .card-bid-highlight { animation: none !important; } }
+
+/* Consistent game controls, independent of the landing-page buttons. */
+.bid-controls { color: #f3e5bc; }
+.bid-controls .bid-count-value { min-width: 3.5rem; font-variant-numeric: tabular-nums; }
+.bid-controls button { border-radius: 10px; transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease; }
+.bid-controls .bid-stepper { flex-shrink: 0; border: 1px solid #46505a; background: linear-gradient(#28313b, #1b232c); box-shadow: inset 0 1px 0 #ffffff12; }
+.bid-controls .bid-rank { min-height: 36px; border-color: #39434e; background: #151c24; color: #cbd5df; }
+.bid-controls .bid-rank.home-chip-active { background: #d9bb76 !important; border-color: #f0d99e !important; color: #211a0e !important; box-shadow: 0 2px 10px #0003; }
+.bid-controls .bid-actions { margin-top: 8px; }
+.bid-controls .bid-actions button { min-height: 44px; letter-spacing: .02em; }
+.bid-controls .home-btn-join { background: linear-gradient(#ead39b, #c5a05c); border-color: #e6cb8c; color: #241b0e; box-shadow: inset 0 1px 0 #fff5, 0 3px 8px #0003; }
+.bid-controls .home-btn-join:hover:not(:disabled) { background: linear-gradient(#f3dfaf, #d8b471); border-color: #f3dfaf; }
+.bid-controls .home-btn-danger { background: linear-gradient(#643038, #432129); border-color: #99515c; color: #ffe4e6; }
+.bid-controls button:focus-visible, .player-avatar-btn:focus-visible { outline: 2px solid #f0d99e; outline-offset: 3px; }
+.bid-controls button:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+.bid-controls button:hover:not(:disabled):not(.home-chip-active) { border-color: #d9bb76; }
+.player-avatar { flex-shrink: 0; vertical-align: middle; }
+.game-shell .seat-avatar-on-table { width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; }
+.game-shell .seat-avatar-on-table.opponent-seat-eliminated { flex-direction: column; }
+@media (prefers-reduced-motion: reduce) { .bid-controls button { transition: none; } }

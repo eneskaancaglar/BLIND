@@ -71,7 +71,7 @@ export function BidControls({
   }
 
   return (
-    <div className={`home-panel-light ${compact ? "bid-panel-compact p-1.5" : "p-4"}`}>
+    <div className={`home-panel-light bid-controls ${compact ? "bid-panel-compact p-1.5" : "p-4"}`}>
       {!compact ? (
         <p className="mb-3 text-center text-sm font-medium text-slate-200">
           {translate("bidYourMove")}
@@ -81,15 +81,16 @@ export function BidControls({
       <div className={`flex items-center justify-center ${compact ? "mb-1 gap-1.5" : "mb-4 gap-4"}`}>
         <button
           type="button"
+          aria-label={`${translate("bidCount")} -`}
           disabled={disabled || loading || count <= 1}
           onClick={() => setCount((c) => Math.max(1, c - 1))}
-          className={`game-chip flex items-center justify-center font-medium text-slate-100 ${
-            compact ? "h-7 w-7 text-sm" : "h-11 w-11 text-2xl"
+          className={`game-chip bid-stepper flex items-center justify-center font-medium text-slate-100 ${
+            compact ? "h-9 w-9 text-lg" : "h-11 w-11 text-2xl"
           }`}
         >
           −
         </button>
-        <div className="text-center">
+        <div className="bid-count-value text-center">
           {!compact ? (
             <p className="text-[10px] uppercase text-slate-400">{translate("bidCount")}</p>
           ) : null}
@@ -99,10 +100,11 @@ export function BidControls({
         </div>
         <button
           type="button"
+          aria-label={`${translate("bidCount")} +`}
           disabled={disabled || loading || count >= maxCount}
           onClick={() => setCount((c) => c + 1)}
-          className={`game-chip flex items-center justify-center font-medium text-slate-100 ${
-            compact ? "h-7 w-7 text-sm" : "h-11 w-11 text-2xl"
+          className={`game-chip bid-stepper flex items-center justify-center font-medium text-slate-100 ${
+            compact ? "h-9 w-9 text-lg" : "h-11 w-11 text-2xl"
           }`}
         >
           +
@@ -116,8 +118,9 @@ export function BidControls({
             type="button"
             disabled={disabled || loading}
             onClick={() => setRank(r)}
-            className={`home-chip font-semibold transition ${
-              compact ? "py-0.5 text-[10px]" : "py-2 text-sm"
+            aria-pressed={rank === r}
+            className={`home-chip bid-rank font-semibold transition ${
+              compact ? "py-1.5 text-sm" : "py-2 text-sm"
             } ${rank === r ? "home-chip-active" : ""}`}
           >
             {r}
@@ -142,13 +145,13 @@ export function BidControls({
         <p className="mb-1.5 text-center text-[10px] text-red-300/90">{error}</p>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-1">
+      <div className="bid-actions grid grid-cols-2 gap-2">
         <button
           type="button"
           disabled={disabled || loading || !valid}
           onClick={handleBid}
           className={`home-btn-join w-full font-semibold disabled:opacity-50 ${
-            compact ? "py-1.5 text-[11px]" : "py-3.5 text-sm"
+            compact ? "py-2.5 text-sm" : "py-3.5 text-sm"
           }`}
         >
           {translate("bidPlace")}
@@ -158,7 +161,7 @@ export function BidControls({
           disabled={disabled || loading || !canOpen}
           onClick={handleOpen}
           className={`home-btn-danger w-full font-semibold disabled:opacity-50 ${
-            compact ? "py-1.5 text-[11px]" : "py-3.5 text-sm"
+            compact ? "py-2.5 text-sm" : "py-3.5 text-sm"
           }`}
         >
           {translate("bidOpen")}

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/context/LanguageContext";
-import { getOpponentSeatLayouts, getOpponentSeatPosition, getPlayerHandAnchor, getTableCenterPercent } from "@/lib/seatLayout";
+import { getOpponentSeatLayouts, getPlayerHandAnchor, getTableCenterPercent } from "@/lib/seatLayout";
 import { getHandDisplayCount, getBlindMode } from "@/lib/gameLogic";
 import { ChatMessage, Player, Rank, RevealResult, Room } from "@/lib/types";
 import { BidHistoryButton, BidHistoryPanel } from "./BidHistoryPanel";
@@ -51,6 +51,17 @@ export function GameTable({
   const { translate } = useLanguage();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [showBidHistory, setShowBidHistory] = useState(false);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [tableScale, setTableScale] = useState(0);
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setTableScale(Math.min(entry.contentRect.width / 440, entry.contentRect.height / 590, 1.5));
+    });
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
   const blindMode = getBlindMode(room);
   const bidHistory = room.bidHistory ?? [];
 
@@ -67,9 +78,9 @@ export function GameTable({
   const tableCenter = useMemo(() => getTableCenterPercent(), []);
   const seesOwnCards = Boolean(me && !me.isBlind && me.cards.length > 0);
   const isBiddingPhase = room.phase === "bidding";
-  const handSize = isBiddingPhase ? "sm" : compactDock ? "sm" : "md";
-  const handSpread = "tight";
-  const handMaxVisible = isBiddingPhase ? 7 : undefined;
+  const handSize = "sm";
+  const handSpread = "wide";
+  const handMaxVisible = 10;
   const isMyTurn = turnPlayerId === playerId;
   const deckCount = room.deckCount ?? 1;
 
@@ -247,61 +258,88 @@ export function GameTable({
         </div>
       </header>
 
-      <div className="game-table-stage">
+      <div className="game-table-stage" ref={stageRef}>
         <div className="game-table-perspective">
-          <div className="game-table-area">
-            <Image
-              src="/table/table-felt.png"
-              alt=""
-              fill
-              priority
-              sizes="(max-width:640px) 98vw, 26rem"
-              className="table-felt-img"
-              draggable={false}
-              unoptimized
-            />
+          <div className="game-table-frame" style={{ transform: `translate(-50%, -50%) scale(${tableScale})`, visibility: tableScale > 0 ? "visible" : "hidden" }}>
+            <div className="opponents-avatar-ring pointer-events-none">
+              {opponents.map((player, index) => {
+                const layout = opponentLayouts[index];
+                if (!layout) return null;
+                return (
+                  <OpponentSeat
+                    key={`avatar-${player.id}`}
+                    player={player}
+                    layout={layout}
+                    seatPosition={layout.seat}
+                    layer="avatar"
+                    deckCount={deckCount}
+                    isTurn={player.id === turnPlayerId}
+                    revealCards={showAllCards}
+                    blindMode={blindMode}
+                    compact={false}
+                    messages={messages}
+                  />
+                );
+              })}
+            </div>
 
-            <div className="table-play-surface relative z-10 h-full w-full">
-              <div className="opponents-table relative h-full min-h-0">
-                {opponents.map((player, index) => {
-                  const layout = opponentLayouts[index];
-                  if (!layout) return null;
-                  const seat = getOpponentSeatPosition(index, opponents.length);
-                  return (
-                    <OpponentSeat
-                      key={player.id}
-                      player={player}
-                      layout={layout}
-                      seatPosition={seat}
-                      deckCount={deckCount}
-                      isTurn={player.id === turnPlayerId}
-                      showCards={showAllCards}
-                      blindMode={blindMode}
-                      highlightRank={highlightRank ?? undefined}
-                      compact={isBiddingPhase}
-                      animateDeal={animateDeal}
-                      dealKey={dealKey}
-                      messages={messages}
-                    />
-                  );
-                })}
+            <div className="game-table-area">
+              <div className="table-felt-clip absolute inset-0 overflow-hidden rounded-[inherit]">
+                <Image
+                  src="/table/table-felt.png"
+                  alt=""
+                  fill
+                  priority
+                  sizes="(max-width:640px) 98vw, 26rem"
+                  className="table-felt-img"
+                  draggable={false}
+                  unoptimized
+                />
               </div>
 
-              <div
-                className="table-center-bid absolute z-20 -translate-x-1/2 -translate-y-1/2"
-                style={{ left: `${tableCenter.x}%`, top: `${tableCenter.y}%` }}
-              >
-                {renderCenterPot()}
-              </div>
+              <div className="table-play-surface relative z-10 h-full w-full">
+                <div className="opponents-table absolute inset-0">
+                  {opponents.map((player, index) => {
+                    const layout = opponentLayouts[index];
+                    if (!layout) return null;
+                    return (
+                      <OpponentSeat
+                        key={`cards-${player.id}`}
+                        player={player}
+                        layout={layout}
+                        seatPosition={layout.seat}
+                        layer="cards"
+                        deckCount={deckCount}
+                        isTurn={player.id === turnPlayerId}
+                        revealCards={showAllCards}
+                        blindMode={blindMode}
+                        highlightRank={highlightRank ?? undefined}
+                        compact={false}
+                        animateDeal={animateDeal}
+                        dealKey={dealKey}
+                        messages={messages}
+                      />
+                    );
+                  })}
+                </div>
 
-              <div
-                className="table-player-hand absolute z-30 -translate-x-1/2 -translate-y-1/2"
-                style={{
-                  left: `${playerHandAnchor.x}%`,
-                  top: `${playerHandAnchor.y}%`,
-                }}
-              >
-                {renderHand()}
+                <div
+                  className="table-center-bid absolute z-20 -translate-x-1/2 -translate-y-1/2"
+                  style={{ left: `${tableCenter.x}%`, top: `${tableCenter.y}%` }}
+                >
+                  {renderCenterPot()}
+                </div>
+
+                <div
+                  className="table-player-hand absolute z-30"
+                  style={{
+                    left: `${playerHandAnchor.x}%`,
+                    top: `${playerHandAnchor.y}%`,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                >
+                  {renderHand()}
+                </div>
               </div>
             </div>
           </div>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { getHandDisplayCount } from "@/lib/gameLogic";
-import { getSeatOutwardVector, type OpponentSeatLayout } from "@/lib/seatLayout";
+import { getOpponentVisualCardCount, type OpponentSeatLayout } from "@/lib/seatLayout";
 import { BlindMode, ChatMessage, Player, Rank } from "@/lib/types";
 import type { SeatPosition } from "@/lib/seatLayout";
 import { getRecentReaction } from "./EmojiChat";
@@ -14,8 +14,9 @@ type OpponentSeatProps = {
   player: Player;
   layout: OpponentSeatLayout;
   seatPosition: SeatPosition;
+  layer?: "all" | "avatar" | "cards";
   isTurn: boolean;
-  showCards: boolean;
+  revealCards: boolean;
   deckCount?: 1 | 2;
   blindMode?: BlindMode;
   highlightRank?: Rank;
@@ -29,8 +30,9 @@ export function OpponentSeat({
   player,
   layout,
   seatPosition,
+  layer = "all",
   isTurn,
-  showCards,
+  revealCards,
   deckCount = 1,
   blindMode = "ORIGINAL_BLIND",
   highlightRank,
@@ -44,16 +46,18 @@ export function OpponentSeat({
   const showName = isTurn || namePinned;
 
   const displayCount =
-    showCards && player.cards.length > 0
+    revealCards && player.cards.length > 0
       ? player.cards.length
       : getHandDisplayCount(player, blindMode);
+  const visualCount = revealCards ? displayCount : getOpponentVisualCardCount(displayCount);
   const blindStatusText =
     blindMode === "HIDDEN_CARDS_BLIND"
       ? translate("blindHiddenCards")
       : translate("blindNoCards");
   const reaction = getRecentReaction(messages, player.id);
 
-  const outward = getSeatOutwardVector(layout.avatar.x, layout.avatar.y);
+  const showAvatarLayer = layer === "all" || layer === "avatar";
+  const showCardLayer = layer === "all" || layer === "cards";
 
   const fanProps = {
     size: compact ? ("xs" as const) : ("sm" as const),
@@ -61,20 +65,25 @@ export function OpponentSeat({
     tilt: "flat" as const,
     fanStyle: "classic" as const,
     seatPosition,
-    seatAnchor: layout.cards,
     fitAll: true,
     deckCount,
     animateDeal,
     dealKey,
+    maxVisible: undefined,
   };
 
   if (player.isEliminated) {
+    if (!showAvatarLayer) return null;
     return (
       <div
         className="seat-avatar-on-table opponent-seat-eliminated opacity-40"
-        style={{ left: `${layout.avatar.x}%`, top: `${layout.avatar.y}%` }}
+        style={{
+          left: `${layout.avatar.x}%`,
+          top: `${layout.avatar.y}%`,
+          transform: "translate(-50%, -50%)",
+        }}
       >
-        <PlayerAvatar player={player} size="md" />
+        <PlayerAvatar player={player} size={compact ? "md" : "lg"} />
         {showName ? <p className="seat-name-tag seat-name-tag-static mt-1">{player.name}</p> : null}
         <span className="mt-0.5 block text-center text-[9px] text-slate-400">{translate("eliminated")}</span>
       </div>
@@ -83,7 +92,7 @@ export function OpponentSeat({
 
   return (
     <>
-      {reaction ? (
+      {showAvatarLayer && reaction ? (
         <span
           key={reaction.id}
           className="seat-emoji-on-table text-base"
@@ -94,13 +103,13 @@ export function OpponentSeat({
         </span>
       ) : null}
 
-      {showName ? (
+      {showAvatarLayer && showName ? (
         <p
           className="seat-name-on-table seat-name-tag"
           style={{
             left: `${layout.avatar.x}%`,
             top: `${layout.avatar.y}%`,
-            transform: `translate(calc(-50% + ${outward.x * 10}px), calc(-50% + ${outward.y * 18}px))`,
+            transform: `translate(-50%, calc(-50% + 38px))`,
           }}
           title={player.name}
         >
@@ -108,9 +117,14 @@ export function OpponentSeat({
         </p>
       ) : null}
 
+      {showAvatarLayer ? (
       <div
         className={`seat-avatar-on-table ${isTurn ? "opponent-seat-turn" : ""}`}
-        style={{ left: `${layout.avatar.x}%`, top: `${layout.avatar.y}%` }}
+        style={{
+          left: `${layout.avatar.x}%`,
+          top: `${layout.avatar.y}%`,
+          transform: "translate(-50%, -50%)",
+        }}
       >
         <PlayerAvatar
           player={player}
@@ -125,29 +139,32 @@ export function OpponentSeat({
           </span>
         ) : null}
       </div>
+      ) : null}
 
+      {showCardLayer ? (
       <div
         className={`seat-cards-on-table ${compact ? "seat-cards-on-table-compact" : ""}`}
         style={{ left: `${layout.cards.x}%`, top: `${layout.cards.y}%` }}
       >
-        {showCards && player.cards.length > 0 ? (
+        {revealCards && player.cards.length > 0 ? (
           <CardFan cards={player.cards} highlightRank={highlightRank} {...fanProps} />
-        ) : showCards && player.isBlind ? (
+        ) : revealCards && player.isBlind ? (
           <span className="block text-center text-[8px] text-slate-300">{blindStatusText}</span>
-        ) : player.isBlind && displayCount > 0 ? (
-          <CardFan count={displayCount} faceDown {...fanProps} />
+        ) : player.isBlind && visualCount > 0 ? (
+          <CardFan count={visualCount} faceDown {...fanProps} />
         ) : player.isBlind ? (
           <span className="block text-center text-[8px] text-slate-300">{blindStatusText}</span>
-        ) : displayCount > 0 ? (
-          <CardFan count={displayCount} faceDown {...fanProps} />
+        ) : visualCount > 0 ? (
+          <CardFan count={visualCount} faceDown {...fanProps} />
         ) : null}
 
-        {player.isBlind && !showCards ? (
+        {player.isBlind && !revealCards ? (
           <span className="mt-0.5 block text-center text-[8px] font-semibold uppercase tracking-wide text-amber-100/70">
             {translate("blind")}
           </span>
         ) : null}
       </div>
+      ) : null}
     </>
   );
 }

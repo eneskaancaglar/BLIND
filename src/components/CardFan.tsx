@@ -3,24 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getSeatCardLayout, getSeatLayoutFromAnchor, type SeatPosition } from "@/lib/seatLayout";
 import { Card as CardType, CardBackColor, Rank } from "@/lib/types";
-import { PlayingCard, CardSize } from "./PlayingCard";
-
-const CARD_WIDTH_PX: Record<CardSize, number> = {
-  xs: 38,
-  sm: 46,
-  md: 57,
-  lg: 66,
-  xl: 72,
-};
-
-const CARD_HEIGHT_PX: Record<CardSize, number> = {
-  xs: 54,
-  sm: 66,
-  md: 80,
-  lg: 94,
-  xl: 102,
-};
-
+import { PlayingCard, CardSize, CARD_DIMENSIONS } from "./PlayingCard";
 
 function resolveBackColor(
   index: number,
@@ -61,15 +44,15 @@ function computePhotoFanAngles(count: number, spreadDeg: number): number[] {
   return Array.from({ length: count }, (_, i) => -half + (i / (count - 1)) * spreadDeg);
 }
 
-function computePhotoFanOffset(index: number, count: number, cardWidth: number): number {
+function computePhotoFanOffset(index: number, count: number, cardWidth: number, spacing = 0.16): number {
   if (count <= 1) return 0;
   const center = (count - 1) / 2;
-  return (index - center) * cardWidth * 0.16;
+  return (index - center) * cardWidth * spacing;
 }
 
-function estimateClassicWidth(cardWidth: number, cardHeight: number, spreadDeg: number): number {
+function estimateClassicWidth(cardWidth: number, cardHeight: number, spreadDeg: number, count = 1): number {
   const rad = (spreadDeg / 2) * (Math.PI / 180);
-  return cardWidth + Math.sin(rad) * cardHeight * 0.85 + 8;
+  return cardWidth + 2 * Math.sin(rad) * cardHeight + Math.max(0, count - 1) * cardWidth * 0.16 + 8;
 }
 
 type CardFanProps = {
@@ -163,25 +146,20 @@ export function CardFan({
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, [animateDeal, dealKey, displayTotal]);
 
-  const cardWidth = CARD_WIDTH_PX[size];
-  const cardHeight = CARD_HEIGHT_PX[size];
+  const cardWidth = CARD_DIMENSIONS[size].width;
+  const cardHeight = CARD_DIMENSIONS[size].height;
 
   const classicSpread = useMemo(() => {
     const baseMax = seatLayout?.maxSpreadDeg ?? (tilt === "table" ? 36 : 52);
     let spreadDeg = computeClassicSpread(displayTotal, baseMax);
     if (fitAll && fanWidth) {
-      const estimated = estimateClassicWidth(cardWidth, cardHeight, spreadDeg);
+      const estimated = estimateClassicWidth(cardWidth, cardHeight, spreadDeg, displayTotal);
       if (estimated > fanWidth) {
         spreadDeg *= (fanWidth / estimated) * 0.94;
       }
     }
     return spreadDeg;
   }, [seatLayout, tilt, displayTotal, fitAll, fanWidth, cardWidth, cardHeight]);
-
-  const classicAngles = useMemo(
-    () => computePhotoFanAngles(displayTotal, classicSpread),
-    [displayTotal, classicSpread]
-  );
 
   if (total === 0) return null;
 
@@ -228,7 +206,13 @@ export function CardFan({
   const pivotY = seatLayout?.pivotY ?? "100%";
   const tiltX = tilt === "flat" ? 0 : seatLayout?.tiltX ?? (tilt === "table" ? 40 : 14);
 
-  const classicContainerWidth = estimateClassicWidth(cardWidth, cardHeight, classicSpread);
+  // Fit the spacing, never shrink individual cards as the hand grows.
+  const availableWidth = fitAll && fanWidth ? fanWidth : Infinity;
+  const fittedSpread = Math.min(classicSpread, 2 * Math.asin(Math.min(1, Math.max(0, availableWidth - cardWidth - 8) / (2 * cardHeight))) * 180 / Math.PI);
+  const rotatedWidth = cardWidth + 2 * Math.sin(fittedSpread * Math.PI / 360) * cardHeight + 8;
+  const fittedSpacing = displayTotal > 1 ? Math.min(0.16, Math.max(0, availableWidth - rotatedWidth) / ((displayTotal - 1) * cardWidth)) : 0;
+  const fittedAngles = computePhotoFanAngles(displayTotal, fittedSpread);
+  const classicContainerWidth = rotatedWidth + Math.max(0, displayTotal - 1) * cardWidth * fittedSpacing;
 
   return (
     <div ref={fanWrapRef} className={`relative flex w-full flex-col items-center ${className}`}>
@@ -240,8 +224,8 @@ export function CardFan({
         <div
           className="card-fan-classic-wrap flex items-end justify-center"
           style={{
-            minHeight: rowMinHeight,
-            transform: seatLayout ? `rotate(${seatLayout.containerRotate}deg)` : undefined,
+            minHeight: `${cardHeight + 12}px`,
+            transform: `rotate(${seatLayout?.containerRotate ?? 0}deg)`,
             transformOrigin: "center center",
           }}
         >
@@ -249,8 +233,8 @@ export function CardFan({
             className="card-fan-classic relative"
             style={{
               width: `${classicContainerWidth}px`,
-              height: rowMinHeight,
-              maxWidth: fitAll && fanWidth ? `${fanWidth}px` : undefined,
+              height: `${cardHeight + 12}px`,
+
             }}
           >
             {items.slice(0, renderCount).map((item, i) => {
@@ -260,9 +244,9 @@ export function CardFan({
               return (
               <div
                 key={isBack ? `wrap-${i}` : `wrap-${(item as { index: number }).index}`}
-                className={`absolute bottom-0 left-1/2 ${animateDeal ? "card-deal-in" : ""}`}
+                className="absolute bottom-0 left-1/2"
                 style={{
-                  transform: `translateX(calc(-50% + ${computePhotoFanOffset(i, displayTotal, cardWidth)}px)) rotate(${classicAngles[i] ?? 0}deg)`,
+                  transform: `translateX(calc(-50% + ${computePhotoFanOffset(i, displayTotal, cardWidth, fittedSpacing)}px)) rotate(${fittedAngles[i] ?? 0}deg)`,
                   transformOrigin: `${pivotX} ${pivotY}`,
                   zIndex: i + 1,
                   animationDelay: animateDeal ? `${i * 0.07}s` : undefined,
@@ -277,6 +261,7 @@ export function CardFan({
                   faceDown={faceDown}
                   backColor={backColor}
                   size={size}
+                  className={animateDeal ? "card-deal-in" : undefined}
                   tilt={tilt}
                   highlightRank={highlightRank}
                 />
@@ -319,6 +304,7 @@ export function CardFan({
                   faceDown={faceDown}
                   backColor={backColor}
                   size={size}
+                  className={animateDeal ? "card-deal-in" : undefined}
                   tilt={tilt}
                   highlightRank={highlightRank}
                   style={{
